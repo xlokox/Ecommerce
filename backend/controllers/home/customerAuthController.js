@@ -8,8 +8,8 @@ class CustomerAuthController {
   customer_register = async (req, res) => {
     const { name, email, password } = req.body;
     try {
-      const existingCustomer = await customerModel.findOne({ email });
-
+      // בדיקת אם קיימת כבר הרשמה לאימייל זה
+      const existingCustomer = await customerModel.findOne({ email: email.trim() });
       if (existingCustomer) {
         return responseReturn(res, 400, { error: 'Email already exists' });
       }
@@ -23,9 +23,8 @@ class CustomerAuthController {
         method: 'manual'
       });
 
-      await sellerCustomerModel.create({
-        myId: newCustomer.id
-      });
+      // יצירת רשומת צ'אט עבור הלקוח
+      await sellerCustomerModel.create({ myId: newCustomer.id });
 
       const token = createToken({
         id: newCustomer.id,
@@ -41,7 +40,6 @@ class CustomerAuthController {
       });
 
       responseReturn(res, 201, { message: 'User registered successfully', token });
-
     } catch (error) {
       console.error('Registration Error:', error);
       responseReturn(res, 500, { error: 'Internal Server Error' });
@@ -51,14 +49,12 @@ class CustomerAuthController {
   customer_login = async (req, res) => {
     const { email, password } = req.body;
     try {
-      const customer = await customerModel.findOne({ email }).select('+password');
-
+      const customer = await customerModel.findOne({ email: email.trim() }).select('+password');
       if (!customer) {
         return responseReturn(res, 404, { error: 'Email not found' });
       }
 
       const isPasswordValid = await bcrypt.compare(password, customer.password);
-
       if (!isPasswordValid) {
         return responseReturn(res, 401, { error: 'Incorrect password' });
       }
@@ -77,7 +73,6 @@ class CustomerAuthController {
       });
 
       responseReturn(res, 200, { message: 'Login successful', token });
-
     } catch (error) {
       console.error('Login Error:', error);
       responseReturn(res, 500, { error: 'Internal Server Error' });

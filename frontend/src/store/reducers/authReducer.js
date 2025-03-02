@@ -1,46 +1,44 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import api from "../../api/api";
-import { jwtDecode } from "jwt-decode"; // שימוש בייבוא בשם, כפי שמצוין בהודעת השגיאה
+import { jwtDecode } from "jwt-decode"; // שימוש בייבוא בשם
 
+// הרשמה ללקוח
 export const customer_register = createAsyncThunk(
   'auth/customer_register',
   async (info, { rejectWithValue, fulfillWithValue }) => {
     try {
-      const { data } = await api.post('/customer/customer-register', info);
+      // Base URL כבר מכיל "/api", לכן הנתיב היחסי הוא "/customer-register"
+      const { data } = await api.post('/customer-register', info);
       localStorage.setItem('customerToken', data.token);
-      // console.log(data)
       return fulfillWithValue(data);
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error?.response?.data);
     }
   }
 );
-// End Method 
 
+// התחברות ללקוח
 export const customer_login = createAsyncThunk(
   'auth/customer_login',
   async (info, { rejectWithValue, fulfillWithValue }) => {
     try {
-      const { data } = await api.post('/customer/customer-login', info);
+      // יש להסיר את "/api" מהנתיב כאן, כדי לא לקבל "/api/api/customer-login"
+      const { data } = await api.post('/customer-login', info);
       localStorage.setItem('customerToken', data.token);
-      // console.log(data) 
       return fulfillWithValue(data);
     } catch (error) {
-      return rejectWithValue(error.response.data);
+      return rejectWithValue(error?.response?.data);
     }
   }
 );
-// End Method 
 
+// פונקציה לפענוח הטוקן
 const decodeToken = (token) => {
   if (token) {
-    const userInfo = jwtDecode(token);
-    return userInfo;
-  } else {
-    return '';
+    return jwtDecode(token);
   }
+  return '';
 };
-// End Method 
 
 export const authReducer = createSlice({
   name: 'auth',
@@ -51,17 +49,17 @@ export const authReducer = createSlice({
     successMessage: '',
   },
   reducers: {
-    messageClear: (state, _) => {
+    messageClear: (state) => {
       state.errorMessage = "";
       state.successMessage = "";
     },
-    user_reset: (state, _) => {
+    user_reset: (state) => {
       state.userInfo = "";
     }
   },
   extraReducers: (builder) => {
     builder
-      // customer_register
+      // Handle customer_register
       .addCase(customer_register.pending, (state) => {
         state.loader = true;
       })
@@ -75,8 +73,7 @@ export const authReducer = createSlice({
         state.loader = false;
         state.userInfo = userInfo;
       })
-
-      // customer_login
+      // Handle customer_login
       .addCase(customer_login.pending, (state) => {
         state.loader = true;
       })
