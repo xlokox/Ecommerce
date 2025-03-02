@@ -1,4 +1,4 @@
-// Import של מודולים חיצוניים תוך שימוש בסגנון ESM
+// server.js
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
@@ -7,13 +7,34 @@ import { dbConnect } from './utiles/db.js';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
+dotenv.config();
 
-dotenv.config(); // אתחול משתני סביבה
+// מוסיפים כאן את Cloudinary – הגדרה פעם אחת בלבד
+import cloudinary from 'cloudinary';
+cloudinary.v2.config({
+  cloud_name: process.env.cloud_name,
+  api_key: process.env.api_key,
+  api_secret: process.env.api_secret,
+  secure: true
+});
 
+// (לא חובה, אבל עוזר לבדיקה)
+console.log('cloud_name:', process.env.cloud_name);
+console.log('api_key:', process.env.api_key);
+console.log('api_secret:', process.env.api_secret);
+
+// במידה ויש לך לוגים/קריאות ל־ChatController:
+console.log('✅ ChatController loaded');
+console.log('✅ Loaded ChatController');
+// וכו' – לפי מה שהיה לך קודם
+console.log('🚀 Available ChatController Methods: [...]');
+console.log('🚀 Final ChatController Methods: [...]');
+
+// יצירת אובייקט express ו־HTTP server
 const app = express();
 const server = createServer(app);
 
-// הגדרות CORS משופרות – כולל Socket.io
+// הגדרות CORS
 const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
 const corsOptions = {
   origin: allowedOrigins,
@@ -25,11 +46,11 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
-// שימוש במידלוור לניתוח JSON ועוגיות
+// שימוש ב־bodyParser וב־cookieParser
 app.use(bodyParser.json());
 app.use(cookieParser());
 
-// הגדרת Socket.io עם אפשרויות CORS נכונות
+// הגדרת Socket.io עם אפשרויות CORS
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -43,28 +64,25 @@ let allCustomer = [];
 let allSeller = [];
 let admin = {};
 
-// פונקציה להוספת לקוח לרשימה
+// פונקציות העזר שהיו לך
 const addUser = (customerId, socketId, userInfo) => {
   if (!allCustomer.some(u => u.customerId === customerId)) {
     allCustomer.push({ customerId, socketId, userInfo });
   }
 };
-
-// פונקציה להוספת מוכר לרשימה
 const addSeller = (sellerId, socketId, userInfo) => {
   if (!allSeller.some(u => u.sellerId === sellerId)) {
     allSeller.push({ sellerId, socketId, userInfo });
   }
 };
-
 const findCustomer = (customerId) => allCustomer.find(c => c.customerId === customerId);
 const findSeller = (sellerId) => allSeller.find(c => c.sellerId === sellerId);
-
 const removeUser = (socketId) => {
   allCustomer = allCustomer.filter(c => c.socketId !== socketId);
   allSeller = allSeller.filter(c => c.socketId !== socketId);
 };
 
+// אירועי Socket.io
 io.on('connection', (soc) => {
   console.log('✅ Socket.io Connected');
 
@@ -145,8 +163,10 @@ app.use('/api', chatRoutes);
 app.use('/api', paymentRoutes);
 app.use('/api', dashboardRoutes);
 
+// בדיקת שרת
 app.get('/', (req, res) => res.send('Hello Server'));
 
+// הפעלת מסד הנתונים והשרת
 const port = process.env.PORT || 5001;
 dbConnect();
 

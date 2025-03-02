@@ -7,6 +7,7 @@ import { createToken } from '../utiles/tokenCreate.js';
 import cloudinary from 'cloudinary';
 import formidable from 'formidable';
 
+// הגדרות Cloudinary (אותם שמות משתנים מה-.env)
 cloudinary.v2.config({
   cloud_name: process.env.cloud_name,
   api_key: process.env.api_key,
@@ -39,7 +40,7 @@ class AuthControllers {
     }
   };
 
-  // כניסת מוכר – כאן הפונקציה נקראת customer_login אך בפועל היא מאמתת מוכר
+  // כניסת מוכר (מכונה פה customer_login)
   customer_login = async (req, res) => {
     const { email, password } = req.body;
     try {
@@ -61,7 +62,7 @@ class AuthControllers {
     }
   };
 
-  // רישום מוכר – כאן הפונקציה נקראת customer_register אך בפועל היא יוצרת משתמש (מוכר)
+  // רישום מוכר (מכונה פה customer_register)
   customer_register = async (req, res) => {
     const { email, name, password } = req.body;
     try {
@@ -77,7 +78,9 @@ class AuthControllers {
         method: 'manual',
         shopInfo: {},
       });
+      // יצירת צ'אט עבור המוכר
       await sellerCustomerModel.create({ myId: seller.id });
+
       const token = createToken({ id: seller.id, role: seller.role });
       res.cookie('accessToken', token, {
         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -162,8 +165,10 @@ class AuthControllers {
     try {
       const user = await sellerModel.findOne({ email }).select('+password');
       if (!user) return res.status(404).json({ message: 'User not found' });
+
       const isMatch = await bcrypt.compare(old_password, user.password);
       if (!isMatch) return res.status(400).json({ message: 'Incorrect old password' });
+
       user.password = await bcrypt.hash(new_password, 10);
       await user.save();
       res.json({ message: 'Password changed successfully' });
