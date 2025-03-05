@@ -1,0 +1,192 @@
+{
+  "id": "ecommerce-login-register-tests",
+  "version": "2.0",
+  "name": "E-commerce Login and Register Tests",
+  "url": "http://localhost:3000",
+  "tests": [
+    {
+      "id": "register-new-user",
+      "name": "Register New User",
+      "commands": [
+        {
+          "id": "navigate-to-register",
+          "comment": "Navigate to register page",
+          "command": "open",
+          "target": "/register",
+          "value": ""
+        },
+        {
+          "id": "verify-register-page",
+          "comment": "Verify we are on the register page",
+          "command": "assertText",
+          "target": "css=h2",
+          "value": "Register"
+        },
+        {
+          "id": "enter-name",
+          "comment": "Enter name",
+          "command": "type",
+          "target": "id=name",
+          "value": "Test User"
+        },
+        {
+          "id": "enter-email",
+          "comment": "Enter email",
+          "command": "type",
+          "target": "id=email",
+          "value": "testuser@example.com"
+        },
+        {
+          "id": "enter-password",
+          "comment": "Enter password",
+          "command": "type",
+          "target": "id=password",
+          "value": "Password123"
+        },
+        {
+          "id": "submit-register-form",
+          "comment": "Submit register form",
+          "command": "click",
+          "target": "css=button[type='submit']",
+          "value": ""
+        },
+        {
+          "id": "wait-for-redirect",
+          "comment": "Wait for redirect to home page",
+          "command": "waitForElementPresent",
+          "target": "css=.home-page",
+          "value": "5000"
+        },
+        {
+          "id": "verify-success-toast",
+          "comment": "Verify success toast appears",
+          "command": "waitForElementPresent",
+          "target": "css=.toast-success",
+          "value": "5000"
+        }
+      ]
+    },
+    {
+      "id": "login-valid-credentials",
+      "name": "Login with Valid Credentials",
+      "commands": [
+        {
+          "id": "navigate-to-login",
+          "comment": "Navigate to login page",
+          "command": "open",
+          "target": "/login",
+          "value": ""
+        },
+        {
+          "id": "verify-login-page",
+          "comment": "Verify we are on the login page",
+          "command": "assertText",
+          "target": "css=h2",
+          "value": "Login"
+        },
+        {
+          "id": "enter-email",
+          "comment": "Enter email",
+          "command": "type",
+          "target": "id=email",
+          "value": "testuser@example.com"
+        },
+        {
+          "id": "enter-password",
+          "comment": "Enter password",
+          "command": "type",
+          "target": "id=password",
+          "value": "Password123"
+        },
+        {
+          "id": "submit-login-form",
+          "comment": "Submit login form",
+          "command": "click",
+          "target": "css=button[type='submit']",
+          "value": ""
+        },
+        {
+          "id": "wait-for-redirect",
+          "comment": "Wait for redirect to home page",
+          "command": "waitForElementPresent",
+          "target": "css=.home-page",
+          "value": "5000"
+        },
+        {
+          "id": "verify-user-logged-in",
+          "comment": "Verify user is logged in",
+          "command": "assertElementPresent",
+          "target": "css=.user-info",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "login-invalid-credentials",
+      "name": "Login with Invalid Credentials",
+      "commands": [
+        {
+          "id": "navigate-to-login",
+          "comment": "Navigate to login page",
+          "command": "open",
+          "target": "/login",
+          "value": ""
+        },
+        {
+          "id": "verify-login-page",
+          "comment": "Verify we are on the login page",
+          "command": "assertText",
+          "target": "css=h2",
+          "value": "Login"
+        },
+        {
+          "id": "enter-email",
+          "comment": "Enter email",
+          "command": "type",
+          "target": "id=email",
+          "value": "testuser@example.com"
+        },
+        {
+          "id": "enter-wrong-password",
+          "comment": "Enter wrong password",
+          "command": "type",
+          "target": "id=password",
+          "value": "WrongPassword"
+        },
+        {
+          "id": "submit-login-form",
+          "comment": "Submit login form",
+          "command": "click",
+          "target": "css=button[type='submit']",
+          "value": ""
+        },
+        {
+          "id": "verify-error-toast",
+          "comment": "Verify error toast appears",
+          "command": "waitForElementPresent",
+          "target": "css=.toast-error",
+          "value": "5000"
+        },
+        {
+          "id": "verify-still-on-login-page",
+          "comment": "Verify still on login page",
+          "command": "assertElementPresent",
+          "target": "css=form",
+          "value": ""
+        }
+      ]
+    }
+  ],
+  "suites": [
+    {
+      "id": "login-register-suite",
+      "name": "Login and Register Test Suite",
+      "persistSession": false,
+      "parallel": false,
+      "timeout": 300,
+      "tests": ["register-new-user", "login-valid-credentials", "login-invalid-credentials"]
+    }
+  ],
+  "urls": ["http://localhost:3000/"],
+  "plugins": []
+}

@@ -1,0 +1,325 @@
+{
+  "id": "ecommerce-shopping-cart-tests",
+  "version": "2.0",
+  "name": "E-commerce Shopping Cart Tests",
+  "url": "http://localhost:3000",
+  "tests": [
+    {
+      "id": "add-product-to-cart",
+      "name": "Add Product to Cart",
+      "commands": [
+        {
+          "id": "login-first",
+          "comment": "Login first",
+          "command": "open",
+          "target": "/login",
+          "value": ""
+        },
+        {
+          "id": "enter-email",
+          "comment": "Enter email",
+          "command": "type",
+          "target": "id=email",
+          "value": "testuser@example.com"
+        },
+        {
+          "id": "enter-password",
+          "comment": "Enter password",
+          "command": "type",
+          "target": "id=password",
+          "value": "Password123"
+        },
+        {
+          "id": "submit-login-form",
+          "comment": "Submit login form",
+          "command": "click",
+          "target": "css=button[type='submit']",
+          "value": ""
+        },
+        {
+          "id": "wait-for-login",
+          "comment": "Wait for login to complete",
+          "command": "waitForElementPresent",
+          "target": "css=.home-page",
+          "value": "5000"
+        },
+        {
+          "id": "navigate-to-product",
+          "comment": "Navigate to a product page",
+          "command": "open",
+          "target": "/product/1",
+          "value": ""
+        },
+        {
+          "id": "wait-for-product-page",
+          "comment": "Wait for product page to load",
+          "command": "waitForElementPresent",
+          "target": "css=.product-details",
+          "value": "5000"
+        },
+        {
+          "id": "set-quantity",
+          "comment": "Set quantity to 2",
+          "command": "type",
+          "target": "css=input[type='number']",
+          "value": "2"
+        },
+        {
+          "id": "add-to-cart",
+          "comment": "Click add to cart button",
+          "command": "click",
+          "target": "css=button.add-to-cart",
+          "value": ""
+        },
+        {
+          "id": "verify-success-toast",
+          "comment": "Verify success toast appears",
+          "command": "waitForElementPresent",
+          "target": "css=.toast-success",
+          "value": "5000"
+        },
+        {
+          "id": "verify-cart-count",
+          "comment": "Verify cart count updated",
+          "command": "assertText",
+          "target": "css=.cart-count",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "id": "update-cart-quantity",
+      "name": "Update Cart Quantity",
+      "commands": [
+        {
+          "id": "login-first",
+          "comment": "Login first",
+          "command": "open",
+          "target": "/login",
+          "value": ""
+        },
+        {
+          "id": "enter-email",
+          "comment": "Enter email",
+          "command": "type",
+          "target": "id=email",
+          "value": "testuser@example.com"
+        },
+        {
+          "id": "enter-password",
+          "comment": "Enter password",
+          "command": "type",
+          "target": "id=password",
+          "value": "Password123"
+        },
+        {
+          "id": "submit-login-form",
+          "comment": "Submit login form",
+          "command": "click",
+          "target": "css=button[type='submit']",
+          "value": ""
+        },
+        {
+          "id": "wait-for-login",
+          "comment": "Wait for login to complete",
+          "command": "waitForElementPresent",
+          "target": "css=.home-page",
+          "value": "5000"
+        },
+        {
+          "id": "navigate-to-cart",
+          "comment": "Navigate to cart page",
+          "command": "open",
+          "target": "/card",
+          "value": ""
+        },
+        {
+          "id": "wait-for-cart-page",
+          "comment": "Wait for cart page to load",
+          "command": "waitForElementPresent",
+          "target": "css=.cart-items",
+          "value": "5000"
+        },
+        {
+          "id": "update-quantity",
+          "comment": "Update quantity to 3",
+          "command": "type",
+          "target": "css=input[type='number']",
+          "value": "3"
+        },
+        {
+          "id": "click-update",
+          "comment": "Click update button",
+          "command": "click",
+          "target": "css=button.update-cart",
+          "value": ""
+        },
+        {
+          "id": "verify-success-toast",
+          "comment": "Verify success toast appears",
+          "command": "waitForElementPresent",
+          "target": "css=.toast-success",
+          "value": "5000"
+        },
+        {
+          "id": "verify-updated-quantity",
+          "comment": "Verify quantity updated",
+          "command": "assertValue",
+          "target": "css=input[type='number']",
+          "value": "3"
+        }
+      ]
+    },
+    {
+      "id": "checkout-process",
+      "name": "Checkout Process",
+      "commands": [
+        {
+          "id": "login-first",
+          "comment": "Login first",
+          "command": "open",
+          "target": "/login",
+          "value": ""
+        },
+        {
+          "id": "enter-email",
+          "comment": "Enter email",
+          "command": "type",
+          "target": "id=email",
+          "value": "testuser@example.com"
+        },
+        {
+          "id": "enter-password",
+          "comment": "Enter password",
+          "command": "type",
+          "target": "id=password",
+          "value": "Password123"
+        },
+        {
+          "id": "submit-login-form",
+          "comment": "Submit login form",
+          "command": "click",
+          "target": "css=button[type='submit']",
+          "value": ""
+        },
+        {
+          "id": "wait-for-login",
+          "comment": "Wait for login to complete",
+          "command": "waitForElementPresent",
+          "target": "css=.home-page",
+          "value": "5000"
+        },
+        {
+          "id": "navigate-to-cart",
+          "comment": "Navigate to cart page",
+          "command": "open",
+          "target": "/card",
+          "value": ""
+        },
+        {
+          "id": "wait-for-cart-page",
+          "comment": "Wait for cart page to load",
+          "command": "waitForElementPresent",
+          "target": "css=.cart-items",
+          "value": "5000"
+        },
+        {
+          "id": "proceed-to-checkout",
+          "comment": "Click proceed to checkout button",
+          "command": "click",
+          "target": "css=button.proceed-to-checkout",
+          "value": ""
+        },
+        {
+          "id": "wait-for-shipping-page",
+          "comment": "Wait for shipping page to load",
+          "command": "waitForElementPresent",
+          "target": "css=.shipping-form",
+          "value": "5000"
+        },
+        {
+          "id": "fill-shipping-address",
+          "comment": "Fill shipping address",
+          "command": "type",
+          "target": "id=address",
+          "value": "123 Test Street"
+        },
+        {
+          "id": "fill-shipping-city",
+          "comment": "Fill shipping city",
+          "command": "type",
+          "target": "id=city",
+          "value": "Test City"
+        },
+        {
+          "id": "fill-shipping-postal-code",
+          "comment": "Fill shipping postal code",
+          "command": "type",
+          "target": "id=postalCode",
+          "value": "12345"
+        },
+        {
+          "id": "fill-shipping-country",
+          "comment": "Fill shipping country",
+          "command": "type",
+          "target": "id=country",
+          "value": "Test Country"
+        },
+        {
+          "id": "continue-to-payment",
+          "comment": "Click continue to payment button",
+          "command": "click",
+          "target": "css=button.continue-to-payment",
+          "value": ""
+        },
+        {
+          "id": "wait-for-payment-page",
+          "comment": "Wait for payment page to load",
+          "command": "waitForElementPresent",
+          "target": "css=.payment-form",
+          "value": "5000"
+        },
+        {
+          "id": "select-payment-method",
+          "comment": "Select payment method",
+          "command": "click",
+          "target": "css=input[value='stripe']",
+          "value": ""
+        },
+        {
+          "id": "continue-to-place-order",
+          "comment": "Click continue to place order button",
+          "command": "click",
+          "target": "css=button.place-order",
+          "value": ""
+        },
+        {
+          "id": "wait-for-order-confirmation",
+          "comment": "Wait for order confirmation page",
+          "command": "waitForElementPresent",
+          "target": "css=.order-confirmation",
+          "value": "5000"
+        },
+        {
+          "id": "verify-order-placed",
+          "comment": "Verify order placed successfully",
+          "command": "assertText",
+          "target": "css=h1",
+          "value": "Order Placed Successfully"
+        }
+      ]
+    }
+  ],
+  "suites": [
+    {
+      "id": "shopping-cart-suite",
+      "name": "Shopping Cart Test Suite",
+      "persistSession": false,
+      "parallel": false,
+      "timeout": 300,
+      "tests": ["add-product-to-cart", "update-cart-quantity", "checkout-process"]
+    }
+  ],
+  "urls": ["http://localhost:3000/"],
+  "plugins": []
+}

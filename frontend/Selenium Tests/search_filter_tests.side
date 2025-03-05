@@ -1,0 +1,199 @@
+{
+  "id": "ecommerce-search-filter-tests",
+  "version": "2.0",
+  "name": "E-commerce Search and Filter Tests",
+  "url": "http://localhost:3000",
+  "tests": [
+    {
+      "id": "search-by-keyword",
+      "name": "Search by Keyword",
+      "commands": [
+        {
+          "id": "navigate-to-home",
+          "comment": "Navigate to home page",
+          "command": "open",
+          "target": "/",
+          "value": ""
+        },
+        {
+          "id": "wait-for-home-page",
+          "comment": "Wait for home page to load",
+          "command": "waitForElementPresent",
+          "target": "css=.home-page",
+          "value": "5000"
+        },
+        {
+          "id": "enter-search-term",
+          "comment": "Enter search term",
+          "command": "type",
+          "target": "css=input[type='text']",
+          "value": "phone"
+        },
+        {
+          "id": "click-search-button",
+          "comment": "Click search button",
+          "command": "click",
+          "target": "css=button.search-button",
+          "value": ""
+        },
+        {
+          "id": "wait-for-search-results",
+          "comment": "Wait for search results to load",
+          "command": "waitForElementPresent",
+          "target": "css=.search-results",
+          "value": "5000"
+        },
+        {
+          "id": "verify-search-results",
+          "comment": "Verify search results contain the keyword",
+          "command": "assertElementPresent",
+          "target": "css=.product-title:contains('phone')",
+          "value": ""
+        },
+        {
+          "id": "verify-search-count",
+          "comment": "Verify search results count is displayed",
+          "command": "assertElementPresent",
+          "target": "css=.results-count",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "filter-by-category",
+      "name": "Filter by Category",
+      "commands": [
+        {
+          "id": "navigate-to-products",
+          "comment": "Navigate to products page",
+          "command": "open",
+          "target": "/products",
+          "value": ""
+        },
+        {
+          "id": "wait-for-products-page",
+          "comment": "Wait for products page to load",
+          "command": "waitForElementPresent",
+          "target": "css=.products-page",
+          "value": "5000"
+        },
+        {
+          "id": "select-category",
+          "comment": "Select Electronics category",
+          "command": "click",
+          "target": "css=.category-filter[data-category='Electronics']",
+          "value": ""
+        },
+        {
+          "id": "click-filter-button",
+          "comment": "Click filter button",
+          "command": "click",
+          "target": "css=button.apply-filter",
+          "value": ""
+        },
+        {
+          "id": "wait-for-filtered-results",
+          "comment": "Wait for filtered results to load",
+          "command": "waitForElementPresent",
+          "target": "css=.filtered-results",
+          "value": "5000"
+        },
+        {
+          "id": "verify-category-filter-applied",
+          "comment": "Verify category filter is applied",
+          "command": "assertText",
+          "target": "css=.active-filter",
+          "value": "Electronics"
+        },
+        {
+          "id": "verify-products-in-category",
+          "comment": "Verify products are in the selected category",
+          "command": "assertElementPresent",
+          "target": "css=.product-category:contains('Electronics')",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "sort-by-price",
+      "name": "Sort by Price",
+      "commands": [
+        {
+          "id": "navigate-to-products",
+          "comment": "Navigate to products page",
+          "command": "open",
+          "target": "/products",
+          "value": ""
+        },
+        {
+          "id": "wait-for-products-page",
+          "comment": "Wait for products page to load",
+          "command": "waitForElementPresent",
+          "target": "css=.products-page",
+          "value": "5000"
+        },
+        {
+          "id": "select-sort-option",
+          "comment": "Select sort by price: low to high",
+          "command": "select",
+          "target": "css=select.sort-options",
+          "value": "label=Price: Low to High"
+        },
+        {
+          "id": "click-sort-button",
+          "comment": "Click sort button",
+          "command": "click",
+          "target": "css=button.apply-sort",
+          "value": ""
+        },
+        {
+          "id": "wait-for-sorted-results",
+          "comment": "Wait for sorted results to load",
+          "command": "waitForElementPresent",
+          "target": "css=.sorted-results",
+          "value": "5000"
+        },
+        {
+          "id": "verify-sort-applied",
+          "comment": "Verify sort is applied",
+          "command": "assertText",
+          "target": "css=.active-sort",
+          "value": "Price: Low to High"
+        },
+        {
+          "id": "store-first-price",
+          "comment": "Store first product price",
+          "command": "storeText",
+          "target": "css=.product-price:nth-child(1)",
+          "value": "firstPrice"
+        },
+        {
+          "id": "store-second-price",
+          "comment": "Store second product price",
+          "command": "storeText",
+          "target": "css=.product-price:nth-child(2)",
+          "value": "secondPrice"
+        },
+        {
+          "id": "verify-price-order",
+          "comment": "Verify prices are in ascending order",
+          "command": "assert",
+          "target": "javascript{Number(${firstPrice}.replace('$', '')) <= Number(${secondPrice}.replace('$', ''))}",
+          "value": "true"
+        }
+      ]
+    }
+  ],
+  "suites": [
+    {
+      "id": "search-filter-suite",
+      "name": "Search and Filter Test Suite",
+      "persistSession": false,
+      "parallel": false,
+      "timeout": 300,
+      "tests": ["search-by-keyword", "filter-by-category", "sort-by-price"]
+    }
+  ],
+  "urls": ["http://localhost:3000/"],
+  "plugins": []
+}
