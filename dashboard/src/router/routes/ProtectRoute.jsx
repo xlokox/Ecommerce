@@ -1,55 +1,55 @@
+// src/router/routes/ProtectRoute.jsx
 import React, { Suspense } from 'react';
 import { useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 
+/**
+ * ProtectRoute:
+ * 1. אם אין userInfo או userInfo.role => לא מחובר => /login
+ * 2. אם הנתיב דורש role מסוים ולא תואם => /unauthorized
+ * 3. בדיקת status/visibility
+ * 4. אם route.ability==='seller' ומשתמש לא seller => /unauthorized
+ * 5. אחרת => מציג children
+ */
 const ProtectRoute = ({ route, children }) => {
-  const { role, userInfo } = useSelector(state => state.auth);
+  const { userInfo } = useSelector(state => state.auth);
 
-  // 1. אם אין role => לא מחובר => מפנה ל-login
-  if (!role) {
+  // אם אין מידע על המשתמש או אין תפקיד => /login
+  if (!userInfo || !userInfo.role) {
     return <Navigate to="/login" replace />;
   }
 
-  // 2. אם הנתיב דורש role מסוים
+  // אם הנתיב דורש תפקיד מסוים
   if (route.role) {
-    // אם אין userInfo => לא ניתן לבדוק תפקיד => מפנים ל-login
-    if (!userInfo) {
-      return <Navigate to="/login" replace />;
-    }
-
-    // אם תפקיד המשתמש != תפקיד הנתיב
+    // אם התפקיד לא תואם => /unauthorized
     if (userInfo.role !== route.role) {
       return <Navigate to="/unauthorized" replace />;
     }
 
-    // 3. אם הנתיב דורש status מסוים
-    if (route.status) {
-      if (userInfo.status !== route.status) {
-        // מפנים ל-pending או deactive
-        return userInfo.status === 'pending'
-          ? <Navigate to="/seller/account-pending" replace />
-          : <Navigate to="/seller/account-deactive" replace />;
-      }
-    }
-    // 4. אם יש visibility => מערך של סטטוסים מותרים
-    else if (route.visibility) {
-      // אם הסטטוס הנוכחי לא נכלל ב-visibility
-      if (!route.visibility.includes(userInfo.status)) {
-        return <Navigate to="/seller/account-pending" replace />;
-      }
+    // בדיקת status
+    if (route.status && userInfo.status !== route.status) {
+      return userInfo.status === 'pending'
+        ? <Navigate to="/seller/account-pending" replace />
+        : <Navigate to="/seller/account-deactive" replace />;
     }
 
-    // אם הגענו לכאן => הכול תקין => מציגים את הקומפוננטה
-    return <Suspense fallback={null}>{children}</Suspense>;
+    // בדיקת visibility (מערך של סטטוסים)
+    if (route.visibility && !route.visibility.includes(userInfo.status)) {
+      return <Navigate to="/seller/account-pending" replace />;
+    }
   }
 
-  // 5. אם אין route.role => אולי יש route.ability
-  if (route.ability === 'seller') {
-    return <Suspense fallback={null}>{children}</Suspense>;
+  // אם אין route.role אך יש ability='seller', נבדוק שהתפקיד הוא seller
+  if (route.ability === 'seller' && userInfo.role !== 'seller') {
+    return <Navigate to="/unauthorized" replace />;
   }
 
-  // 6. ברירת מחדל => מציגים את הקומפוננטה
-  return <Suspense fallback={null}>{children}</Suspense>;
+  // ברירת מחדל => מציגים את children
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      {children}
+    </Suspense>
+  );
 };
 
 export default ProtectRoute;

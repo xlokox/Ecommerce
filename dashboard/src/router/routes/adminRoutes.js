@@ -1,5 +1,3 @@
-// src/router/routes/adminRoutes.js
-
 import { lazy } from "react";
 
 const AdminDashboard = lazy(() => import("../../views/admin/AdminDashboard"));
@@ -13,11 +11,6 @@ const SellerDetails = lazy(() => import("../../views/admin/SellerDetails"));
 const ChatSeller = lazy(() => import("../../views/admin/ChatSeller"));
 const OrderDetails = lazy(() => import("../../views/admin/OrderDetails"));
 
-/**
- * נתיבים המיועדים לתפקיד "admin".
- * שים לב שכל הנתיבים יחסיים ל-root שלנו.
- * לדוגמה, "/admin/dashboard" בפועל יהיה תחת "/" + "admin/dashboard".
- */
 export const adminRoutes = [
   {
     path: "admin/dashboard",
