@@ -58,16 +58,21 @@ const Categorys = () => {
                     transitionDuration={500}
                 >
                 {
-                    categorys.map((c, i) => <Link className='h-[185px] border block' key={i} to={`/products?category=${c.name}`}>
-                        <div className='w-full h-full relative p-3'>
-                        <img src={c.image} alt="" />
-                        <div className='absolute bottom-6 w-full mx-auto font-bold left-0 flex justify-center items-center'>
-                         <span className='py-[2px] px-6 bg-[#3330305d] text-white'>{c.name}</span>
-
-                        </div>
-                        </div>
-                        
-                    </Link> )
+                    categorys.map((c, i) => (
+                        <Link
+                            data-cy={`category-link-${i}`}
+                            className='h-[185px] border block'
+                            key={i}
+                            to={`/products?category=${c.name}`}
+                        >
+                            <div className='w-full h-full relative p-3'>
+                                <img data-cy={`category-image-${i}`} src={c.image} alt={c.name} />
+                                <div className='absolute bottom-6 w-full mx-auto font-bold left-0 flex justify-center items-center'>
+                                    <span className='py-[2px] px-6 bg-[#3330305d] text-white'>{c.name}</span>
+                                </div>
+                            </div>
+                        </Link>
+                    ))
                 }
                 </Carousel>        
          </div>
