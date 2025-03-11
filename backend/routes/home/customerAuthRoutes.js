@@ -1,9 +1,11 @@
-import customerAuthController from '../../controllers/home/customerAuthController.js';
 import express from 'express';
+import customerAuthController from '../../controllers/home/customerAuthController.js';
 
 const router = express.Router();
 
+// רישום לקוח
 router.post('/register', async (req, res) => {
+  console.log("📌 Register Route Hit");
   try {
     await customerAuthController.customer_register(req, res);
   } catch (error) {
@@ -12,7 +14,9 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// התחברות לקוח
 router.post('/login', async (req, res) => {
+  console.log("📌 Login Route Hit");
   try {
     await customerAuthController.customer_login(req, res);
   } catch (error) {
@@ -21,7 +25,9 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// התנתקות לקוח
 router.get('/logout', async (req, res) => {
+  console.log("📌 Logout Route Hit");
   try {
     await customerAuthController.customer_logout(req, res);
   } catch (error) {
@@ -31,4 +37,3 @@ router.get('/logout', async (req, res) => {
 });
 
 export default router;
-// Compare this snippet from Ecommerce/backend/routes/authRoutes.js:

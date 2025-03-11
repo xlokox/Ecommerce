@@ -8,6 +8,7 @@ import { Types } from 'mongoose';
 const { ObjectId } = Types;
 
 class HomeControllers {
+  // פונקציה פנימית לעיצוב המוצרים למערך דו-ממדי (3 מוצרים בשורה)
   formateProduct = (products) => {
     const productArray = [];
     let i = 0;
@@ -26,25 +27,36 @@ class HomeControllers {
     return productArray;
   };
 
+  // שליפת כל הקטגוריות
   get_categorys = async (req, res) => {
     try {
       const categorys = await categoryModel.find({});
-      responseReturn(res, 200, { categorys });
+      return responseReturn(res, 200, { categorys });
     } catch (error) {
       console.log(error.message);
+      return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
 
+  // שליפת מוצרים (עד 12 אחרונים) וכן חלוקה ל-latest, topRated, discount
   get_products = async (req, res) => {
     try {
+      // מוצרים אחרונים (עד 12)
       const products = await productModel.find({}).limit(12).sort({ createdAt: -1 });
+
+      // Latest product: 9 מוצרים אחרונים, מחולקים ל-3-שורות
       const allProduct1 = await productModel.find({}).limit(9).sort({ createdAt: -1 });
       const latest_product = this.formateProduct(allProduct1);
+
+      // Top rated product: 9 מוצרים עם דירוג גבוה, מחולקים ל-3-שורות
       const allProduct2 = await productModel.find({}).limit(9).sort({ rating: -1 });
       const topRated_product = this.formateProduct(allProduct2);
+
+      // Discount product: 9 מוצרים עם הנחה, מחולקים ל-3-שורות
       const allProduct3 = await productModel.find({}).limit(9).sort({ discount: -1 });
       const discount_product = this.formateProduct(allProduct3);
-      responseReturn(res, 200, {
+
+      return responseReturn(res, 200, {
         products,
         latest_product,
         topRated_product,
@@ -52,9 +64,11 @@ class HomeControllers {
       });
     } catch (error) {
       console.log(error.message);
+      return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
 
+  // שליפת טווח מחירים ומוצרים אחרונים
   price_range_product = async (req, res) => {
     try {
       const priceRange = { low: 0, high: 0 };
@@ -65,12 +79,14 @@ class HomeControllers {
         priceRange.high = getForPrice[getForPrice.length - 1].price;
         priceRange.low = getForPrice[0].price;
       }
-      responseReturn(res, 200, { latest_product, priceRange });
+      return responseReturn(res, 200, { latest_product, priceRange });
     } catch (error) {
       console.log(error.message);
+      return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
 
+  // שליפת מוצרים לפי קריטריונים (קטגוריה, דירוג, מחיר, חיפוש)
   query_products = async (req, res) => {
     const parPage = 12;
     req.query.parPage = parPage;
@@ -92,38 +108,49 @@ class HomeControllers {
         .skip()
         .limit()
         .getProducts();
-      responseReturn(res, 200, { products: result, totalProduct, parPage });
+      return responseReturn(res, 200, { products: result, totalProduct, parPage });
     } catch (error) {
       console.log(error.message);
+      return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
 
+  // שליפת פרטי מוצר בודד יחד עם מוצרים קשורים ומוצרים נוספים מאותו מוכר
   product_details = async (req, res) => {
     const { slug } = req.params;
     try {
       const product = await productModel.findOne({ slug });
-      const relatedProducts = await productModel.find({
-        $and: [
-          { _id: { $ne: product.id } },
-          { category: { $eq: product.category } }
-        ]
-      }).limit(12);
-      const moreProducts = await productModel.find({
-        $and: [
-          { _id: { $ne: product.id } },
-          { sellerId: { $eq: product.sellerId } }
-        ]
-      }).limit(3);
-      responseReturn(res, 200, {
+      if (!product) {
+        return responseReturn(res, 404, { error: "Product not found" });
+      }
+      const relatedProducts = await productModel
+        .find({
+          $and: [
+            { _id: { $ne: product._id } },
+            { category: { $eq: product.category } }
+          ]
+        })
+        .limit(12);
+      const moreProducts = await productModel
+        .find({
+          $and: [
+            { _id: { $ne: product._id } },
+            { sellerId: { $eq: product.sellerId } }
+          ]
+        })
+        .limit(3);
+      return responseReturn(res, 200, {
         product,
         relatedProducts,
         moreProducts
       });
     } catch (error) {
       console.log(error.message);
+      return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
 
+  // הוספת ביקורת למוצר
   submit_review = async (req, res) => {
     const { productId, rating, review, name } = req.body;
     try {
@@ -132,7 +159,7 @@ class HomeControllers {
         name,
         rating,
         review,
-        date: moment(Date.now()).format('LL')
+        date: moment(Date.now()).format("LL")
       });
       let rat = 0;
       const reviews = await reviewModel.find({ productId });
@@ -144,16 +171,18 @@ class HomeControllers {
         productRating = (rat / reviews.length).toFixed(1);
       }
       await productModel.findByIdAndUpdate(productId, { rating: productRating });
-      responseReturn(res, 201, { message: "Review Added Successfully" });
+      return responseReturn(res, 201, { message: "Review Added Successfully" });
     } catch (error) {
       console.log(error.message);
+      return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
 
+  // שליפת ביקורות למוצר
   get_reviews = async (req, res) => {
     const { productId } = req.params;
     let { pageNo } = req.query;
-    pageNo = parseInt(pageNo);
+    pageNo = parseInt(pageNo) || 1;
     const limit = 5;
     const skipPage = limit * (pageNo - 1);
     try {
@@ -188,17 +217,35 @@ class HomeControllers {
         }
       }
       const getAll = await reviewModel.find({ productId });
-      const reviews = await reviewModel.find({ productId })
+      const reviews = await reviewModel
+        .find({ productId })
         .skip(skipPage)
         .limit(limit)
         .sort({ createdAt: -1 });
-      responseReturn(res, 200, {
+      return responseReturn(res, 200, {
         reviews,
         totalReview: getAll.length,
         rating_review
       });
     } catch (error) {
       console.log(error.message);
+      return responseReturn(res, 500, { error: "Internal Server Error" });
+    }
+  };
+
+  // **פונקציה חדשה**: שליפת מוצרים מקטגוריות מובילות (Top Category)
+  get_top_category_products = async (req, res) => {
+    try {
+      // הגדרה קבועה של קטגוריות שנחשבות "טופ"
+      const topCategories = ["Shoes", "Watches", "Phones"];
+      const products = await productModel
+        .find({ category: { $in: topCategories } })
+        .limit(12)
+        .sort({ createdAt: -1 });
+      return responseReturn(res, 200, { products });
+    } catch (error) {
+      console.log(error.message);
+      return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
 }

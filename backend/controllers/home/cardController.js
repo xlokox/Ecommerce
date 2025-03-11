@@ -5,6 +5,7 @@ const { ObjectId } = Types;
 import wishlistModel from '../../models/wishlistModel.js';
 
 class CardController {
+  // הוספת מוצר לסל
   add_to_card = async (req, res) => {
     const { userId, productId, quantity } = req.body;
     try {
@@ -15,20 +16,22 @@ class CardController {
         ]
       });
       if (product) {
-        responseReturn(res, 404, { error: "Product Already Added To Card" });
+        return responseReturn(res, 404, { error: "Product Already Added To Card" });
       } else {
         const productCreated = await cardModel.create({
           userId,
           productId,
           quantity
         });
-        responseReturn(res, 201, { message: "Added To Card Successfully", product: productCreated });
+        return responseReturn(res, 201, { message: "Added To Card Successfully", product: productCreated });
       }
     } catch (error) {
       console.log(error.message);
+      return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
 
+  // שליפת מוצרים בסל לפי משתמש
   get_card_products = async (req, res) => {
     const co = 5;
     const { userId } = req.params;
@@ -48,13 +51,16 @@ class CardController {
           }
         }
       ]);
+      
       let buy_product_item = 0;
       let calculatePrice = 0;
       let card_product_count = 0;
+      
       const outOfStockProduct = card_products.filter(p => p.products[0].stock < p.quantity);
       for (let i = 0; i < outOfStockProduct.length; i++) {
         card_product_count += outOfStockProduct[i].quantity;
       }
+      
       const stockProduct = card_products.filter(p => p.products[0].stock >= p.quantity);
       for (let i = 0; i < stockProduct.length; i++) {
         const { quantity } = stockProduct[i];
@@ -67,10 +73,11 @@ class CardController {
           calculatePrice += quantity * price;
         }
       }
+      
       let p = [];
       let unique = [...new Set(stockProduct.map(p => p.products[0].sellerId.toString()))];
       for (let i = 0; i < unique.length; i++) {
-        let price = 0;
+        let sellerPrice = 0;
         for (let j = 0; j < stockProduct.length; j++) {
           const tempProduct = stockProduct[j].products[0];
           if (unique[i] === tempProduct.sellerId.toString()) {
@@ -80,12 +87,13 @@ class CardController {
             } else {
               pri = tempProduct.price;
             }
+            // הפחתה בהתאם ל־co (למשל, הנחה נוספת)
             pri = pri - Math.floor((pri * co) / 100);
-            price += pri * stockProduct[j].quantity;
+            sellerPrice += pri * stockProduct[j].quantity;
             p[i] = {
               sellerId: unique[i],
               shopName: tempProduct.shopName,
-              price,
+              price: sellerPrice,
               products: p[i]
                 ? [
                     ...p[i].products,
@@ -106,7 +114,8 @@ class CardController {
           }
         }
       }
-      responseReturn(res, 200, {
+      
+      return responseReturn(res, 200, {
         card_products: p,
         price: calculatePrice,
         card_product_count,
@@ -116,75 +125,88 @@ class CardController {
       });
     } catch (error) {
       console.log(error.message);
+      return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
 
+  // מחיקת מוצר מהסל
   delete_card_products = async (req, res) => {
     const { card_id } = req.params;
     try {
       await cardModel.findByIdAndDelete(card_id);
-      responseReturn(res, 200, { message: "Product Remove Successfully" });
+      return responseReturn(res, 200, { message: "Product Remove Successfully" });
     } catch (error) {
       console.log(error.message);
+      return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
 
+  // העלאת כמות מוצר
   quantity_inc = async (req, res) => {
     const { card_id } = req.params;
     try {
       const product = await cardModel.findById(card_id);
       const { quantity } = product;
       await cardModel.findByIdAndUpdate(card_id, { quantity: quantity + 1 });
-      responseReturn(res, 200, { message: "Qty Updated" });
+      return responseReturn(res, 200, { message: "Qty Updated" });
     } catch (error) {
       console.log(error.message);
+      return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
 
+  // הפחתת כמות מוצר
   quantity_dec = async (req, res) => {
     const { card_id } = req.params;
     try {
       const product = await cardModel.findById(card_id);
       const { quantity } = product;
       await cardModel.findByIdAndUpdate(card_id, { quantity: quantity - 1 });
-      responseReturn(res, 200, { message: "Qty Updated" });
+      return responseReturn(res, 200, { message: "Qty Updated" });
     } catch (error) {
       console.log(error.message);
+      return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
 
+  // הוספת מוצר לווישליסט
   add_wishlist = async (req, res) => {
     const { slug } = req.body;
     try {
       const product = await wishlistModel.findOne({ slug });
       if (product) {
-        responseReturn(res, 404, { error: 'Product Is Already In Wishlist' });
+        return responseReturn(res, 404, { error: 'Product Is Already In Wishlist' });
       } else {
         await wishlistModel.create(req.body);
-        responseReturn(res, 201, { message: 'Product Add to Wishlist Success' });
+        return responseReturn(res, 201, { message: 'Product Add to Wishlist Success' });
       }
     } catch (error) {
       console.log(error.message);
+      return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
 
+  // שליפת מוצרים מהווישליסט של משתמש
   get_wishlist = async (req, res) => {
     const { userId } = req.params;
     try {
       const wishlists = await wishlistModel.find({ userId });
-      responseReturn(res, 200, { wishlistCount: wishlists.length, wishlists });
+      return responseReturn(res, 200, { wishlistCount: wishlists.length, wishlists });
     } catch (error) {
       console.log(error.message);
+      return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
 
+  // הסרת מוצר מהווישליסט
   remove_wishlist = async (req, res) => {
     const { wishlistId } = req.params;
     try {
       await wishlistModel.findByIdAndDelete(wishlistId);
-      responseReturn(res, 200, { message: 'Wishlist Product Remove', wishlistId });
+      return responseReturn(res, 200, { message: 'Wishlist Product Remove', wishlistId });
     } catch (error) {
       console.log(error.message);
+      return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
 }

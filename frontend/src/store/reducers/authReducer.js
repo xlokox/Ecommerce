@@ -1,94 +1,118 @@
+// src/store/reducers/authReducer.js
+
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import api from "../../api/api";
-import { jwtDecode } from "jwt-decode"; // שימוש בייבוא בשם
+import { jwtDecode } from "jwt-decode";
 
-// הרשמה ללקוח
-export const customer_register = createAsyncThunk(
-  'auth/customer_register',
-  async (info, { rejectWithValue, fulfillWithValue }) => {
-    try {
-      // Base URL כבר מכיל "/api", לכן הנתיב היחסי הוא "/customer-register"
-      const { data } = await api.post('/customer-register', info);
-      localStorage.setItem('customerToken', data.token);
-      return fulfillWithValue(data);
-    } catch (error) {
-      return rejectWithValue(error?.response?.data);
-    }
-  }
-);
-
-// התחברות ללקוח
-export const customer_login = createAsyncThunk(
-  'auth/customer_login',
-  async (info, { rejectWithValue, fulfillWithValue }) => {
-    try {
-      // יש להסיר את "/api" מהנתיב כאן, כדי לא לקבל "/api/api/customer-login"
-      const { data } = await api.post('/customer-login', info);
-      localStorage.setItem('customerToken', data.token);
-      return fulfillWithValue(data);
-    } catch (error) {
-      return rejectWithValue(error?.response?.data);
-    }
-  }
-);
-
-// פונקציה לפענוח הטוקן
+// פונקציה קטנה לפענוח הטוקן
 const decodeToken = (token) => {
-  if (token) {
-    return jwtDecode(token);
+  try {
+    return token ? jwtDecode(token) : null;
+  } catch (error) {
+    console.error("Token Decoding Error:", error);
+    return null;
   }
-  return '';
 };
 
+// Thunk לרישום לקוח
+export const customer_register = createAsyncThunk(
+  "auth/customer_register",
+  async (info, { rejectWithValue, fulfillWithValue }) => {
+    try {
+      // לדוגמה: אם בשרת הנתיב הוא POST /api/customer/register
+      const { data } = await api.post("/customer/register", info);
+
+      // אם חזר טוקן, נשמור אותו ב-LocalStorage
+      if (data?.token) {
+        localStorage.setItem("customerToken", data.token);
+      }
+      return fulfillWithValue(data);
+    } catch (error) {
+      return rejectWithValue(error?.response?.data || { error: "Registration failed" });
+    }
+  }
+);
+
+// Thunk להתחברות לקוח
+export const customer_login = createAsyncThunk(
+  "auth/customer_login",
+  async (info, { rejectWithValue, fulfillWithValue }) => {
+    try {
+      // לדוגמה: אם בשרת הנתיב הוא POST /api/customer/login
+      const { data } = await api.post("/customer/login", info);
+
+      // אם חזר טוקן, נשמור אותו ב-LocalStorage
+      if (data?.token) {
+        localStorage.setItem("customerToken", data.token);
+      }
+      return fulfillWithValue(data);
+    } catch (error) {
+      return rejectWithValue(error?.response?.data || { error: "Login failed" });
+    }
+  }
+);
+
+// מצב התחלתי
+const initialState = {
+  loader: false,
+  userInfo: decodeToken(localStorage.getItem("customerToken")), 
+  errorMessage: "",
+  successMessage: "",
+};
+
+// Slice ל־auth
 export const authReducer = createSlice({
-  name: 'auth',
-  initialState: {
-    loader: false,
-    userInfo: decodeToken(localStorage.getItem('customerToken')),
-    errorMessage: '',
-    successMessage: '',
-  },
+  name: "auth",
+  initialState,
   reducers: {
     messageClear: (state) => {
       state.errorMessage = "";
       state.successMessage = "";
     },
     user_reset: (state) => {
-      state.userInfo = "";
-    }
+      // מנקה את המשתמש + הטוקן
+      state.userInfo = null;
+      localStorage.removeItem("customerToken");
+    },
   },
   extraReducers: (builder) => {
     builder
-      // Handle customer_register
+      // טיפול ברישום
       .addCase(customer_register.pending, (state) => {
         state.loader = true;
+        state.errorMessage = "";
+        state.successMessage = "";
       })
       .addCase(customer_register.rejected, (state, { payload }) => {
-        state.errorMessage = payload?.error || payload || "Registration failed";
+        state.errorMessage = payload?.error || "Registration failed";
         state.loader = false;
       })
       .addCase(customer_register.fulfilled, (state, { payload }) => {
-        const userInfo = decodeToken(payload.token);
-        state.successMessage = payload.message;
+        state.successMessage = payload.message || "Registration successful";
         state.loader = false;
-        state.userInfo = userInfo;
+        state.userInfo = decodeToken(payload.token);
       })
-      // Handle customer_login
+
+      // טיפול בהתחברות
       .addCase(customer_login.pending, (state) => {
         state.loader = true;
+        state.errorMessage = "";
+        state.successMessage = "";
       })
       .addCase(customer_login.rejected, (state, { payload }) => {
-        state.errorMessage = payload?.error || payload || "Login failed";
+        state.errorMessage = payload?.error || "Login failed";
         state.loader = false;
       })
       .addCase(customer_login.fulfilled, (state, { payload }) => {
-        const userInfo = decodeToken(payload.token);
-        state.successMessage = payload.message;
+        state.successMessage = payload.message || "Login successful";
         state.loader = false;
-        state.userInfo = userInfo;
+        state.userInfo = decodeToken(payload.token);
       });
-  }
+  },
 });
 
+// מייצאים את הפעולות
 export const { messageClear, user_reset } = authReducer.actions;
+
+// מייצאים את הרידוסר כברירת מחדל
 export default authReducer.reducer;

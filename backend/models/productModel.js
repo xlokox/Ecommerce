@@ -1,7 +1,6 @@
 import { Schema, model } from "mongoose";
 
 const productSchema = new Schema({
-  sellerId: { type: Schema.ObjectId, required: true },
   name: { type: String, required: true },
   slug: { type: String, required: true },
   category: { type: String, required: true },

@@ -7,7 +7,7 @@ import { createToken } from '../utiles/tokenCreate.js';
 import cloudinary from 'cloudinary';
 import formidable from 'formidable';
 
-// הגדרות Cloudinary (אותם שמות משתנים מה-.env)
+// הגדרות Cloudinary – ודא שהמשתנים בסביבת העבודה (.env) מוגדרים
 cloudinary.v2.config({
   cloud_name: process.env.cloud_name,
   api_key: process.env.api_key,
@@ -16,32 +16,31 @@ cloudinary.v2.config({
 });
 
 class AuthControllers {
-  // כניסת אדמין
-  admin_login = async (req, res) => {
+  // 1️⃣ כניסת אדמין
+  async admin_login(req, res) {
     const { email, password } = req.body;
     try {
       const admin = await adminModel.findOne({ email }).select('+password');
-      if (admin) {
-        const match = await bcrypt.compare(password, admin.password);
-        if (match) {
-          const token = createToken({ id: admin.id, role: admin.role });
-          res.cookie('accessToken', token, {
-            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          });
-          responseReturn(res, 200, { token, message: "Login Success" });
-        } else {
-          responseReturn(res, 404, { error: "Password Wrong" });
-        }
-      } else {
-        responseReturn(res, 404, { error: "Email not Found" });
+      if (!admin) {
+        return responseReturn(res, 404, { error: "Admin Email not Found" });
       }
+      const match = await bcrypt.compare(password, admin.password);
+      if (!match) {
+        return responseReturn(res, 404, { error: "Password Wrong" });
+      }
+      const token = createToken({ id: admin.id, role: admin.role });
+      res.cookie('accessToken', token, {
+        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        httpOnly: true
+      });
+      return responseReturn(res, 200, { token, message: "Login Success" });
     } catch (error) {
-      responseReturn(res, 500, { error: error.message });
+      return responseReturn(res, 500, { error: error.message });
     }
-  };
+  }
 
-  // כניסת מוכר (מכונה פה customer_login)
-  customer_login = async (req, res) => {
+  // 2️⃣ כניסת מוכר (נקראת כאן customer_login)
+  async customer_login(req, res) {
     const { email, password } = req.body;
     try {
       const seller = await sellerModel.findOne({ email }).select('+password');
@@ -55,15 +54,16 @@ class AuthControllers {
       const token = createToken({ id: seller.id, role: seller.role });
       res.cookie('accessToken', token, {
         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        httpOnly: true
       });
-      responseReturn(res, 200, { token, message: "Login Success" });
+      return responseReturn(res, 200, { token, message: "Login Success" });
     } catch (error) {
-      responseReturn(res, 500, { error: error.message });
+      return responseReturn(res, 500, { error: error.message });
     }
-  };
+  }
 
-  // רישום מוכר (מכונה פה customer_register)
-  customer_register = async (req, res) => {
+  // 3️⃣ רישום מוכר (customer_register)
+  async customer_register(req, res) {
     const { email, name, password } = req.body;
     try {
       const getUser = await sellerModel.findOne({ email });
@@ -78,37 +78,36 @@ class AuthControllers {
         method: 'manual',
         shopInfo: {},
       });
-      // יצירת צ'אט עבור המוכר
       await sellerCustomerModel.create({ myId: seller.id });
-
       const token = createToken({ id: seller.id, role: seller.role });
       res.cookie('accessToken', token, {
         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        httpOnly: true
       });
-      responseReturn(res, 201, { token, message: 'Register Success' });
+      return responseReturn(res, 201, { token, message: 'Register Success' });
     } catch (error) {
-      responseReturn(res, 500, { error: 'Internal Server Error' });
+      return responseReturn(res, 500, { error: 'Internal Server Error' });
     }
-  };
+  }
 
-  // קבלת מידע משתמש (אדמין/מוכר)
-  getUser = async (req, res) => {
+  // 4️⃣ קבלת מידע משתמש (אדמין או מוכר)
+  async getUser(req, res) {
     const { id, role } = req;
     try {
       if (role === 'admin') {
         const user = await adminModel.findById(id);
-        responseReturn(res, 200, { userInfo: user });
+        return responseReturn(res, 200, { userInfo: user });
       } else {
         const seller = await sellerModel.findById(id);
-        responseReturn(res, 200, { userInfo: seller });
+        return responseReturn(res, 200, { userInfo: seller });
       }
     } catch (error) {
-      responseReturn(res, 500, { error: 'Internal Server Error' });
+      return responseReturn(res, 500, { error: 'Internal Server Error' });
     }
-  };
+  }
 
-  // העלאת תמונת פרופיל
-  profile_image_upload = async (req, res) => {
+  // 5️⃣ העלאת תמונת פרופיל (למוכר)
+  async profile_image_upload(req, res) {
     const { id } = req;
     const form = formidable({ multiples: true });
     form.parse(req, async (err, _, files) => {
@@ -116,23 +115,25 @@ class AuthControllers {
         return responseReturn(res, 400, { error: 'Form parse error' });
       }
       const { image } = files;
+      if (!image) {
+        return responseReturn(res, 400, { error: 'No image file provided' });
+      }
       try {
         const result = await cloudinary.v2.uploader.upload(image.filepath, { folder: 'profile' });
-        if (result) {
-          await sellerModel.findByIdAndUpdate(id, { image: result.url });
-          const userInfo = await sellerModel.findById(id);
-          responseReturn(res, 201, { message: 'Profile Image Upload Successfully', userInfo });
-        } else {
-          responseReturn(res, 404, { error: 'Image Upload Failed' });
+        if (!result) {
+          return responseReturn(res, 404, { error: 'Image Upload Failed' });
         }
+        await sellerModel.findByIdAndUpdate(id, { image: result.url });
+        const userInfo = await sellerModel.findById(id);
+        return responseReturn(res, 201, { message: 'Profile Image Upload Successfully', userInfo });
       } catch (error) {
-        responseReturn(res, 500, { error: error.message });
+        return responseReturn(res, 500, { error: error.message });
       }
     });
-  };
+  }
 
-  // הוספת מידע לחנות (כתובת וכו')
-  profile_info_add = async (req, res) => {
+  // 6️⃣ הוספת מידע לחנות (כתובת וכו')
+  async profile_info_add(req, res) {
     const { division, district, shopName, sub_district } = req.body;
     const { id } = req;
     try {
@@ -140,42 +141,44 @@ class AuthControllers {
         shopInfo: { shopName, division, district, sub_district }
       });
       const userInfo = await sellerModel.findById(id);
-      responseReturn(res, 201, { message: 'Profile info Add Successfully', userInfo });
+      return responseReturn(res, 201, { message: 'Profile info Add Successfully', userInfo });
     } catch (error) {
-      responseReturn(res, 500, { error: error.message });
+      return responseReturn(res, 500, { error: error.message });
     }
-  };
+  }
 
-  // יציאה (מחיקת העוגייה)
-  logout = async (req, res) => {
+  // 7️⃣ יציאה (מחיקת העוגייה)
+  async logout(req, res) {
     try {
       res.cookie('accessToken', null, {
         expires: new Date(Date.now()),
         httpOnly: true
       });
-      responseReturn(res, 200, { message: 'logout Success' });
+      return responseReturn(res, 200, { message: 'logout Success' });
     } catch (error) {
-      responseReturn(res, 500, { error: error.message });
+      return responseReturn(res, 500, { error: error.message });
     }
-  };
+  }
 
-  // שינוי סיסמה
-  change_password = async (req, res) => {
+  // 8️⃣ שינוי סיסמה
+  async change_password(req, res) {
     const { email, old_password, new_password } = req.body;
     try {
       const user = await sellerModel.findOne({ email }).select('+password');
-      if (!user) return res.status(404).json({ message: 'User not found' });
-
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
       const isMatch = await bcrypt.compare(old_password, user.password);
-      if (!isMatch) return res.status(400).json({ message: 'Incorrect old password' });
-
+      if (!isMatch) {
+        return res.status(400).json({ message: 'Incorrect old password' });
+      }
       user.password = await bcrypt.hash(new_password, 10);
       await user.save();
-      res.json({ message: 'Password changed successfully' });
+      return res.json({ message: 'Password changed successfully' });
     } catch (error) {
-      res.status(500).json({ message: 'Server Error' });
+      return res.status(500).json({ message: 'Server Error' });
     }
-  };
+  }
 }
 
 export default new AuthControllers();

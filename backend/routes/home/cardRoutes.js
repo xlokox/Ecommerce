@@ -1,4 +1,3 @@
-// routes/home/cardRoutes.js
 import express from 'express';
 import cardController from '../../controllers/home/cardController.js';
 import { authMiddleware } from '../../middlewares/authMiddleware.js';
@@ -15,4 +14,3 @@ router.get('/get-wishlist/:userId', authMiddleware, cardController.get_wishlist)
 router.delete('/remove-wishlist/:wishlistId', authMiddleware, cardController.remove_wishlist);
 
 export default router;
-// routes/home/cardRoutes.js
