@@ -24,7 +24,6 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
 // התנתקות לקוח
 router.get('/logout', async (req, res) => {
   console.log("📌 Logout Route Hit");

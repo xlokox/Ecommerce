@@ -5,8 +5,16 @@ import bcrypt from 'bcrypt';
 import sellerCustomerModel from '../../models/chat/sellerCustomerModel.js';
 import { createToken } from '../../utiles/tokenCreate.js';
 
+
+
 class CustomerAuthController {
-  // 1️⃣ רישום לקוח
+  constructor() {
+    console.log("🔍 פונקציות ב-customerAuthController:");
+    console.log("customer_register:", typeof this.customer_register);
+    console.log("customer_login:", typeof this.customer_login);
+    console.log("customer_logout:", typeof this.customer_logout);
+  }
+
   async customer_register(req, res) {
     try {
       const { name, email, password } = req.body;
@@ -102,13 +110,18 @@ class CustomerAuthController {
   // 3️⃣ התנתקות
   async customer_logout(req, res) {
     try {
-      res.clearCookie('customerToken', { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
-      return responseReturn(res, 200, { message: 'Logout successful' });
+        res.clearCookie('customerToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: "None" // ✅ חובה אם משתמשים ב־CORS
+        })
+        return responseReturn(res, 200, { message: 'Logout successful' })
     } catch (error) {
-      console.error('🚨 Logout Error:', error);
-      return responseReturn(res, 500, { error: 'Internal Server Error' });
+        console.error('🚨 Logout Error:', error)
+        return responseReturn(res, 500, { error: 'Internal Server Error' })
     }
-  }
+}
+
 }
 
 export default new CustomerAuthController();

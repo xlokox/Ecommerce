@@ -7,16 +7,16 @@ import { createToken } from '../utiles/tokenCreate.js';
 import cloudinary from 'cloudinary';
 import formidable from 'formidable';
 
-// הגדרות Cloudinary – ודא שהמשתנים בסביבת העבודה (.env) מוגדרים
+// הגדרות Cloudinary
 cloudinary.v2.config({
-  cloud_name: process.env.cloud_name,
-  api_key: process.env.api_key,
-  api_secret: process.env.api_secret,
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
   secure: true,
 });
 
 class AuthControllers {
-  // 1️⃣ כניסת אדמין
+  // 🔹 כניסת אדמין
   async admin_login(req, res) {
     const { email, password } = req.body;
     try {
@@ -26,12 +26,12 @@ class AuthControllers {
       }
       const match = await bcrypt.compare(password, admin.password);
       if (!match) {
-        return responseReturn(res, 404, { error: "Password Wrong" });
+        return responseReturn(res, 401, { error: "Incorrect Password" });
       }
       const token = createToken({ id: admin.id, role: admin.role });
       res.cookie('accessToken', token, {
         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        httpOnly: true
+        httpOnly: true,
       });
       return responseReturn(res, 200, { token, message: "Login Success" });
     } catch (error) {
@@ -39,8 +39,8 @@ class AuthControllers {
     }
   }
 
-  // 2️⃣ כניסת מוכר (נקראת כאן customer_login)
-  async customer_login(req, res) {
+  // 🔹 כניסת מוכר
+  async seller_login(req, res) {
     const { email, password } = req.body;
     try {
       const seller = await sellerModel.findOne({ email }).select('+password');
@@ -49,12 +49,12 @@ class AuthControllers {
       }
       const match = await bcrypt.compare(password, seller.password);
       if (!match) {
-        return responseReturn(res, 404, { error: "Password Wrong" });
+        return responseReturn(res, 401, { error: "Incorrect Password" });
       }
       const token = createToken({ id: seller.id, role: seller.role });
       res.cookie('accessToken', token, {
         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        httpOnly: true
+        httpOnly: true,
       });
       return responseReturn(res, 200, { token, message: "Login Success" });
     } catch (error) {
@@ -62,19 +62,19 @@ class AuthControllers {
     }
   }
 
-  // 3️⃣ רישום מוכר (customer_register)
-  async customer_register(req, res) {
+  // 🔹 רישום מוכר
+  async seller_register(req, res) {
     const { email, name, password } = req.body;
     try {
       const getUser = await sellerModel.findOne({ email });
       if (getUser) {
-        return responseReturn(res, 404, { error: 'Email Already Exist' });
+        return responseReturn(res, 400, { error: 'Email Already Exists' });
       }
-      const hashed = await bcrypt.hash(password, 10);
+      const hashedPassword = await bcrypt.hash(password, 10);
       const seller = await sellerModel.create({
         name,
         email,
-        password: hashed,
+        password: hashedPassword,
         method: 'manual',
         shopInfo: {},
       });
@@ -82,7 +82,7 @@ class AuthControllers {
       const token = createToken({ id: seller.id, role: seller.role });
       res.cookie('accessToken', token, {
         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        httpOnly: true
+        httpOnly: true,
       });
       return responseReturn(res, 201, { token, message: 'Register Success' });
     } catch (error) {
@@ -90,7 +90,7 @@ class AuthControllers {
     }
   }
 
-  // 4️⃣ קבלת מידע משתמש (אדמין או מוכר)
+  // 🔹 קבלת מידע משתמש
   async getUser(req, res) {
     const { id, role } = req;
     try {
@@ -106,10 +106,11 @@ class AuthControllers {
     }
   }
 
-  // 5️⃣ העלאת תמונת פרופיל (למוכר)
+  // 🔹 העלאת תמונת פרופיל
   async profile_image_upload(req, res) {
     const { id } = req;
     const form = formidable({ multiples: true });
+
     form.parse(req, async (err, _, files) => {
       if (err) {
         return responseReturn(res, 400, { error: 'Form parse error' });
@@ -120,47 +121,34 @@ class AuthControllers {
       }
       try {
         const result = await cloudinary.v2.uploader.upload(image.filepath, { folder: 'profile' });
-        if (!result) {
-          return responseReturn(res, 404, { error: 'Image Upload Failed' });
-        }
         await sellerModel.findByIdAndUpdate(id, { image: result.url });
         const userInfo = await sellerModel.findById(id);
-        return responseReturn(res, 201, { message: 'Profile Image Upload Successfully', userInfo });
+        return responseReturn(res, 201, { message: 'Profile Image Uploaded', userInfo });
       } catch (error) {
         return responseReturn(res, 500, { error: error.message });
       }
     });
   }
 
-  // 6️⃣ הוספת מידע לחנות (כתובת וכו')
+  // 🔹 הוספת מידע לפרופיל
   async profile_info_add(req, res) {
-    const { division, district, shopName, sub_district } = req.body;
     const { id } = req;
+    const { fullName, phoneNumber } = req.body;
+
+    if (!fullName || !phoneNumber) {
+      return responseReturn(res, 400, { error: 'All fields are required' });
+    }
+
     try {
-      await sellerModel.findByIdAndUpdate(id, {
-        shopInfo: { shopName, division, district, sub_district }
-      });
+      await sellerModel.findByIdAndUpdate(id, { fullName, phoneNumber });
       const userInfo = await sellerModel.findById(id);
-      return responseReturn(res, 201, { message: 'Profile info Add Successfully', userInfo });
+      return responseReturn(res, 201, { message: 'Profile Info Updated', userInfo });
     } catch (error) {
       return responseReturn(res, 500, { error: error.message });
     }
   }
 
-  // 7️⃣ יציאה (מחיקת העוגייה)
-  async logout(req, res) {
-    try {
-      res.cookie('accessToken', null, {
-        expires: new Date(Date.now()),
-        httpOnly: true
-      });
-      return responseReturn(res, 200, { message: 'logout Success' });
-    } catch (error) {
-      return responseReturn(res, 500, { error: error.message });
-    }
-  }
-
-  // 8️⃣ שינוי סיסמה
+  // 🔹 שינוי סיסמה
   async change_password(req, res) {
     const { email, old_password, new_password } = req.body;
     try {
@@ -177,6 +165,19 @@ class AuthControllers {
       return res.json({ message: 'Password changed successfully' });
     } catch (error) {
       return res.status(500).json({ message: 'Server Error' });
+    }
+  }
+
+  // 🔹 יציאה (Logout)
+  async logout(req, res) {
+    try {
+      res.cookie('accessToken', '', {
+        expires: new Date(0),
+        httpOnly: true,
+      });
+      return responseReturn(res, 200, { message: 'Logout Success' });
+    } catch (error) {
+      return responseReturn(res, 500, { error: error.message });
     }
   }
 }

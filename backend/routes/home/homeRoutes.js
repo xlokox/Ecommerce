@@ -11,7 +11,6 @@ router.get('/query-products', homeControllers.query_products);
 router.get('/product-details/:slug', homeControllers.product_details);
 router.post('/customer/submit-review', homeControllers.submit_review);
 router.get('/customer/get-reviews/:productId', homeControllers.get_reviews);
-
 // Endpoint חדש לשליפת מוצרים מקטגוריות מובילות
 router.get('/get-top-category-products', homeControllers.get_top_category_products);
 

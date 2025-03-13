@@ -23,9 +23,6 @@ console.log('cloud_name:', process.env.cloud_name);
 console.log('api_key:', process.env.api_key);
 console.log('api_secret:', process.env.api_secret);
 
-// במידה ויש לך לוגים/קריאות ל־ChatController:
-console.log('✅ ChatController loaded');
-console.log('✅ Loaded ChatController');
 // וכו' – לפי מה שהיה לך קודם
 console.log('🚀 Available ChatController Methods: [...]');
 console.log('🚀 Final ChatController Methods: [...]');
@@ -137,6 +134,7 @@ io.on('connection', (soc) => {
   });
 });
 
+
 // ייבוא קבצי הנתיבים (routes)
 import homeRoutes from './routes/home/homeRoutes.js';
 import authRoutes from './routes/authRoutes.js';
@@ -158,7 +156,7 @@ app.use('/api', cardRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', productRoutes);
 app.use('/api', sellerRoutes);
-app.use('/api', customerAuthRoutes);
+app.use('/api/customer', customerAuthRoutes);
 app.use('/api', chatRoutes);
 app.use('/api', paymentRoutes);
 app.use('/api', dashboardRoutes);
