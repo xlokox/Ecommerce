@@ -7,12 +7,12 @@ import { createToken } from '../utiles/tokenCreate.js';
 import cloudinary from 'cloudinary';
 import formidable from 'formidable';
 
-// הגדרות Cloudinary
+// Cloudinary configuration
 cloudinary.v2.config({
-  cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.CLOUD_API_KEY,
-  api_secret: process.env.CLOUD_API_SECRET,
-  secure: true,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || process.env.cloud_name,
+  api_key: process.env.CLOUDINARY_API_KEY || process.env.api_key,
+  api_secret: process.env.CLOUDINARY_API_SECRET || process.env.api_secret,
+  secure: true
 });
 
 class AuthControllers {

@@ -1,12 +1,16 @@
 import axios from "axios";
 
-// יצירת אינסטנס של axios עם ההגדרות הבסיסיות
+// API configuration with environment awareness
+const isDevelopment = process.env.NODE_ENV === 'development';
+const API_BASE_URL = isDevelopment ? 'http://localhost:5001' : process.env.REACT_APP_API_URL || '';
+
+// Create axios instance with proper configuration
 const api = axios.create({
-    baseURL: 'http://localhost:5001/api', // שנה לפורט של השרת שלך
-    withCredentials: true, // שולח cookies עם הבקשות
+    baseURL: `${API_BASE_URL}/api`,
+    withCredentials: true, // Enable cookies for authentication
 });
 
-// פונקציה להוספת טוקן לכל הבקשות כברירת מחדל
+// Add authorization header if token exists
 export const setAuthToken = (token) => {
     if (token) {
         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -15,8 +19,10 @@ export const setAuthToken = (token) => {
     }
 };
 
-// קבלת הטוקן מה-localStorage והגדרתו כברירת מחדל
+// Initialize with token from localStorage if available
 const token = localStorage.getItem("token");
-setAuthToken(token);
+if (token) {
+    setAuthToken(token);
+}
 
 export default api;

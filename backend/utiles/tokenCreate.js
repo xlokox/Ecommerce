@@ -9,7 +9,7 @@ import jwt from 'jsonwebtoken';
 export const createToken = (data) => {
   return jwt.sign(
     data, // 🔹 הנתונים שנקודד בתוך הטוקן (אובייקט עם מידע על המשתמש)
-    process.env.SECRET, // 🔹 מפתח סודי (Secret Key) ששומר על אבטחת הטוקן (נמצא ב-.env)
-    { expiresIn: '7d' } // 🔹 קובע שתוקף הטוקן יפוג אחרי 7 ימים
+    process.env.JWT_SECRET || process.env.SECRET, // 🔹 מפתח סודי (Secret Key) ששומר על אבטחת הטוקן (נמצא ב-.env)
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } // 🔹 קובע שתוקף הטוקן יפוג לפי ההגדרה ב-.env
   );
 };

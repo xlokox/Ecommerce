@@ -14,11 +14,11 @@ const { ObjectId } = Types;
 import cloudinary from "cloudinary";
 import formidable from "formidable";
 
-// קביעת קונפיגורציית cloudinary – מיקום מרכזי
+// Cloudinary configuration - using environment variables
 cloudinary.v2.config({
-  cloud_name: process.env.cloud_name,
-  api_key: process.env.api_key,
-  api_secret: process.env.api_secret,
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || process.env.cloud_name,
+  api_key: process.env.CLOUDINARY_API_KEY || process.env.api_key,
+  api_secret: process.env.CLOUDINARY_API_SECRET || process.env.api_secret,
   secure: true
 });
 
@@ -57,7 +57,7 @@ class DashboardController {
     try {
       const totalSale = await sellerWallet.aggregate([
         {
-          $match: { 
+          $match: {
             sellerId: { $eq: id }
           }
         },
