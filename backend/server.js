@@ -62,13 +62,19 @@ app.use(bodyParser.json({ limit: '50mb' })); // Increase payload size limit
 app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 
-// Configure Socket.io with CORS options
+// Configure Socket.io with CORS options and improved settings
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
     methods: ['GET', 'POST'],
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
   },
+  transports: ['websocket', 'polling'],
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  cookie: false,
+  allowEIO3: true,
 });
 
 // Variables to manage socket connections - customers, sellers and admin

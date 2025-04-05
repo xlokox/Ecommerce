@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import Header from './Header'; 
+import Header from './Header';
 import Sidebar from './Sidebar';
 import { socket } from '../utils/utils';
 import { useDispatch, useSelector } from 'react-redux';
@@ -44,7 +44,7 @@ const MainLayout = () => {
 
   const [showSidebar, setShowSidebar] = useState(false);
 
-  return ( 
+  return (
     <div className="bg-[#cdcae9] w-full min-h-screen">
       <Header showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
       <Sidebar showSidebar={showSidebar} setShowSidebar={setShowSidebar} />

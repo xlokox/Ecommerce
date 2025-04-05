@@ -15,7 +15,7 @@ const Login = () => {
     const dispatch = useDispatch()
     const {loader,errorMessage,successMessage} = useSelector(state=>state.auth)
 
-    const [state, setState] = useState({ 
+    const [state, setState] = useState({
         email: "",
         password: ""
     })
@@ -32,20 +32,32 @@ const Login = () => {
         dispatch(seller_login(state))
     }
 
-    useEffect(() => {
+    const { role } = useSelector(state => state.auth)
 
-        if (successMessage) {
+    // Use a ref to track if we've already shown the success message
+    const [hasShownSuccessMessage, setHasShownSuccessMessage] = useState(false);
+
+    useEffect(() => {
+        if (successMessage && !hasShownSuccessMessage) {
+            // Only show the success message once
             toast.success(successMessage)
-            dispatch(messageClear()) 
-            navigate('/') 
+            dispatch(messageClear())
+            setHasShownSuccessMessage(true);
+
+            // Redirect based on role
+            if (role === 'seller') {
+                navigate('/seller/dashboard', { replace: true })
+            } else if (role === 'admin') {
+                navigate('/admin/dashboard', { replace: true })
+            } else {
+                navigate('/', { replace: true })
+            }
         }
         if (errorMessage) {
             toast.error(errorMessage)
             dispatch(messageClear())
         }
-        
-
-    },[successMessage,errorMessage])
+    }, [successMessage, errorMessage, role, navigate, dispatch, hasShownSuccessMessage])
 
 
     return (
@@ -56,7 +68,7 @@ const Login = () => {
                 <p className='text-sm mb-3 font-medium'>Please Sing In your account</p>
 
     <form onSubmit={submit}>
-         
+
         <div className='flex flex-col w-full gap-1 mb-3'>
             <label htmlFor="email">Email</label>
             <input onChange={inputHandle} value={state.email}  className='px-3 py-2 outline-none border border-slate-400 bg-transparent rounded-md' type="email" name='email' placeholder='Email' id='email' required />
@@ -67,16 +79,16 @@ const Login = () => {
             <label htmlFor="password">Password</label>
             <input onChange={inputHandle} value={state.password}  className='px-3 py-2 outline-none border border-slate-400 bg-transparent rounded-md' type="password" name='password' placeholder='Password' id='password' required />
         </div>
-  
+
 
         <button disabled={loader ? true : false}  className='bg-slate-800 w-full hover:shadow-blue-300/ hover:shadow-lg text-white rounded-md px-7 py-2 mb-3'>
             {
                loader ? <PropagateLoader color='#fff' cssOverride={overrideStyle} /> : 'Sing In'
-            } 
+            }
             </button>
 
         <div className='flex items-center mb-3 gap-3 justify-center'>
-            <p>Don't Have an account ? <Link className='font-bold' to="/register">Sing Up</Link> </p> 
+            <p>Don't Have an account ? <Link className='font-bold' to="/register">Sing Up</Link> </p>
         </div>
 
         <div className='w-full flex justify-center items-center mb-3'>
@@ -100,10 +112,10 @@ const Login = () => {
 
 
     </form>
- 
+
             </div>
-            </div>  
-            
+            </div>
+
         </div>
     );
 };

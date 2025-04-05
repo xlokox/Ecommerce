@@ -1,5 +1,5 @@
 // src/router/routes/ProtectRoute.jsx
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 
@@ -13,38 +13,53 @@ import { Navigate } from 'react-router-dom';
  */
 const ProtectRoute = ({ route, children }) => {
   const { userInfo } = useSelector(state => state.auth);
+  const [shouldRedirect, setShouldRedirect] = useState(null);
 
-  // אם אין מידע על המשתמש או אין תפקיד => /login
-  if (!userInfo || !userInfo.role) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // אם הנתיב דורש תפקיד מסוים
-  if (route.role) {
-    // אם התפקיד לא תואם => /unauthorized
-    if (userInfo.role !== route.role) {
-      return <Navigate to="/unauthorized" replace />;
+  // Use useEffect to prevent navigation throttling
+  useEffect(() => {
+    // Check authentication
+    if (!userInfo || !userInfo.role) {
+      setShouldRedirect({ to: "/login", replace: true });
+      return;
     }
 
-    // בדיקת status
+    // Check role requirements
+    if (route.role && userInfo.role !== route.role) {
+      setShouldRedirect({ to: "/unauthorized", replace: true });
+      return;
+    }
+
+    // Check status
     if (route.status && userInfo.status !== route.status) {
-      return userInfo.status === 'pending'
-        ? <Navigate to="/seller/account-pending" replace />
-        : <Navigate to="/seller/account-deactive" replace />;
+      const redirectTo = userInfo.status === 'pending'
+        ? "/seller/account-pending"
+        : "/seller/account-deactive";
+      setShouldRedirect({ to: redirectTo, replace: true });
+      return;
     }
 
-    // בדיקת visibility (מערך של סטטוסים)
+    // Check visibility
     if (route.visibility && !route.visibility.includes(userInfo.status)) {
-      return <Navigate to="/seller/account-pending" replace />;
+      setShouldRedirect({ to: "/seller/account-pending", replace: true });
+      return;
     }
+
+    // Check ability
+    if (route.ability === 'seller' && userInfo.role !== 'seller') {
+      setShouldRedirect({ to: "/unauthorized", replace: true });
+      return;
+    }
+
+    // No redirection needed
+    setShouldRedirect(null);
+  }, [userInfo, route]);
+
+  // Handle redirection
+  if (shouldRedirect) {
+    return <Navigate to={shouldRedirect.to} replace={shouldRedirect.replace} />;
   }
 
-  // אם אין route.role אך יש ability='seller', נבדוק שהתפקיד הוא seller
-  if (route.ability === 'seller' && userInfo.role !== 'seller') {
-    return <Navigate to="/unauthorized" replace />;
-  }
-
-  // ברירת מחדל => מציגים את children
+  // Default: show children
   return (
     <Suspense fallback={<div>Loading...</div>}>
       {children}

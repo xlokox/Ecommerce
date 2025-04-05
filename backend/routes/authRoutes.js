@@ -15,13 +15,9 @@ router.post('/admin-login', authControllers.admin_login);
 // 🔹 קבלת פרטי משתמש (אדמין/מוכר)
 router.get('/get-user', authMiddleware, authControllers.getUser);
 
-// 🔹 נתיבי רישום וכניסה למוכר
-if (authControllers.seller_register && authControllers.seller_login) {
-    router.post('/seller-register', authControllers.seller_register);
-    router.post('/seller-login', authControllers.seller_login);
-} else {
-    console.error("❌ seller_register או seller_login אינם מוגדרים");
-}
+// Seller registration and login routes
+router.post('/seller-register', authControllers.seller_register);
+router.post('/seller-login', authControllers.seller_login);
 
 // 🔹 נתיבי רישום וכניסה ללקוח
 if (customerAuthController.customer_register && customerAuthController.customer_login) {
