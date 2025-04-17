@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .endpoint {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <h1>E-commerce API Test</h1>
+    
+    <div class="endpoint">
+        <h2>Test Server</h2>
+        <button onclick="testServer()">Test Server</button>
+        <pre id="serverResult">Results will appear here...</pre>
+    </div>
+
+    <div class="endpoint">
+        <h2>Admin Login</h2>
+        <div>
+            <label for="adminEmail">Email:</label>
+            <input type="email" id="adminEmail" value="admin@example.com">
+        </div>
+        <div>
+            <label for="adminPassword">Password:</label>
+            <input type="password" id="adminPassword" value="password123">
+        </div>
+        <button onclick="adminLogin()">Login</button>
+        <pre id="adminLoginResult">Results will appear here...</pre>
+    </div>
+
+    <div class="endpoint">
+        <h2>Customer Login</h2>
+        <div>
+            <label for="customerEmail">Email:</label>
+            <input type="email" id="customerEmail" value="customer@example.com">
+        </div>
+        <div>
+            <label for="customerPassword">Password:</label>
+            <input type="password" id="customerPassword" value="password123">
+        </div>
+        <button onclick="customerLogin()">Login</button>
+        <pre id="customerLoginResult">Results will appear here...</pre>
+    </div>
+
+    <div class="endpoint">
+        <h2>Custom API Request</h2>
+        <div>
+            <label for="method">Method:</label>
+            <select id="method">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+            </select>
+        </div>
+        <div>
+            <label for="endpoint">Endpoint:</label>
+            <input type="text" id="endpoint" value="/api/test">
+        </div>
+        <div>
+            <label for="requestBody">Request Body (JSON):</label>
+            <textarea id="requestBody" rows="4">{}</textarea>
+        </div>
+        <button onclick="customRequest()">Send Request</button>
+        <pre id="customResult">Results will appear here...</pre>
+    </div>
+
+    <script>
+        // Get CSRF token from cookies
+        function getCsrfToken() {
+            return document.cookie
+                .split('; ')
+                .find(row => row.startsWith('XSRF-TOKEN'))
+                ?.split('=')[1];
+        }
+
+        // Test server
+        async function testServer() {
+            const resultElement = document.getElementById('serverResult');
+            resultElement.textContent = 'Loading...';
+            
+            try {
+                const response = await fetch('http://localhost:5001/', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                
+                const text = await response.text();
+                resultElement.textContent = `Status: ${response.status}\nResponse: ${text}`;
+            } catch (error) {
+                resultElement.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Admin login
+        async function adminLogin() {
+            const resultElement = document.getElementById('adminLoginResult');
+            resultElement.textContent = 'Loading...';
+            
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/admin-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': getCsrfToken() || ''
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                resultElement.textContent = `Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultElement.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Customer login
+        async function customerLogin() {
+            const resultElement = document.getElementById('customerLoginResult');
+            resultElement.textContent = 'Loading...';
+            
+            const email = document.getElementById('customerEmail').value;
+            const password = document.getElementById('customerPassword').value;
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/customer/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': getCsrfToken() || ''
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                resultElement.textContent = `Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultElement.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Custom API request
+        async function customRequest() {
+            const resultElement = document.getElementById('customResult');
+            resultElement.textContent = 'Loading...';
+            
+            const method = document.getElementById('method').value;
+            const endpoint = document.getElementById('endpoint').value;
+            const requestBodyText = document.getElementById('requestBody').value;
+            
+            try {
+                const requestBody = requestBodyText ? JSON.parse(requestBodyText) : null;
+                
+                const options = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': getCsrfToken() || ''
+                    },
+                    credentials: 'include'
+                };
+                
+                if (method !== 'GET' && requestBody) {
+                    options.body = JSON.stringify(requestBody);
+                }
+                
+                const response = await fetch(`http://localhost:5001${endpoint}`, options);
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    data = await response.text();
+                }
+                
+                resultElement.textContent = `Status: ${response.status}\nResponse: ${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultElement.textContent = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
