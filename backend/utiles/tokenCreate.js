@@ -1,15 +1,26 @@
-// 📌 מייבא את הספרייה jsonwebtoken (JWT) ליצירת טוקנים
+// backend/utiles/tokenCreate.js
+
+import dotenv from 'dotenv';
+
+// 1️⃣ Load .env (from your current working directory, i.e. backend/.env)
+dotenv.config();
+
+// 2️⃣ Import JWT
 import jwt from 'jsonwebtoken';
 
+// 3️⃣ Read SECRET (or fallback to JWT_SECRET)
+const SECRET = process.env.SECRET || process.env.JWT_SECRET;
+if (!SECRET) {
+  throw new Error(
+    'Missing JWT secret in environment. Please add SECRET=your_secret_here (or JWT_SECRET) to backend/.env'
+  );
+}
+
 /**
- * 📌 פונקציה ליצירת טוקן (JWT) עבור משתמשים
- * @param {Object} data - הנתונים שנרצה לקודד בתוך הטוקן (למשל, מזהה המשתמש ותפקידו)
- * @returns {string} - מחזיר מחרוזת (String) שהיא ה-Token שנוצר
+ * Create a JWT valid for 7 days
+ * @param {Object} data – payload (user id, role, etc.)
+ * @returns {string} signed token
  */
 export const createToken = (data) => {
-  return jwt.sign(
-    data, // 🔹 הנתונים שנקודד בתוך הטוקן (אובייקט עם מידע על המשתמש)
-    process.env.SECRET, // 🔹 מפתח סודי (Secret Key) ששומר על אבטחת הטוקן (נמצא ב-.env)
-    { expiresIn: '7d' } // 🔹 קובע שתוקף הטוקן יפוג אחרי 7 ימים
-  );
+  return jwt.sign(data, SECRET, { expiresIn: '7d' });
 };

@@ -1,33 +1,32 @@
-export const authMiddleware = (req, res, next) => {
-  //ביטול בדיקת הטוקן לצורך הדגמה –  production!
-  next();
-};
+// backend/middlewares/authMiddleware.js
+import jwt from 'jsonwebtoken';
 
-export default authMiddleware;
+export function authMiddleware(req, res, next) {
+  // 1️⃣ Grab token from cookie or header
+  let token =
+    req.cookies?.accessToken ||
+    req.cookies?.customerToken ||
+    (req.header('Authorization')?.startsWith('Bearer ')
+      ? req.header('Authorization').slice(7)
+      : null);
 
+  if (!token) {
+    return res.status(401).json({ message: 'Access denied. No token provided.' });
+  }
 
-// import jwt from 'jsonwebtoken';  // ייבוא מודול של jsonwebtoken לאימות טוקנים
+  // 2️⃣ Ensure SECRET is available
+  const SECRET = process.env.SECRET;
+  if (!SECRET) {
+    return res.status(500).json({ message: 'Server misconfigured: missing JWT SECRET' });
+  }
 
-// // הגדרת ה-middleware לאימות טוקן
-// export const authMiddleware = (req, res, next) => {
-//   // ניסיון לשלוף את הטוקן מה-header של הבקשה
-//   const token = req.header('Authorization');  // הטוקן בדרך כלל נמצא ב-"Authorization" header
-
-//   // אם אין טוקן, מחזירים שגיאה 401
-//   if (!token) {
-//     return res.status(401).json({ message: 'Access denied. No token provided.' });
-//   }
-
-//   // אם יש טוקן, אנחנו מנסים לאמת אותו
-//   try {
-//     // Verify הטוקן, ומחזירים את המידע אם הוא תקין
-//     const decoded = jwt.verify(token, process.env.JWT_SECRET);  // ה-secret צריך להיות אותו secret שהשתמשנו בו בהנפקת הטוקן
-//     req.user = decoded;  // שמירה של המידע המפוענח מהטוקן בתוך ה-req כדי שנוכל להשתמש בו בהמשך
-//     next();  // אם הטוקן תקין, נמשיך לשלבים הבאים
-//   } catch (error) {
-//     // אם יש בעיה עם הטוקן (כמו שהוא לא תקין), מחזירים שגיאה 400
-//     return res.status(400).json({ message: 'Invalid token' });
-//   }
-// };
-
-// export default authMiddleware;
+  // 3️⃣ Verify JWT
+  try {
+    const decoded = jwt.verify(token, SECRET);
+    req.id   = decoded.id;
+    req.role = decoded.role;
+    return next();
+  } catch (err) {
+    return res.status(401).json({ message: 'Invalid or expired token.' });
+  }
+}
