@@ -35,14 +35,21 @@ import { securityMiddleware, validateRequest } from './middlewares/securityMiddl
 import { authMiddleware } from './middlewares/authMiddleware.js';
 import { loggingMiddleware } from './middlewares/loggingMiddleware.js';
 
+// Parse JSON and URL-encoded bodies
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Cookie parser middleware
+app.use(cookieParser());
+
 // Security middleware
 app.use(securityMiddleware);
 
 // CORS with secure configuration
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? 'https://your-domain.com' 
-    : ['http://localhost:3000', 'http://localhost:3001'],
+  origin: process.env.NODE_ENV === 'production'
+    ? 'https://your-domain.com'
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'X-CSRF-Token'],
@@ -66,17 +73,17 @@ app.use('/api/chat', validateRequest, authMiddleware);
 // Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ 
-    error: process.env.NODE_ENV === 'production' 
-      ? 'Internal server error' 
-      : err.message 
+  res.status(500).json({
+    error: process.env.NODE_ENV === 'production'
+      ? 'Internal server error'
+      : err.message
   });
 });
 
 // הגדרת Socket.io עם אפשרויות CORS
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
+    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
     methods: ['GET', 'POST'],
     credentials: true,
   },

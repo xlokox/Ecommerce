@@ -128,20 +128,38 @@ const Details = () => {
 
     const add_wishlist = () => {
         if (userInfo) {
+            // Check if product is defined and has required properties
+            if (!product || !product._id) {
+                toast.error('Product information is missing');
+                return;
+            }
+
+            console.log('Adding to wishlist:', {
+                userId: userInfo.id,
+                productId: product._id,
+                name: product.name || 'Unknown Product',
+                price: product.price || 0,
+                image: product.images && product.images.length > 0 ? product.images[0] : 'https://via.placeholder.com/240',
+                discount: product.discount || 0,
+                rating: product.rating || 0,
+                slug: product.slug || 'unknown-product'
+            });
+
             dispatch(add_to_wishlist({
                 userId: userInfo.id,
                 productId: product._id,
-                name: product.name,
-                price: product.price,
-                image: product.images[0],
-                discount: product.discount,
-                rating: product.rating,
-                slug: product.slug
-            }))
-        } else {
-            navigate('/login')
-        }
+                name: product.name || 'Unknown Product',
+                price: product.price || 0,
+                image: product.images && product.images.length > 0 ? product.images[0] : 'https://via.placeholder.com/240',
+                discount: product.discount || 0,
+                rating: product.rating || 0,
+                slug: product.slug || 'unknown-product'
+            }));
 
+            toast.success('Adding to wishlist...');
+        } else {
+            navigate('/login');
+        }
     }
 
    const buynow = () => {
@@ -412,7 +430,8 @@ const Details = () => {
         }
     }}
     spaceBetween={25}
-    loop={true}
+    loop={relatedProducts.length > 3}
+    loopedSlides={relatedProducts.length > 3 ? 3 : 0}
     pagination={{
         clickable: true,
         el: '.custom_bullet'

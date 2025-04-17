@@ -85,13 +85,18 @@ export const query_products = createAsyncThunk(
 // 5) קבלת פרטי מוצר בודד
 export const product_details = createAsyncThunk(
   "product/product_details",
-  async (slug, { fulfillWithValue }) => {
+  async (slug, { fulfillWithValue, rejectWithValue }) => {
     try {
       const { data } = await api.get(`/home/product-details/${slug}`);
-      // console.log(data)
+      console.log('Product details data:', data);
       return fulfillWithValue(data);
     } catch (error) {
-      console.log(error?.response);
+      console.log('Error fetching product details:', error?.response);
+      return rejectWithValue({
+        product: {},
+        relatedProducts: [],
+        moreProducts: []
+      });
     }
   }
 );
@@ -231,6 +236,11 @@ export const homeReducer = createSlice({
         state.product = payload.product;
         state.relatedProducts = payload.relatedProducts;
         state.moreProducts = payload.moreProducts;
+      })
+      .addCase(product_details.rejected, (state, { payload }) => {
+        state.product = payload?.product || {};
+        state.relatedProducts = payload?.relatedProducts || [];
+        state.moreProducts = payload?.moreProducts || [];
       })
       // 6) customer_review
       .addCase(customer_review.fulfilled, (state, { payload }) => {

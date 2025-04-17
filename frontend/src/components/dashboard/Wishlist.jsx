@@ -44,7 +44,7 @@ const Wishlist = () => {
                 {p.discount}%
               </div>
             )}
-            <img className='sm:w-full w-full h-[240px]' src={p.image} alt="" />
+            <img className='sm:w-full w-full h-[240px]' src={p.image || 'https://via.placeholder.com/240'} alt="" />
             <ul className='flex transition-all duration-700 -bottom-10 justify-center items-center gap-2 absolute w-full group-hover:bottom-3'>
               <li
                 onClick={() => {

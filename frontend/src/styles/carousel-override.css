@@ -1,11 +1,17 @@
-/* Override deprecated -ms-high-contrast styles */
-@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
-  /* Replace with modern forced-colors-mode */
-  @media (forced-colors: active) {
-    .react-multi-carousel-item {
-      /* Add appropriate styles for high contrast mode */
-      border: 1px solid currentColor;
-    }
+/* Replace deprecated -ms-high-contrast with modern forced-colors-mode */
+@media (forced-colors: active) {
+  .react-multi-carousel-dot button {
+    border: 1px solid ButtonText;
+    background: ButtonFace;
+  }
+
+  .react-multi-carousel-dot--active button {
+    background: Highlight;
+  }
+
+  .react-multi-carousel-item {
+    /* Add appropriate styles for high contrast mode */
+    border: 1px solid currentColor;
   }
 }
 

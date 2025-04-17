@@ -118,21 +118,23 @@ const Card = () => {
                             {p.shopName}
                           </h2>
                         </div>
-                        {p.products.map((pt, idx) => (
+                        {p.products && p.products.map((pt, idx) => (
                           <div key={idx} className='w-full flex flex-wrap'>
                             <div className='flex sm:w-full gap-2 w-7/12'>
                               <div className='flex gap-2 justify-start items-center'>
-                                <img
-                                  className='w-[80px] h-[80px]'
-                                  src={pt.productInfo.images[0]}
-                                  alt=""
-                                />
+                                {pt.productInfo && pt.productInfo.images && (
+                                  <img
+                                    className='w-[80px] h-[80px]'
+                                    src={pt.productInfo.images[0]}
+                                    alt=""
+                                  />
+                                )}
                                 <div className='pr-4 text-slate-600'>
                                   <h2 className='text-md font-semibold'>
-                                    {pt.productInfo.name}
+                                    {pt.productInfo ? pt.productInfo.name : 'Product'}
                                   </h2>
                                   <span className='text-sm'>
-                                    Brand: {pt.productInfo.brand}
+                                    Brand: {pt.productInfo ? pt.productInfo.brand : 'Unknown'}
                                   </span>
                                 </div>
                               </div>
@@ -140,19 +142,23 @@ const Card = () => {
 
                             <div className='flex justify-between w-5/12 sm:w-full sm:mt-3'>
                               <div className='pl-4 sm:pl-0'>
-                                <h2 className='text-lg text-orange-500'>
-                                  $
-                                  {pt.productInfo.price -
-                                    Math.floor(
-                                      (pt.productInfo.price *
-                                        pt.productInfo.discount) /
-                                        100
-                                    )}
-                                </h2>
-                                <p className='line-through'>
-                                  ${pt.productInfo.price}
-                                </p>
-                                <p>-{pt.productInfo.discount}%</p>
+                                {pt.productInfo && (
+                                  <>
+                                    <h2 className='text-lg text-orange-500'>
+                                      $
+                                      {pt.productInfo.price -
+                                        Math.floor(
+                                          (pt.productInfo.price *
+                                            (pt.productInfo.discount || 0)) /
+                                            100
+                                        )}
+                                    </h2>
+                                    <p className='line-through'>
+                                      ${pt.productInfo.price}
+                                    </p>
+                                    <p>-{pt.productInfo.discount || 0}%</p>
+                                  </>
+                                )}
                               </div>
                               <div className='flex gap-2 flex-col'>
                                 <div className='flex bg-slate-200 h-[30px] justify-center items-center text-xl'>
@@ -165,7 +171,7 @@ const Card = () => {
                                   <div className='px-3'>{pt.quantity}</div>
                                   <div
                                     onClick={() =>
-                                      inc(pt.quantity, pt.productInfo.stock, pt._id)
+                                      inc(pt.quantity, pt.productInfo ? pt.productInfo.stock : 0, pt._id)
                                     }
                                     className='px-3 cursor-pointer'
                                   >
@@ -201,17 +207,19 @@ const Card = () => {
                             <div key={i} className='w-full flex flex-wrap'>
                               <div className='flex sm:w-full gap-2 w-7/12'>
                                 <div className='flex gap-2 justify-start items-center'>
-                                  <img
-                                    className='w-[80px] h-[80px]'
-                                    src={p.products[0].images[0]}
-                                    alt=""
-                                  />
+                                  {p.products && p.products[0] && p.products[0].images && (
+                                    <img
+                                      className='w-[80px] h-[80px]'
+                                      src={p.products[0].images[0]}
+                                      alt=""
+                                    />
+                                  )}
                                   <div className='pr-4 text-slate-600'>
                                     <h2 className='text-md font-semibold'>
-                                      {p.products[0].name}
+                                      {p.products && p.products[0] ? p.products[0].name : 'Product'}
                                     </h2>
                                     <span className='text-sm'>
-                                      Brand: {p.products[0].brand}
+                                      Brand: {p.products && p.products[0] ? p.products[0].brand : 'Unknown'}
                                     </span>
                                   </div>
                                 </div>
@@ -219,19 +227,23 @@ const Card = () => {
 
                               <div className='flex justify-between w-5/12 sm:w-full sm:mt-3'>
                                 <div className='pl-4 sm:pl-0'>
-                                  <h2 className='text-lg text-orange-500'>
-                                    $
-                                    {p.products[0].price -
-                                      Math.floor(
-                                        (p.products[0].price *
-                                          p.products[0].discount) /
-                                          100
-                                      )}
-                                  </h2>
-                                  <p className='line-through'>
-                                    ${p.products[0].price}
-                                  </p>
-                                  <p>-{p.products[0].discount}%</p>
+                                  {p.products && p.products[0] && (
+                                    <>
+                                      <h2 className='text-lg text-orange-500'>
+                                        $
+                                        {p.products[0].price -
+                                          Math.floor(
+                                            (p.products[0].price *
+                                              (p.products[0].discount || 0)) /
+                                              100
+                                          )}
+                                      </h2>
+                                      <p className='line-through'>
+                                        ${p.products[0].price}
+                                      </p>
+                                      <p>-{p.products[0].discount || 0}%</p>
+                                    </>
+                                  )}
                                 </div>
                                 <div className='flex gap-2 flex-col'>
                                   <div className='flex bg-slate-200 h-[30px] justify-center items-center text-xl'>
