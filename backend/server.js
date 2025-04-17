@@ -1,10 +1,4 @@
-// backend/server.js
-
-// 1️⃣ Load environment variables from backend/.env
-import dotenv from 'dotenv';
-dotenv.config();  // automatically reads backend/.env
-
-// 2️⃣ Standard imports
+// server.js
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
@@ -12,55 +6,62 @@ import cookieParser from 'cookie-parser';
 import { dbConnect } from './utiles/db.js';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import dotenv from 'dotenv';
+dotenv.config();
+
+// מוסיפים כאן את Cloudinary – הגדרה פעם אחת בלבד
 import cloudinary from 'cloudinary';
-
-// 3️⃣ Verify that critical env vars are loaded
-console.log('DB_URL:    ', process.env.DB_URL);
-console.log('SECRET:    ', process.env.SECRET);
-console.log('cloud_name:', process.env.cloud_name);
-console.log('api_key:   ', process.env.api_key);
-console.log('api_secret:', process.env.api_secret);
-
-// 4️⃣ Configure Cloudinary once
 cloudinary.v2.config({
-  cloud_name:  process.env.cloud_name,
-  api_key:     process.env.api_key,
-  api_secret:  process.env.api_secret,
-  secure:      true,
+  cloud_name: process.env.cloud_name,
+  api_key: process.env.api_key,
+  api_secret: process.env.api_secret,
+  secure: true
 });
 
-// 5️⃣ Create Express app and HTTP server
+// (לא חובה, אבל עוזר לבדיקה)
+console.log('cloud_name:', process.env.cloud_name);
+console.log('api_key:', process.env.api_key);
+console.log('api_secret:', process.env.api_secret);
+
+// וכו' – לפי מה שהיה לך קודם
+console.log('🚀 Available ChatController Methods: [...]');
+console.log('🚀 Final ChatController Methods: [...]');
+
+// יצירת אובייקט express ו־HTTP server
 const app = express();
 const server = createServer(app);
 
-// 6️⃣ CORS settings
-const allowedOrigins = ['http://localhost:3000','http://localhost:3001'];
-app.use(cors({
-  origin:        allowedOrigins,
-  methods:       ['GET','POST','PUT','DELETE'],
-  credentials:   true,
-  allowedHeaders:['Content-Type','Authorization'],
-}));
-app.options('*', cors());
+// הגדרות CORS
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+const corsOptions = {
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
 
-// 7️⃣ JSON & cookie parsing
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
+// שימוש ב־bodyParser וב־cookieParser
 app.use(bodyParser.json());
 app.use(cookieParser());
 
-// 8️⃣ Socket.io setup
+// הגדרת Socket.io עם אפשרויות CORS
 const io = new Server(server, {
   cors: {
-    origin:      allowedOrigins,
-    methods:     ['GET','POST'],
+    origin: allowedOrigins,
+    methods: ['GET', 'POST'],
     credentials: true,
-  }
+  },
 });
 
-// 9️⃣ Socket.io event handlers
+// משתנים לניהול חיבורי סוקט – לקוחות, מוכרים ומנהל
 let allCustomer = [];
-let allSeller   = [];
-let admin       = {};
+let allSeller = [];
+let admin = {};
 
+// פונקציות העזר שהיו לך
 const addUser = (customerId, socketId, userInfo) => {
   if (!allCustomer.some(u => u.customerId === customerId)) {
     allCustomer.push({ customerId, socketId, userInfo });
@@ -72,89 +73,99 @@ const addSeller = (sellerId, socketId, userInfo) => {
   }
 };
 const findCustomer = (customerId) => allCustomer.find(c => c.customerId === customerId);
-const findSeller   = (sellerId)   => allSeller.find(s => s.sellerId === sellerId);
-const removeUser   = (socketId)    => {
+const findSeller = (sellerId) => allSeller.find(c => c.sellerId === sellerId);
+const removeUser = (socketId) => {
   allCustomer = allCustomer.filter(c => c.socketId !== socketId);
-  allSeller   = allSeller.filter(s => s.socketId !== socketId);
+  allSeller = allSeller.filter(c => c.socketId !== socketId);
 };
 
-io.on('connection', (socket) => {
+// אירועי Socket.io
+io.on('connection', (soc) => {
   console.log('✅ Socket.io Connected');
 
-  socket.on('add_user', (customerId, userInfo) => {
-    addUser(customerId, socket.id, userInfo);
+  soc.on('add_user', (customerId, userInfo) => {
+    addUser(customerId, soc.id, userInfo);
     io.emit('activeSeller', allSeller);
   });
 
-  socket.on('add_seller', (sellerId, userInfo) => {
-    addSeller(sellerId, socket.id, userInfo);
+  soc.on('add_seller', (sellerId, userInfo) => {
+    addSeller(sellerId, soc.id, userInfo);
     io.emit('activeSeller', allSeller);
   });
 
-  socket.on('send_seller_message', (msg) => {
-    const cust = findCustomer(msg.receverId);
-    if (cust) socket.to(cust.socketId).emit('seller_message', msg);
+  soc.on('send_seller_message', (msg) => {
+    const customer = findCustomer(msg.receverId);
+    if (customer) {
+      soc.to(customer.socketId).emit('seller_message', msg);
+    }
   });
 
-  socket.on('send_customer_message', (msg) => {
-    const sel = findSeller(msg.receverId);
-    if (sel) socket.to(sel.socketId).emit('customer_message', msg);
+  soc.on('send_customer_message', (msg) => {
+    const seller = findSeller(msg.receverId);
+    if (seller) {
+      soc.to(seller.socketId).emit('customer_message', msg);
+    }
   });
 
-  socket.on('send_message_admin_to_seller', (msg) => {
-    const sel = findSeller(msg.receverId);
-    if (sel) socket.to(sel.socketId).emit('receved_admin_message', msg);
+  soc.on('send_message_admin_to_seller', (msg) => {
+    const seller = findSeller(msg.receverId);
+    if (seller) {
+      soc.to(seller.socketId).emit('receved_admin_message', msg);
+    }
   });
 
-  socket.on('send_message_seller_to_admin', (msg) => {
-    if (admin.socketId) socket.to(admin.socketId).emit('receved_seller_message', msg);
+  soc.on('send_message_seller_to_admin', (msg) => {
+    if (admin.socketId) {
+      soc.to(admin.socketId).emit('receved_seller_message', msg);
+    }
   });
 
-  socket.on('add_admin', (adminInfo) => {
+  soc.on('add_admin', (adminInfo) => {
     delete adminInfo.email;
     delete adminInfo.password;
-    admin = { ...adminInfo, socketId: socket.id };
+    admin = { ...adminInfo, socketId: soc.id };
     io.emit('activeSeller', allSeller);
   });
 
-  socket.on('disconnect', () => {
+  soc.on('disconnect', () => {
     console.log('❌ User disconnected');
-    removeUser(socket.id);
+    removeUser(soc.id);
     io.emit('activeSeller', allSeller);
   });
 });
 
-// 10️⃣ Import middleware & routes
-import { authMiddleware }      from './middlewares/authMiddleware.js';
-import homeRoutes              from './routes/home/homeRoutes.js';
-import cardRoutes              from './routes/home/cardRoutes.js';
-import customerAuthRoutes      from './routes/home/customerAuthRoutes.js';
-import authRoutes              from './routes/authRoutes.js';
-import orderRoutes             from './routes/order/orderRoutes.js';
-import categoryRoutes          from './routes/dashboard/categoryRoutes.js';
-import productRoutes           from './routes/dashboard/productRoutes.js';
-import sellerRoutes            from './routes/dashboard/sellerRoutes.js';
-import chatRoutes              from './routes/chatRoutes.js';
-import paymentRoutes           from './routes/paymentRoutes.js';
-import dashboardRoutes         from './routes/dashboard/dashboardRoutes.js';
 
-// 11️⃣ Mount routes
-app.use('/api/home',         homeRoutes);
-app.use('/api/home/product', authMiddleware, cardRoutes);
-app.use('/api/customer',     customerAuthRoutes);
-app.use('/api',              authRoutes);
-app.use('/api',              orderRoutes);
-app.use('/api',              categoryRoutes);
-app.use('/api',              productRoutes);
-app.use('/api',              sellerRoutes);
-app.use('/api',              chatRoutes);
-app.use('/api',              paymentRoutes);
-app.use('/api',              dashboardRoutes);
+// ייבוא קבצי הנתיבים (routes)
+import homeRoutes from './routes/home/homeRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import orderRoutes from './routes/order/orderRoutes.js';
+import cardRoutes from './routes/home/cardRoutes.js';
+import categoryRoutes from './routes/dashboard/categoryRoutes.js';
+import productRoutes from './routes/dashboard/productRoutes.js';
+import sellerRoutes from './routes/dashboard/sellerRoutes.js';
+import customerAuthRoutes from './routes/home/customerAuthRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
+import dashboardRoutes from './routes/dashboard/dashboardRoutes.js';
 
-// 12️⃣ Health check
-app.get('/', (_req, res) => res.send('Hello Server'));
+// הגדרת הנתיבים ב־Express
+app.use('/api/home', homeRoutes);
+app.use('/api', authRoutes);
+app.use('/api', orderRoutes);
+app.use('/api', cardRoutes);
+app.use('/api', categoryRoutes);
+app.use('/api', productRoutes);
+app.use('/api', sellerRoutes);
+app.use('/api/customer', customerAuthRoutes);
+app.use('/api', chatRoutes);
+app.use('/api', paymentRoutes);
+app.use('/api', dashboardRoutes);
 
-// 13️⃣ Connect to DB & start server
+// בדיקת שרת
+app.get('/', (req, res) => res.send('Hello Server'));
+
+// הפעלת מסד הנתונים והשרת
+const port = process.env.PORT || 5001;
 dbConnect();
-const PORT = process.env.PORT || 5001;
-server.listen(PORT, () => console.log(`🚀 Server is running on port ${PORT}`));
+
+server.listen(port, () => console.log(`🚀 Server is running on port ${port}`));
