@@ -90,17 +90,47 @@ class HomeControllers {
   query_products = async (req, res) => {
     const parPage = 12;
     req.query.parPage = parPage;
+
+    console.log('Query params:', req.query);
+    console.log('Category:', req.query.category);
+
     try {
-      const products = await productModel.find({}).sort({ createdAt: -1 });
+      let products;
+
+      // If category is provided, try to filter by category ID in the database first
+      if (req.query.category) {
+        try {
+          // Try to find products with the exact category ID
+          products = await productModel.find({ category: req.query.category }).populate('category', 'name').sort({ createdAt: -1 });
+          console.log(`Found ${products.length} products with category ID ${req.query.category} in database`);
+        } catch (err) {
+          console.log('Error filtering by category in database:', err.message);
+          // Fallback to getting all products
+          products = await productModel.find({}).populate('category', 'name').sort({ createdAt: -1 });
+        }
+      } else {
+        // Get all products if no category is specified
+        products = await productModel.find({}).populate('category', 'name').sort({ createdAt: -1 });
+      }
+
+      // Add categoryName to each product for easier filtering
+      products = products.map(product => {
+        const p = product.toObject();
+        if (p.category && p.category.name) {
+          p.categoryName = p.category.name;
+        }
+        return p;
+      });
+
+      // Apply additional filters
       const totalProduct = new queryProducts(products, req.query)
-        .categoryQuery()
         .ratingQuery()
         .searchQuery()
         .priceQuery()
         .sortByPrice()
         .countProducts();
+
       const result = new queryProducts(products, req.query)
-        .categoryQuery()
         .ratingQuery()
         .priceQuery()
         .searchQuery()
@@ -108,9 +138,11 @@ class HomeControllers {
         .skip()
         .limit()
         .getProducts();
+
+      console.log(`Returning ${result.length} products after filtering`);
       return responseReturn(res, 200, { products: result, totalProduct, parPage });
     } catch (error) {
-      console.log(error.message);
+      console.log('Error in query_products:', error.message);
       return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };

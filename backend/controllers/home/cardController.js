@@ -35,11 +35,15 @@ class CardController {
   get_card_products = async (req, res) => {
     const co = 5;
     const { userId } = req.params;
+    console.log('Getting cart products for user ID:', userId);
     try {
+      // Convert userId to ObjectId if it's a string
+      const userObjectId = typeof userId === 'string' ? new ObjectId(userId) : userId;
+
       const card_products = await cardModel.aggregate([
         {
           $match: {
-            userId: { $eq: new ObjectId(userId) }
+            userId: { $eq: userObjectId }
           }
         },
         {
@@ -51,36 +55,56 @@ class CardController {
           }
         }
       ]);
-      
+
       let buy_product_item = 0;
       let calculatePrice = 0;
       let card_product_count = 0;
-      
-      const outOfStockProduct = card_products.filter(p => p.products[0].stock < p.quantity);
+
+      // Safely filter out-of-stock products
+      const outOfStockProduct = card_products.filter(p => {
+        return p.products && p.products[0] && p.products[0].stock < p.quantity;
+      });
+      console.log('Out of stock products:', outOfStockProduct.length);
       for (let i = 0; i < outOfStockProduct.length; i++) {
         card_product_count += outOfStockProduct[i].quantity;
       }
-      
-      const stockProduct = card_products.filter(p => p.products[0].stock >= p.quantity);
+
+      // Safely filter in-stock products
+      const stockProduct = card_products.filter(p => {
+        return p.products && p.products[0] && p.products[0].stock >= p.quantity;
+      });
+      console.log('In stock products:', stockProduct.length);
       for (let i = 0; i < stockProduct.length; i++) {
         const { quantity } = stockProduct[i];
-        card_product_count = buy_product_item + quantity;
+        // Fix: Increment card_product_count correctly
+        card_product_count += quantity;
         buy_product_item += quantity;
-        const { price, discount } = stockProduct[i].products[0];
-        if (discount !== 0) {
-          calculatePrice += quantity * (price - Math.floor((price * discount) / 100));
-        } else {
-          calculatePrice += quantity * price;
+        // Safely get price and discount, handling undefined values
+        if (stockProduct[i].products && stockProduct[i].products[0]) {
+          const { price = 0, discount = 0 } = stockProduct[i].products[0];
+          if (discount !== 0) {
+            calculatePrice += quantity * (price - Math.floor((price * discount) / 100));
+          } else {
+            calculatePrice += quantity * price;
+          }
         }
       }
-      
+
       let p = [];
-      let unique = [...new Set(stockProduct.map(p => p.products[0].sellerId.toString()))];
+      // Safely get unique seller IDs, handling undefined values
+      let unique = [...new Set(stockProduct.map(p => {
+        if (p.products && p.products[0] && p.products[0].sellerId) {
+          return p.products[0].sellerId.toString();
+        }
+        return 'unknown';
+      }))];
+
+      console.log('Unique seller IDs:', unique);
       for (let i = 0; i < unique.length; i++) {
         let sellerPrice = 0;
         for (let j = 0; j < stockProduct.length; j++) {
           const tempProduct = stockProduct[j].products[0];
-          if (unique[i] === tempProduct.sellerId.toString()) {
+          if (tempProduct && tempProduct.sellerId && unique[i] === tempProduct.sellerId.toString()) {
             let pri = 0;
             if (tempProduct.discount !== 0) {
               pri = tempProduct.price - Math.floor((tempProduct.price * tempProduct.discount) / 100);
@@ -94,7 +118,7 @@ class CardController {
               sellerId: unique[i],
               shopName: tempProduct.shopName,
               price: sellerPrice,
-              products: p[i]
+              products: p[i] && p[i].products
                 ? [
                     ...p[i].products,
                     {
@@ -114,7 +138,17 @@ class CardController {
           }
         }
       }
-      
+
+      // Log the data for debugging
+      console.log('Card products:', {
+        card_products_count: p.length,
+        price: calculatePrice,
+        card_product_count,
+        shipping_fee: 20 * p.length,
+        outOfStockProduct_count: outOfStockProduct.length,
+        buy_product_item
+      });
+
       return responseReturn(res, 200, {
         card_products: p,
         price: calculatePrice,
@@ -132,11 +166,13 @@ class CardController {
   // מחיקת מוצר מהסל
   delete_card_products = async (req, res) => {
     const { card_id } = req.params;
+    console.log('Deleting card product with ID:', card_id);
     try {
-      await cardModel.findByIdAndDelete(card_id);
+      const result = await cardModel.findByIdAndDelete(card_id);
+      console.log('Delete result:', result);
       return responseReturn(res, 200, { message: "Product Remove Successfully" });
     } catch (error) {
-      console.log(error.message);
+      console.log('Error deleting card product:', error.message);
       return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
@@ -189,11 +225,16 @@ class CardController {
   // שליפת מוצרים מהווישליסט של משתמש
   get_wishlist = async (req, res) => {
     const { userId } = req.params;
+    console.log('Getting wishlist for user ID:', userId);
     try {
-      const wishlists = await wishlistModel.find({ userId });
+      // Convert userId to ObjectId if it's a string
+      const userObjectId = typeof userId === 'string' ? new ObjectId(userId) : userId;
+
+      const wishlists = await wishlistModel.find({ userId: userObjectId });
+      console.log('Found wishlist items:', wishlists.length);
       return responseReturn(res, 200, { wishlistCount: wishlists.length, wishlists });
     } catch (error) {
-      console.log(error.message);
+      console.log('Error getting wishlist:', error.message);
       return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };
@@ -201,11 +242,13 @@ class CardController {
   // הסרת מוצר מהווישליסט
   remove_wishlist = async (req, res) => {
     const { wishlistId } = req.params;
+    console.log('Removing wishlist item with ID:', wishlistId);
     try {
-      await wishlistModel.findByIdAndDelete(wishlistId);
+      const result = await wishlistModel.findByIdAndDelete(wishlistId);
+      console.log('Remove result:', result);
       return responseReturn(res, 200, { message: 'Wishlist Product Remove', wishlistId });
     } catch (error) {
-      console.log(error.message);
+      console.log('Error removing wishlist item:', error.message);
       return responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };

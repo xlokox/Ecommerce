@@ -2,11 +2,26 @@ import React from 'react';
 import Carousel from 'react-multi-carousel';
 import { Link } from 'react-router-dom';
 import 'react-multi-carousel/lib/styles.css'
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 const Categorys = () => {
- 
-    const {categorys} = useSelector(state => state.home)
+    // Get categorys from state with a default empty array
+    const { categorys = [] } = useSelector(state => state.home || { categorys: [] })
+
+    // If categorys is not an array or is empty, return null or a placeholder
+    if (!Array.isArray(categorys) || categorys.length === 0) {
+        return (
+            <div className='w-[87%] mx-auto relative'>
+                <div className='w-full'>
+                    <div className='text-center flex justify-center items-center flex-col text-3xl text-slate-600 font-bold relative pb-[35px]'>
+                        <h2>Top Category</h2>
+                        <div className='w-[100px] h-[2px] bg-[#059473] mt-4'></div>
+                    </div>
+                    <div className='text-center text-gray-500 py-4'>No categories available at the moment.</div>
+                </div>
+            </div>
+        );
+    }
 
     const responsive = {
         superLargeDesktop: {
@@ -53,7 +68,7 @@ const Categorys = () => {
                 <Carousel
                     autoPlay={true}
                     infinite={true}
-                    arrows={true} 
+                    arrows={true}
                     responsive={responsive}
                     transitionDuration={500}
                 >
@@ -74,9 +89,9 @@ const Categorys = () => {
                         </Link>
                     ))
                 }
-                </Carousel>        
+                </Carousel>
          </div>
-             
+
     );
 };
 

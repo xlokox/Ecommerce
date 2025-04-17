@@ -7,8 +7,23 @@ class QueryProducts {
     // 🔹 סינון לפי קטגוריה
     categoryQuery() {
         if (this.query.category) {
+            console.log('Filtering by category:', this.query.category);
             // כאן אנחנו מסננים את המוצרים ב-JavaScript
-            this.products = this.products.filter(c => c.category === this.query.category);
+            // Check if category is a string or an ObjectId
+            this.products = this.products.filter(product => {
+                // Convert both to string for comparison
+                const productCategory = String(product.category);
+                const queryCategory = String(this.query.category);
+
+                console.log(`Product ${product.name} - Category: ${productCategory}, Query: ${queryCategory}`);
+
+                // Check if the product's category matches the query category
+                // or if the product's category name matches the query category
+                return productCategory === queryCategory ||
+                       (product.categoryName && product.categoryName.toLowerCase() === queryCategory.toLowerCase());
+            });
+
+            console.log('Filtered products count:', this.products.length);
         }
         return this;
     }
@@ -54,7 +69,7 @@ class QueryProducts {
     sortByPrice() {
         if (this.query.sortPrice) {
             // אם `sortPrice` הוא 'low-to-high' אז מסדרים מהמחיר הנמוך לגבוה, אחרת להפך
-            this.products.sort((a, b) => 
+            this.products.sort((a, b) =>
                 this.query.sortPrice === 'low-to-high' ? a.price - b.price : b.price - a.price
             );
         }

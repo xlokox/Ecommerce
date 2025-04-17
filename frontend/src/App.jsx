@@ -9,7 +9,7 @@ import Shipping from './pages/Shipping';
 import Details from './pages/Details';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import { get_category } from './store/reducers/homeReducer';
+import { get_category, get_banners } from './store/reducers/homeReducer';
 import { useDispatch } from 'react-redux';
 import CategoryShop from './pages/CategoryShop';
 import SearchProducts from './pages/SearchProducts';
@@ -28,7 +28,10 @@ function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    // Fetch categories and banners when the app loads
+    console.log('Dispatching get_category and get_banners');
     dispatch(get_category());
+    dispatch(get_banners());
   }, [dispatch]); // הוספנו dispatch למערך התלויות
 
   return (

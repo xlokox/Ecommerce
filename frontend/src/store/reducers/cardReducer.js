@@ -5,10 +5,13 @@ export const add_to_card = createAsyncThunk(
   "card/add_to_card",
   async (info, { rejectWithValue, fulfillWithValue }) => {
     try {
-      const { data } = await api.post("/home/product/add-to-card", info);
+      console.log('Adding to cart with info:', info);
+      // Use the correct endpoint path with the proper prefix
+      const { data } = await api.post("/add-to-card", info);
       return fulfillWithValue(data);
     } catch (error) {
-      return rejectWithValue(error?.response?.data);
+      console.error('Error adding to cart:', error);
+      return rejectWithValue(error?.response?.data || { error: 'Failed to add to cart' });
     }
   }
 );
@@ -17,10 +20,16 @@ export const get_card_products = createAsyncThunk(
   "card/get_card_products",
   async (userId, { rejectWithValue, fulfillWithValue }) => {
     try {
-      const { data } = await api.get(`/home/product/get-card-product/${userId}`);
+      // Check if userId is valid
+      if (!userId) {
+        console.log('No user ID provided for get_card_products');
+        return fulfillWithValue({ card_products: [], price: 0, card_product_count: 0, shipping_fee: 0, outOfStockProduct: [], buy_product_item: 0 });
+      }
+      const { data } = await api.get(`/get-card-products/${userId}`);
       return fulfillWithValue(data);
     } catch (error) {
-      return rejectWithValue(error?.response?.data);
+      console.error('Error fetching cart products:', error);
+      return rejectWithValue(error?.response?.data || { error: 'Failed to fetch cart products' });
     }
   }
 );
@@ -29,12 +38,16 @@ export const delete_card_product = createAsyncThunk(
   "card/delete_card_product",
   async (card_id, { rejectWithValue, fulfillWithValue }) => {
     try {
+      console.log('Deleting cart product with ID:', card_id);
+      // Use the correct endpoint path
       const { data } = await api.delete(
-        `/home/product/delete-card-product/${card_id}`
+        `/delete-card-products/${card_id}`
       );
+      console.log('Successfully deleted cart product:', data);
       return fulfillWithValue(data);
     } catch (error) {
-      return rejectWithValue(error?.response?.data);
+      console.error('Error deleting cart product:', error);
+      return rejectWithValue(error?.response?.data || { error: 'Failed to delete cart product' });
     }
   }
 );
@@ -43,10 +56,12 @@ export const quantity_inc = createAsyncThunk(
   "card/quantity_inc",
   async (card_id, { rejectWithValue, fulfillWithValue }) => {
     try {
-      const { data } = await api.put(`/home/product/quantity-inc/${card_id}`);
+      // Use the correct endpoint path
+      const { data } = await api.put(`/quantity-inc/${card_id}`);
       return fulfillWithValue(data);
     } catch (error) {
-      return rejectWithValue(error?.response?.data);
+      console.error('Error incrementing quantity:', error);
+      return rejectWithValue(error?.response?.data || { error: 'Failed to increment quantity' });
     }
   }
 );
@@ -55,10 +70,12 @@ export const quantity_dec = createAsyncThunk(
   "card/quantity_dec",
   async (card_id, { rejectWithValue, fulfillWithValue }) => {
     try {
-      const { data } = await api.put(`/home/product/quantity-dec/${card_id}`);
+      // Use the correct endpoint path
+      const { data } = await api.put(`/quantity-dec/${card_id}`);
       return fulfillWithValue(data);
     } catch (error) {
-      return rejectWithValue(error?.response?.data);
+      console.error('Error decrementing quantity:', error);
+      return rejectWithValue(error?.response?.data || { error: 'Failed to decrement quantity' });
     }
   }
 );
@@ -67,10 +84,13 @@ export const add_to_wishlist = createAsyncThunk(
   "wishlist/add_to_wishlist",
   async (info, { rejectWithValue, fulfillWithValue }) => {
     try {
-      const { data } = await api.post("/home/product/add-to-wishlist", info);
+      console.log('Adding to wishlist with info:', info);
+      // Use the correct endpoint path with the proper prefix
+      const { data } = await api.post("/add-wishlist", info);
       return fulfillWithValue(data);
     } catch (error) {
-      return rejectWithValue(error?.response?.data);
+      console.error('Error adding to wishlist:', error);
+      return rejectWithValue(error?.response?.data || { error: 'Failed to add to wishlist' });
     }
   }
 );
@@ -79,12 +99,16 @@ export const get_wishlist_products = createAsyncThunk(
   "wishlist/get_wishlist_products",
   async (userId, { rejectWithValue, fulfillWithValue }) => {
     try {
-      const { data } = await api.get(
-        `/home/product/get-wishlist-products/${userId}`
-      );
+      // Check if userId is valid
+      if (!userId) {
+        console.log('No user ID provided for get_wishlist_products');
+        return fulfillWithValue({ wishlists: [], wishlistCount: 0 });
+      }
+      const { data } = await api.get(`/get-wishlist/${userId}`);
       return fulfillWithValue(data);
     } catch (error) {
-      return rejectWithValue(error?.response?.data);
+      console.error('Error fetching wishlist products:', error);
+      return rejectWithValue(error?.response?.data || { error: 'Failed to fetch wishlist products' });
     }
   }
 );
@@ -93,12 +117,16 @@ export const remove_wishlist = createAsyncThunk(
   "wishlist/remove_wishlist",
   async (wishlistId, { rejectWithValue, fulfillWithValue }) => {
     try {
+      console.log('Removing from wishlist with ID:', wishlistId);
+      // Use the correct endpoint path with the proper prefix
       const { data } = await api.delete(
-        `/home/product/remove-wishlist-product/${wishlistId}`
+        `/remove-wishlist/${wishlistId}`
       );
+      console.log('Successfully removed from wishlist:', data);
       return fulfillWithValue(data);
     } catch (error) {
-      return rejectWithValue(error?.response?.data);
+      console.error('Error removing from wishlist:', error);
+      return rejectWithValue(error?.response?.data || { error: 'Failed to remove from wishlist' });
     }
   }
 );

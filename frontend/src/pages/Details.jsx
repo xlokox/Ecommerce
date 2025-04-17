@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { IoIosArrowForward } from "react-icons/io"; 
-import Carousel from 'react-multi-carousel'; 
+import { IoIosArrowForward } from "react-icons/io";
+import Carousel from 'react-multi-carousel';
 import 'react-multi-carousel/lib/styles.css'
 import Rating from '../components/Rating';
 import { FaHeart } from "react-icons/fa6";
@@ -13,14 +13,14 @@ import { FaLinkedin } from "react-icons/fa";
 import { FaGithub } from "react-icons/fa";
 import Reviews from '../components/Reviews';
 import {Pagination } from 'swiper/modules';
-import 'swiper/css'; 
+import 'swiper/css';
 import 'swiper/css/pagination';
 import {Swiper, SwiperSlide } from 'swiper/react';
 import { useDispatch, useSelector } from 'react-redux';
 import { product_details } from '../store/reducers/homeReducer';
 import toast from 'react-hot-toast';
 import { add_to_card,messageClear,add_to_wishlist } from '../store/reducers/cardReducer';
- 
+
 
 const Details = () => {
 
@@ -35,16 +35,16 @@ const Details = () => {
         dispatch(product_details(slug))
     },[slug])
 
-    useEffect(() => { 
+    useEffect(() => {
         if (successMessage) {
             toast.success(successMessage)
-            dispatch(messageClear())  
-        } 
+            dispatch(messageClear())
+        }
         if (errorMessage) {
             toast.error(errorMessage)
-            dispatch(messageClear())  
-        } 
-        
+            dispatch(messageClear())
+        }
+
     },[successMessage,errorMessage])
 
     const images = [1,2,3,4,5,6]
@@ -102,13 +102,27 @@ const Details = () => {
 
     const add_card = () => {
         if (userInfo) {
-           dispatch(add_to_card({
-            userId: userInfo.id,
-            quantity,
-            productId : product._id
-           }))
+            // Check if product is defined and has an _id
+            if (!product || !product._id) {
+                toast.error('Product information is missing');
+                return;
+            }
+
+            console.log('Adding to cart:', {
+                userId: userInfo.id,
+                quantity,
+                productId: product._id
+            });
+
+            dispatch(add_to_card({
+                userId: userInfo.id,
+                quantity,
+                productId: product._id
+            }));
+
+            toast.success('Adding to cart...');
         } else {
-            navigate('/login')
+            navigate('/login');
         }
     }
 
@@ -127,7 +141,7 @@ const Details = () => {
         } else {
             navigate('/login')
         }
-       
+
     }
 
    const buynow = () => {
@@ -151,7 +165,7 @@ const Details = () => {
                 ]
             }
         ]
-        
+
         navigate('/shipping',{
             state: {
                 products : obj,
@@ -159,7 +173,7 @@ const Details = () => {
                 shipping_fee : 50,
                 items: 1
             }
-        }) 
+        })
    }
 
 
@@ -178,9 +192,9 @@ const Details = () => {
                 </span>
                 <span>Product Details </span>
                 </div>
-            </div> 
-        </div> 
-    </div> 
+            </div>
+        </div>
+    </div>
     </section>
 
     <section>
@@ -209,23 +223,23 @@ const Details = () => {
                 {
                     product.images && <Carousel
                     autoPlay={true}
-                    infinite={true} 
+                    infinite={true}
                     responsive={responsive}
                     transitionDuration={500}
                 >
-                    { 
+                    {
                        product.images.map((img, i) => {
                         return (
                             <div key={i}  onClick={() => setImage(img)}>
-                   <img className='h-[120px] cursor-pointer' src={img} alt="" /> 
+                   <img className='h-[120px] cursor-pointer' src={img} alt="" />
                             </div>
                         )
                        })
-                    } 
+                    }
 
                 </Carousel>
                 }
-           </div>    
+           </div>
            </div>
 
         <div className='flex flex-col gap-5'>
@@ -236,7 +250,7 @@ const Details = () => {
                     <div className='flex text-xl'>
                         <Rating ratings={4.5} />
                     </div>
-                    <span className='text-green-500'>(24 reviews)</span> 
+                    <span className='text-green-500'>(24 reviews)</span>
                 </div>
 
          <div className='text-2xl text-red-500 font-bold flex gap-3'>
@@ -244,15 +258,15 @@ const Details = () => {
                 product.discount !== 0 ? <>
                 Price : <h2 className='line-through'>${product.price}</h2>
                 <h2>${product.price - Math.floor((product.price * product.discount) / 100)} (-{product.discount}%) </h2>
-                
+
                 </> : <h2> Price : ${product.price} </h2>
             }
-          </div> 
+          </div>
 
           <div className='text-slate-600'>
             <p>{product.description}  </p>
             <p className='text-slate-600 py-1 font-bold'>Shop Name : {product.shopName}</p>
-           </div> 
+           </div>
 
             <div className='flex gap-3 pb-10 border-b'>
                 {
@@ -265,28 +279,28 @@ const Details = () => {
                     <div>
                         <button onClick={add_card} className='px-8 py-3 h-[50px] cursor-pointer hover:shadow-lg hover:shadow-green-500/40 bg-[#059473] text-white'>Add To Card</button>
                     </div>
-                    
+
                     </> : ''
                 }
 
                 <div>
                     <div onClick={add_wishlist} className='h-[50px] w-[50px] flex justify-center items-center cursor-pointer hover:shadow-lg hover:shadow-cyan-500/40 bg-cyan-500 text-white'>
                     <FaHeart />
-                    </div> 
-                </div> 
-            </div>  
+                    </div>
+                </div>
+            </div>
 
 
         <div className='flex py-5 gap-5'>
             <div className='w-[150px] text-black font-bold text-xl flex flex-col gap-5'>
-                 
+
                 <span>Availability</span>
-                <span>Share On</span> 
-            </div> 
+                <span>Share On</span>
+            </div>
             <div className='flex flex-col gap-5'>
                 <span className={`text-${product.stock ? 'green' : 'red'}-500`}>
                     {product.stock ? `In Stock(${product.stock})` : 'Out Of Stock'}
-                </span> 
+                </span>
 
     <ul className='flex justify-start items-center gap-3'>
         <li>
@@ -301,7 +315,7 @@ const Details = () => {
         <li>
             <a className='w-[38px] h-[38px] hover:bg-[#059473] hover:text-white flex justify-center items-center bg-blue-500 rounded-full text-white' href="#"> <FaGithub /> </a>
         </li>
-    </ul> 
+    </ul>
 
             </div>
           </div>
@@ -316,9 +330,9 @@ const Details = () => {
             </div>
 
 
-             </div>   
-            </div> 
-       </div> 
+             </div>
+            </div>
+       </div>
         </section>
 
 
@@ -329,7 +343,7 @@ const Details = () => {
                 <div className='pr-4 md-lg:pr-0'>
                     <div className='grid grid-cols-2'>
                     <button onClick={() => setState('reviews')} className={`py-1 hover:text-white px-5 hover:bg-[#059473] ${state === 'reviews' ? 'bg-[#059473] text-white' : 'bg-slate-200 text-slate-700'} rounded-sm`}>Reviews </button>
-                    
+
                     <button onClick={() => setState('description')} className={`py-1 hover:text-white px-5 hover:bg-[#059473] ${state === 'description' ? 'bg-[#059473] text-white' : 'bg-slate-200 text-slate-700' } rounded-sm`}>Description </button>
                     </div>
 
@@ -339,8 +353,8 @@ const Details = () => {
     {product.description}
             </p>
         }
-    </div> 
-         </div> 
+    </div>
+         </div>
          </div>
 
 <div className='w-[28%] md-lg:w-full'>
@@ -354,7 +368,7 @@ const Details = () => {
                 return (
         <Link className='block'>
             <div className='relative h-[270px]'>
-            <img className='w-full h-full' src={ p.images[0]} alt="" /> 
+            <img className='w-full h-full' src={ p.images[0]} alt="" />
             {
             p.discount !== 0 && <div className='flex justify-center items-center absolute text-white w-[38px] h-[38px] rounded-full bg-red-500 font-semibold text-xs left-2 top-2'>{p.discount}%
             </div>
@@ -368,7 +382,7 @@ const Details = () => {
                     <Rating ratings={p.rating}  />
                 </div>
             </div>
-            
+
         </Link>
                 )
             })
@@ -376,9 +390,9 @@ const Details = () => {
 
     </div>
 </div>
-</div> 
+</div>
 
-    </div>  
+    </div>
         </div>
         </section>
 
@@ -404,8 +418,8 @@ const Details = () => {
         el: '.custom_bullet'
     }}
     modules={[Pagination]}
-    className='mySwiper' 
-    > 
+    className='mySwiper'
+    >
 
     {
         relatedProducts.map((p, i) => {
@@ -416,13 +430,13 @@ const Details = () => {
                         <div className='relative h-[270px]'>
                             <div className='w-full h-full'>
                     <img className='w-full h-full' src={p.images[0] } alt="" />
-                    <div className='absolute h-full w-full top-0 left-0 bg-[#000] opacity-25 hover:opacity-50 transition-all duration-500'> 
+                    <div className='absolute h-full w-full top-0 left-0 bg-[#000] opacity-25 hover:opacity-50 transition-all duration-500'>
                     </div>
                            </div>
             {
             p.discount !== 0 && <div className='flex justify-center items-center absolute text-white w-[38px] h-[38px] rounded-full bg-red-500 font-semibold text-xs left-2 top-2'>{p.discount}%
             </div>
-            } 
+            }
                 </div>
 
             <div className='p-4 flex flex-col gap-1'>
@@ -442,12 +456,12 @@ const Details = () => {
             )
         })
     }
-    
+
     </Swiper>
 </div>
 
       <div className='w-full flex justify-center items-center py-8'>
-        <div className='custom_bullet justify-center gap-3 !w-auto'> 
+        <div className='custom_bullet justify-center gap-3 !w-auto'>
         </div>
 
       </div>
@@ -458,7 +472,7 @@ const Details = () => {
 
 
 
-            <Footer/> 
+            <Footer/>
         </div>
     );
 };

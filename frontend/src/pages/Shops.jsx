@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { IoIosArrowForward } from "react-icons/io";
 import { Range } from 'react-range';
 import {AiFillStar} from 'react-icons/ai'
-import {CiStar} from 'react-icons/ci' 
+import {CiStar} from 'react-icons/ci'
 import Products from '../components/products/Products';
 import {BsFillGridFill} from 'react-icons/bs'
 import {FaThList} from 'react-icons/fa'
@@ -17,24 +17,24 @@ import { price_range_product,query_products } from '../store/reducers/homeReduce
 const Shops = () => {
 
     const dispatch = useDispatch()
-    const {products,categorys,priceRange,latest_product,totalProduct,parPage} = useSelector(state => state.home)
+    const {products = [], categorys = [], priceRange = {low: 0, high: 100}, latest_product = [], totalProduct = 0, parPage = 10} = useSelector(state => state.home || {})
 
-    useEffect(() => { 
+    useEffect(() => {
         dispatch(price_range_product())
     },[])
-    useEffect(() => { 
+    useEffect(() => {
         setState({
             values: [priceRange.low, priceRange.high]
         })
     },[priceRange])
 
-    const [filter, setFilter] = useState(true) 
+    const [filter, setFilter] = useState(true)
 
     const [state, setState] = useState({values: [priceRange.low, priceRange.high]})
     const [rating, setRating] = useState('')
     const [styles, setStyles] = useState('grid')
 
-   
+
     const [pageNumber, setPageNumber] = useState(1)
 
     const [sortPrice, setSortPrice] = useState('')
@@ -47,7 +47,7 @@ const Shops = () => {
         }
     }
 
-    useEffect(() => { 
+    useEffect(() => {
         dispatch(
             query_products({
                 low: state.values[0],
@@ -73,7 +73,7 @@ const Shops = () => {
             })
          )
     }
-    
+
 
     return (
         <div>
@@ -90,15 +90,15 @@ const Shops = () => {
                         </span>
                         <span>Shop </span>
                       </div>
-                    </div> 
-                </div> 
-            </div> 
+                    </div>
+                </div>
+            </div>
            </section>
 
            <section className='py-16'>
             <div className='w-[85%] md:w-[80%] sm:w-[90%] lg:w-[90%] h-full mx-auto'>
             <div className={` md:block hidden ${!filter ? 'mb-6' : 'mb-0'} `}>
-                <button onClick={() => setFilter(!filter)} className='text-center w-full py-2 px-3 bg-indigo-500 text-white'>Filter Product</button> 
+                <button onClick={() => setFilter(!filter)} className='text-center w-full py-2 px-3 bg-indigo-500 text-white'>Filter Product</button>
             </div>
 
             <div className='w-full flex flex-wrap'>
@@ -106,16 +106,20 @@ const Shops = () => {
                     <h2 className='text-3xl font-bold mb-3 text-slate-600'>Category </h2>
         <div className='py-2'>
             {
-                categorys.map((c,i) => <div key={i} className='flex justify-start items-center gap-2 py-1'>
-                    <input checked={category === c.name ? true : false} onChange={(e)=>queryCategory(e,c.name)} type="checkbox" id={c.name} />
-                    <label className='text-slate-600 block cursor-pointer' htmlFor={c.name}>{c.name}</label>
-                </div>)
+                Array.isArray(categorys) && categorys.length > 0 ? (
+                    categorys.map((c,i) => <div key={i} className='flex justify-start items-center gap-2 py-1'>
+                        <input checked={category === c.name ? true : false} onChange={(e)=>queryCategory(e,c.name)} type="checkbox" id={c.name} />
+                        <label className='text-slate-600 block cursor-pointer' htmlFor={c.name}>{c.name}</label>
+                    </div>)
+                ) : (
+                    <div className='text-gray-500'>No categories available</div>
+                )
             }
         </div>
 
         <div className='py-2 flex flex-col gap-5'>
             <h2 className='text-3xl font-bold mb-3 text-slate-600'>Price</h2>
-             
+
              <Range
                 step={5}
                 min={priceRange.low}
@@ -129,11 +133,11 @@ const Shops = () => {
                 )}
                 renderThumb={({ props }) => (
                     <div className='w-[15px] h-[15px] bg-[#059473] rounded-full' {...props} />
-    
-                )} 
-             />  
+
+                )}
+             />
          <div>
-         <span className='text-slate-800 font-bold text-lg'>${Math.floor(state.values[0])} - ${Math.floor(state.values[1])}</span>  
+         <span className='text-slate-800 font-bold text-lg'>${Math.floor(state.values[0])} - ${Math.floor(state.values[1])}</span>
            </div>
          </div>
 
@@ -186,14 +190,14 @@ const Shops = () => {
                   <span><CiStar/> </span>
                   <span><CiStar/> </span>
                   <span><CiStar/> </span>
-                  </div> 
-            </div> 
+                  </div>
+            </div>
          </div>
-        
-        
+
+
         <div className='py-5 flex flex-col gap-4 md:hidden'>
             <Products title='Latest Product'  products={latest_product} />
-        </div> 
+        </div>
           </div>
 
         <div className='w-9/12 md-lg:w-8/12 md:w-full'>
@@ -208,17 +212,17 @@ const Shops = () => {
             </select>
         <div className='flex justify-center items-start gap-4 md-lg:hidden'>
             <div onClick={()=> setStyles('grid')} className={`p-2 ${styles === 'grid' && 'bg-slate-300'} text-slate-600 hover:bg-slate-300 cursor-pointer rounded-sm `} >
-                  <BsFillGridFill/>  
+                  <BsFillGridFill/>
             </div>
             <div onClick={()=> setStyles('list')} className={`p-2 ${styles === 'list' && 'bg-slate-300'} text-slate-600 hover:bg-slate-300 cursor-pointer rounded-sm `} >
-                  <FaThList/>  
-            </div> 
-        </div> 
-        </div> 
-         </div> 
+                  <FaThList/>
+            </div>
+        </div>
+        </div>
+         </div>
 
          <div className='pb-8'>
-                  <ShopProducts products={products} styles={styles} />  
+                  <ShopProducts products={products} styles={styles} />
          </div>
 
          <div>
@@ -231,14 +235,14 @@ const Shops = () => {
 
 
 
-            </div> 
-         </div>  
+            </div>
+         </div>
 
 
 
 
             </div>
-            </div> 
+            </div>
            </section>
 
            <Footer/>

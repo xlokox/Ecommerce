@@ -4,13 +4,14 @@ import api from "../../api/api";
 // 1) קבלת רשימת קטגוריות
 export const get_category = createAsyncThunk(
   "product/get_category",
-  async (_, { fulfillWithValue }) => {
+  async (_, { fulfillWithValue, rejectWithValue }) => {
     try {
       const { data } = await api.get("/home/get-categorys");
-      // console.log(data)
-      return fulfillWithValue(data);
+      console.log('Categories data:', data);
+      return fulfillWithValue(data || { categorys: [] });
     } catch (error) {
-      console.log(error?.response);
+      console.error('Error fetching categories:', error);
+      return rejectWithValue({ categorys: [] });
     }
   }
 );
@@ -18,13 +19,24 @@ export const get_category = createAsyncThunk(
 // 2) קבלת מוצרים (12 אחרונים + Latest/TopRated/Discount)
 export const get_products = createAsyncThunk(
   "product/get_products",
-  async (_, { fulfillWithValue }) => {
+  async (_, { fulfillWithValue, rejectWithValue }) => {
     try {
       const { data } = await api.get("/home/get-products");
-      console.log(data);
-      return fulfillWithValue(data);
+      console.log('Products data:', data);
+      return fulfillWithValue(data || {
+        products: [],
+        latest_product: [],
+        topRated_product: [],
+        discount_product: []
+      });
     } catch (error) {
-      console.log(error?.response);
+      console.error('Error fetching products:', error);
+      return rejectWithValue({
+        products: [],
+        latest_product: [],
+        topRated_product: [],
+        discount_product: []
+      });
     }
   }
 );
@@ -46,15 +58,26 @@ export const price_range_product = createAsyncThunk(
 // 4) קבלת מוצרים לפי שאילתא (קטגוריה, חיפוש, מחיר וכו')
 export const query_products = createAsyncThunk(
   "product/query_products",
-  async (query, { fulfillWithValue }) => {
+  async (query, { fulfillWithValue, rejectWithValue }) => {
     try {
+      // Make sure all parameters are defined
+      const category = query.category || '';
+      const rating = query.rating || '';
+      const low = query.low || 0;
+      const high = query.high || 1000;
+      const sortPrice = query.sortPrice || '';
+      const pageNumber = query.pageNumber || 1;
+      const searchValue = query.searchValue || '';
+
+      console.log('Query params:', { category, rating, low, high, sortPrice, pageNumber, searchValue });
+
       const { data } = await api.get(
-        `/home/query-products?category=${query.category}&&rating=${query.rating}&&lowPrice=${query.low}&&highPrice=${query.high}&&sortPrice=${query.sortPrice}&&pageNumber=${query.pageNumber}&&searchValue=${query.searchValue ? query.searchValue : ""}`
+        `/home/query-products?category=${category}&&rating=${rating}&&lowPrice=${low}&&highPrice=${high}&&sortPrice=${sortPrice}&&pageNumber=${pageNumber}&&searchValue=${searchValue}`
       );
-      // console.log(data)
       return fulfillWithValue(data);
     } catch (error) {
-      console.log(error?.response);
+      console.error('Error querying products:', error);
+      return rejectWithValue({ products: [], totalProduct: 0, parPage: 10 });
     }
   }
 );
@@ -106,13 +129,14 @@ export const get_reviews = createAsyncThunk(
 // 8) שליפת באנרים
 export const get_banners = createAsyncThunk(
   "banner/get_banners",
-  async (_, { fulfillWithValue }) => {
+  async (_, { fulfillWithValue, rejectWithValue }) => {
     try {
       const { data } = await api.get(`/banners`);
-      // console.log(data)
-      return fulfillWithValue(data);
+      console.log('Banners data:', data);
+      return fulfillWithValue(data || { banners: [] });
     } catch (error) {
-      console.log(error?.response);
+      console.error('Error fetching banners:', error);
+      return rejectWithValue({ banners: [] });
     }
   }
 );
@@ -120,13 +144,14 @@ export const get_banners = createAsyncThunk(
 // 9) **חדש**: שליפת מוצרים מקטגוריות מובילות (Top Category)
 export const get_top_category_products = createAsyncThunk(
   "product/get_top_category_products",
-  async (_, { fulfillWithValue }) => {
+  async (_, { fulfillWithValue, rejectWithValue }) => {
     try {
       const { data } = await api.get("/home/get-top-category-products");
-      // console.log(data)
-      return fulfillWithValue(data);
+      console.log('Top category products data:', data);
+      return fulfillWithValue(data || { products: [] });
     } catch (error) {
-      console.log(error?.response);
+      console.error('Error fetching top category products:', error);
+      return rejectWithValue({ products: [] });
     }
   }
 );
@@ -167,14 +192,23 @@ export const homeReducer = createSlice({
     builder
       // 1) get_category
       .addCase(get_category.fulfilled, (state, { payload }) => {
-        state.categorys = payload.categorys;
+        state.categorys = payload?.categorys || [];
+      })
+      .addCase(get_category.rejected, (state, { payload }) => {
+        state.categorys = payload?.categorys || [];
       })
       // 2) get_products
       .addCase(get_products.fulfilled, (state, { payload }) => {
-        state.products = payload.products;
-        state.latest_product = payload.latest_product;
-        state.topRated_product = payload.topRated_product;
-        state.discount_product = payload.discount_product;
+        state.products = payload.products || [];
+        state.latest_product = payload.latest_product || [];
+        state.topRated_product = payload.topRated_product || [];
+        state.discount_product = payload.discount_product || [];
+      })
+      .addCase(get_products.rejected, (state, { payload }) => {
+        state.products = payload?.products || [];
+        state.latest_product = payload?.latest_product || [];
+        state.topRated_product = payload?.topRated_product || [];
+        state.discount_product = payload?.discount_product || [];
       })
       // 3) price_range_product
       .addCase(price_range_product.fulfilled, (state, { payload }) => {
@@ -183,9 +217,14 @@ export const homeReducer = createSlice({
       })
       // 4) query_products
       .addCase(query_products.fulfilled, (state, { payload }) => {
-        state.products = payload.products;
-        state.totalProduct = payload.totalProduct;
-        state.parPage = payload.parPage;
+        state.products = payload.products || [];
+        state.totalProduct = payload.totalProduct || 0;
+        state.parPage = payload.parPage || 10;
+      })
+      .addCase(query_products.rejected, (state, { payload }) => {
+        state.products = payload?.products || [];
+        state.totalProduct = payload?.totalProduct || 0;
+        state.parPage = payload?.parPage || 10;
       })
       // 5) product_details
       .addCase(product_details.fulfilled, (state, { payload }) => {
@@ -205,11 +244,17 @@ export const homeReducer = createSlice({
       })
       // 8) get_banners
       .addCase(get_banners.fulfilled, (state, { payload }) => {
-        state.banners = payload.banners;
+        state.banners = payload?.banners || [];
+      })
+      .addCase(get_banners.rejected, (state) => {
+        state.banners = [];
       })
       // 9) **חדש**: get_top_category_products
       .addCase(get_top_category_products.fulfilled, (state, { payload }) => {
-        state.topCategoryProducts = payload.products;
+        state.topCategoryProducts = payload?.products || [];
+      })
+      .addCase(get_top_category_products.rejected, (state, { payload }) => {
+        state.topCategoryProducts = payload?.products || [];
       });
   },
 });

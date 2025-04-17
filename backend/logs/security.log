@@ -1,0 +1,13 @@
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/home/get-products","timestamp":"2025-04-17T18:52:58.957Z"},"timestamp":"2025-04-17T18:52:58.957Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/home/get-categorys","timestamp":"2025-04-17T18:52:58.968Z"},"timestamp":"2025-04-17T18:52:58.968Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/banners","timestamp":"2025-04-17T18:52:58.973Z"},"timestamp":"2025-04-17T18:52:58.973Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/get-card-products/6801418d70e997869e55d29e","timestamp":"2025-04-17T18:53:02.777Z"},"timestamp":"2025-04-17T18:53:02.777Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/get-wishlist/6801418d70e997869e55d29e","timestamp":"2025-04-17T18:53:02.783Z"},"timestamp":"2025-04-17T18:53:02.783Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/home/get-categorys","timestamp":"2025-04-17T18:53:02.788Z"},"timestamp":"2025-04-17T18:53:02.788Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/banners","timestamp":"2025-04-17T18:53:02.793Z"},"timestamp":"2025-04-17T18:53:02.793Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/home/get-products","timestamp":"2025-04-17T18:53:02.799Z"},"timestamp":"2025-04-17T18:53:02.799Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/get-card-products/6801418d70e997869e55d29e","timestamp":"2025-04-17T18:53:02.803Z"},"timestamp":"2025-04-17T18:53:02.803Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/get-wishlist/6801418d70e997869e55d29e","timestamp":"2025-04-17T18:53:02.804Z"},"timestamp":"2025-04-17T18:53:02.804Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/get-card-products/6801418d70e997869e55d29e","timestamp":"2025-04-17T18:53:05.300Z"},"timestamp":"2025-04-17T18:53:05.300Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/get-wishlist/6801418d70e997869e55d29e","timestamp":"2025-04-17T18:53:05.302Z"},"timestamp":"2025-04-17T18:53:05.302Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/get-card-products/6801418d70e997869e55d29e","timestamp":"2025-04-17T18:53:05.309Z"},"timestamp":"2025-04-17T18:53:05.309Z"}

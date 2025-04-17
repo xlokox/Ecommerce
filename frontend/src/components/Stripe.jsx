@@ -1,17 +1,23 @@
-import React, { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js' 
-import { Elements } from '@stripe/react-stripe-js' 
+import React, { useState, useEffect } from 'react';
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements } from '@stripe/react-stripe-js'
 import axios from 'axios';
 import CheckoutForm from './CheckoutForm';
+
+// Load Stripe outside of component render to avoid recreating the Stripe object on every render
 const stripePromise = loadStripe('pk_test_51Oml5cGAwoXiNtjJgPPyQngDj9WTjawya4zCsqTn3LPFhl4VvLZZJIh9fW9wqVweFYC5f0YEb9zjUqRpXbkEKT7T00eU1xQvjp')
+
+// Add a comment to explain the HTTP warning
+// Note: The warning "You may test your Stripe.js integration over HTTP" is expected in development
+// In production, you should use HTTPS
 
 const Stripe = ({ price, orderId }) => {
     const [clientSecret, setClientSecret] = useState('')
-    const apperance = {
+    const appearance = {
         theme: 'stripe'
     }
     const options = {
-        apperance,
+        appearance,
         clientSecret
     }
 
@@ -35,6 +41,6 @@ const Stripe = ({ price, orderId }) => {
             }
         </div>
     );
-}; 
+};
 
 export default Stripe;

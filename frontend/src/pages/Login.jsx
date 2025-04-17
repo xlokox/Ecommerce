@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { FaFacebookF } from "react-icons/fa6";
-import { FaGoogle } from "react-icons/fa6"; 
+import { FaGoogle } from "react-icons/fa6";
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { customer_login,messageClear } from '../store/reducers/authReducer';
@@ -15,7 +15,7 @@ const Login = () => {
     const {loader,errorMessage,successMessage,userInfo } = useSelector(state => state.auth)
     const dispatch = useDispatch()
 
-    const [state, setState] = useState({ 
+    const [state, setState] = useState({
         email: '',
         password: ''
     })
@@ -26,25 +26,25 @@ const Login = () => {
             [e.target.name]: e.target.value
         })
     }
- 
+
     const login = (e) => {
         e.preventDefault()
         dispatch(customer_login(state))
     }
 
-    useEffect(() => { 
+    useEffect(() => {
         if (successMessage) {
             toast.success(successMessage)
-            dispatch(messageClear())  
-        } 
+            dispatch(messageClear())
+        }
         if (errorMessage) {
             toast.error(errorMessage)
-            dispatch(messageClear())  
-        } 
+            dispatch(messageClear())
+        }
         if (userInfo) {
             navigate('/')
         }
-    },[successMessage,errorMessage])
+    },[successMessage, errorMessage, userInfo, navigate, dispatch])
 
 
     return (
@@ -59,11 +59,11 @@ const Login = () => {
         <div className='w-full justify-center items-center p-10'>
             <div className='grid grid-cols-2 w-[60%] mx-auto bg-white rounded-md'>
                 <div className='px-8 py-8'>
-            <h2 className='text-center w-full text-xl text-slate-600 font-bold'>Login </h2> 
+            <h2 className='text-center w-full text-xl text-slate-600 font-bold'>Login </h2>
 
     <div>
         <form onSubmit={login} className='text-slate-600'>
-    
+
 
     <div className='flex flex-col gap-1 mb-2'>
         <label htmlFor="email">Email</label>
@@ -77,7 +77,7 @@ const Login = () => {
     </div>
 
     <button className='px-8 w-full py-2 bg-[#059473] shadow-lg hover:shadow-green-500/40 text-white rounded-md'>Login</button>
- 
+
         </form>
     <div className='flex justify-center items-center py-2'>
         <div className='h-[1px] bg-slate-300 w-[95%]'> </div>
@@ -93,19 +93,19 @@ const Login = () => {
     <button className='px-8 w-full py-2 bg-red-500 shadow hover:shadow-red-500/50 text-white rounded-md flex justify-center items-center gap-2 mb-3'>
         <span><FaGoogle  /></span>
         <span>Login With Google </span>
-    </button> 
-    </div>    
+    </button>
+    </div>
 
     <div className='text-center text-slate-600 pt-1'>
         <p>Don't Have An Account ? <Link className='text-blue-500' to='/register'> Register</Link> </p>
-    </div> 
+    </div>
 
      <a target='_blank' href="http://localhost:3000/login">
      <div className='px-8 w-full py-2 bg-[#02e3e0] shadow hover:shadow-red-500/50 text-white rounded-md flex justify-center items-center gap-2 mb-3'>
             Login As a Seller
      </div>
      </a>
- 
+
      <a target='_blank' href="http://localhost:3000/register">
      <div className='px-8 w-full py-2 bg-[#ad2cc4] shadow hover:shadow-red-500/50 text-white rounded-md flex justify-center items-center gap-2 mb-3'>
             Register As a Seller
@@ -114,16 +114,16 @@ const Login = () => {
 
 
 
-            </div> 
+            </div>
 
         <div className='w-full h-full py-4 pr-4'>
             <img src="http://localhost:3000/images/login.jpg" alt="" />
-         </div>    
+         </div>
 
          </div>
         </div>
-    </div>        
-            
+    </div>
+
             <Footer/>
         </div>
     );

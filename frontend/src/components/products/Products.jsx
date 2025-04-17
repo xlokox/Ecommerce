@@ -6,6 +6,16 @@ import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import Rating from '../Rating';
 
 const Products = ({ title, products }) => {
+  // Simple null check
+  if (!products || !Array.isArray(products) || products.length === 0) {
+    return (
+      <div className='flex justify-between items-center'>
+        <div className='text-xl font-bold text-slate-600'>{title}</div>
+        <div className='text-sm text-gray-500'>No products available</div>
+      </div>
+    );
+  }
+
   const responsive = {
     superLargeDesktop: {
       breakpoint: { max: 4000, min: 3000 },
@@ -59,21 +69,26 @@ const Products = ({ title, products }) => {
         customButtonGroup={<ButtonGroup />}
       >
         {products.map((p, i) => {
+          if (!p) return null;
+
           return (
             <div key={i} className='flex flex-col justify-start gap-2'>
-              {p.map((pl, j) => (
-                <Link key={j} className='flex justify-start items-start' to='#'>
-                  <img className='w-[110px] h-[110px]' src={pl.images[0]} alt="" />
-                  <div className='px-3 flex justify-start items-start gap-1 flex-col text-slate-600'>
-                    <h2>{pl.name}</h2>
-                    <span className='text-lg font-bold'>${pl.price}</span>
-                    {/* הוספת דירוג אם רוצים */}
-                    <div className='flex'>
-                      <Rating ratings={pl.rating || 0} />
+              {Array.isArray(p) ? p.map((pl, j) => {
+                if (!pl || !pl.images) return null;
+
+                return (
+                  <Link key={j} className='flex justify-start items-start' to='#'>
+                    <img className='w-[110px] h-[110px]' src={pl.images[0]} alt="Product" />
+                    <div className='px-3 flex justify-start items-start gap-1 flex-col text-slate-600'>
+                      <h2>{pl.name}</h2>
+                      <span className='text-lg font-bold'>${pl.price}</span>
+                      <div className='flex'>
+                        <Rating ratings={pl.rating || 0} />
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              }) : null}
             </div>
           );
         })}

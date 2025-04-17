@@ -13,8 +13,16 @@ const Wishlist = () => {
   const { wishlist, successMessage } = useSelector(state => state.card);
 
   useEffect(() => {
-    dispatch(get_wishlist_products(userInfo.id));
+    if (userInfo && userInfo.id) {
+      console.log('Fetching wishlist products for user:', userInfo.id);
+      dispatch(get_wishlist_products(userInfo.id));
+    }
   }, [dispatch, userInfo]);
+
+  // Log wishlist when it changes
+  useEffect(() => {
+    console.log('Current wishlist:', wishlist);
+  }, [wishlist]);
 
   useEffect(() => {
     if (successMessage) {
@@ -39,7 +47,10 @@ const Wishlist = () => {
             <img className='sm:w-full w-full h-[240px]' src={p.image} alt="" />
             <ul className='flex transition-all duration-700 -bottom-10 justify-center items-center gap-2 absolute w-full group-hover:bottom-3'>
               <li
-                onClick={() => dispatch(remove_wishlist(p._id))}
+                onClick={() => {
+                  console.log('Removing wishlist item with ID:', p._id);
+                  dispatch(remove_wishlist(p._id));
+                }}
                 className='w-[38px] h-[38px] cursor-pointer bg-white flex justify-center items-center rounded-full hover:bg-[#059473] hover:text-white hover:rotate-[720deg] transition-all'
               >
                 <FaRegHeart />

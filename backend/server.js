@@ -23,7 +23,7 @@ console.log('cloud_name:', process.env.cloud_name);
 console.log('api_key:', process.env.api_key);
 console.log('api_secret:', process.env.api_secret);
 
-// וכו' – לפי מה שהיה לך קודם
+// goodies – לפי מה שהיה לך קודם
 console.log('🚀 Available ChatController Methods: [...]');
 console.log('🚀 Final ChatController Methods: [...]');
 
@@ -31,26 +31,52 @@ console.log('🚀 Final ChatController Methods: [...]');
 const app = express();
 const server = createServer(app);
 
-// הגדרות CORS
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
-const corsOptions = {
-  origin: allowedOrigins,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+import { securityMiddleware, validateRequest } from './middlewares/securityMiddleware.js';
+import { authMiddleware } from './middlewares/authMiddleware.js';
+import { loggingMiddleware } from './middlewares/loggingMiddleware.js';
+
+// Security middleware
+app.use(securityMiddleware);
+
+// CORS with secure configuration
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? 'https://your-domain.com' 
+    : ['http://localhost:3000', 'http://localhost:3001'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'X-CSRF-Token'],
+  exposedHeaders: ['X-CSRF-Token'],
+  maxAge: 86400 // 24 hours
+}));
 
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+// Add logging middleware
+app.use(loggingMiddleware);
 
-// שימוש ב־bodyParser וב־cookieParser
-app.use(bodyParser.json());
-app.use(cookieParser());
+// Test endpoint
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'API is working' });
+});
+
+// Protected routes
+app.use('/api/payment', validateRequest, authMiddleware);
+app.use('/api/order', validateRequest, authMiddleware);
+app.use('/api/chat', validateRequest, authMiddleware);
+
+// Error handling
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ 
+    error: process.env.NODE_ENV === 'production' 
+      ? 'Internal server error' 
+      : err.message 
+  });
+});
 
 // הגדרת Socket.io עם אפשרויות CORS
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: ['http://localhost:3000', 'http://localhost:3001'],
     methods: ['GET', 'POST'],
     credentials: true,
   },

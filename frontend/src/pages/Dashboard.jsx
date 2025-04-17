@@ -23,15 +23,12 @@ const Dashboard = () => {
 
     const logout = async () => {
         try {
-            const { data } = await api.get('/logout', { withCredentials: true });
-
-            localStorage.removeItem('customerToken')
-            dispatch(user_reset())
-            dispatch(reset_count())
-            navigate('/login')
-            
+            await api.get('/logout');
+            dispatch(user_reset());
+            dispatch(reset_count());
+            navigate('/login');
         } catch (error) {
-            console.log(error.response.data)
+            console.error('Logout failed:', error);
         }
     }
 

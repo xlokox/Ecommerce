@@ -38,15 +38,14 @@ export const customer_login = createAsyncThunk(
   "auth/customer_login",
   async (info, { rejectWithValue, fulfillWithValue }) => {
     try {
-      // לדוגמה: אם בשרת הנתיב הוא POST /api/customer/login
       const { data } = await api.post("/customer/login", info);
-
-      // אם חזר טוקן, נשמור אותו ב-LocalStorage
+      // Save token to localStorage
       if (data?.token) {
         localStorage.setItem("customerToken", data.token);
       }
       return fulfillWithValue(data);
     } catch (error) {
+      console.error('Login error:', error?.response?.data || error);
       return rejectWithValue(error?.response?.data || { error: "Login failed" });
     }
   }
@@ -55,7 +54,7 @@ export const customer_login = createAsyncThunk(
 // מצב התחלתי
 const initialState = {
   loader: false,
-  userInfo: decodeToken(localStorage.getItem("customerToken")), 
+  userInfo: decodeToken(localStorage.getItem("customerToken")),
   errorMessage: "",
   successMessage: "",
 };

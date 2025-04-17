@@ -28,7 +28,10 @@ const Card = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    dispatch(get_card_products(userInfo.id));
+    if (userInfo && userInfo.id) {
+      console.log('Fetching cart products for user:', userInfo.id);
+      dispatch(get_card_products(userInfo.id));
+    }
   }, [dispatch, userInfo]);
 
   const redirect = () => {
@@ -42,11 +45,19 @@ const Card = () => {
     });
   };
 
+  // Log cart products when they change
+  useEffect(() => {
+    console.log('Cart products:', card_products);
+    console.log('Out of stock products:', outofstock_products);
+  }, [card_products, outofstock_products]);
+
   useEffect(() => {
     if (successMessage) {
       toast.success(successMessage);
       dispatch(messageClear());
-      dispatch(get_card_products(userInfo.id));
+      if (userInfo && userInfo.id) {
+        dispatch(get_card_products(userInfo.id));
+      }
     }
   }, [successMessage, dispatch, userInfo]);
 

@@ -5,10 +5,18 @@ export const add_friend = createAsyncThunk(
   "chat/add_friend",
   async (info, { rejectWithValue, fulfillWithValue }) => {
     try {
+      // Make sure we have both sellerId and userId
+      if (!info.sellerId || !info.userId) {
+        console.error('Missing sellerId or userId in add_friend');
+        return rejectWithValue({ error: 'Missing sellerId or userId' });
+      }
+
+      console.log('Adding friend with info:', info);
       const { data } = await api.post("/chat/customer/add-customer-friend", info);
       return fulfillWithValue(data);
     } catch (error) {
-      return rejectWithValue(error?.response?.data);
+      console.error('Error adding friend:', error);
+      return rejectWithValue(error?.response?.data || { error: 'Failed to add friend' });
     }
   }
 );

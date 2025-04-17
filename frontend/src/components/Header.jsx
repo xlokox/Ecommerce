@@ -12,7 +12,7 @@ import { FaCartShopping } from "react-icons/fa6";
 import { FaPhoneAlt } from "react-icons/fa";
 import { IoIosArrowDown } from "react-icons/io";
 import { useDispatch, useSelector } from 'react-redux';
-import { get_card_products, get_wishlist_products } from '../store/reducers/cardReducer';
+import { get_card_products, get_wishlist_products, reset_count } from '../store/reducers/cardReducer';
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -40,9 +40,13 @@ const Header = () => {
   };
 
   useEffect(() => {
-    if (userInfo) {
+    if (userInfo && userInfo.id) {
+      console.log('Fetching cart and wishlist for user:', userInfo.id);
       dispatch(get_card_products(userInfo.id));
       dispatch(get_wishlist_products(userInfo.id));
+    } else {
+      // Reset counts when user is not logged in
+      dispatch(reset_count());
     }
   }, [userInfo, dispatch]);
 
@@ -296,7 +300,7 @@ const Header = () => {
                     {categorys.map((c, i) => (
                       <li key={i} className='flex justify-start items-center gap-2 px-[24px] py-[6px]'>
                         <img src={c.image} className='w-[30px] h-[30px] rounded-full overflow-hidden' alt="" />
-                        <Link to={`/products?category=${c.name}`} className='text-sm block'>
+                        <Link to={`/products?category=${c._id}`} className='text-sm block'>
                           {c.name}
                         </Link>
                       </li>

@@ -1,22 +1,32 @@
 import rateLimit from 'express-rate-limit';
-import csrf from 'csurf';
+import helmet from 'helmet';
 
-export const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP
-  message: { error: 'Too many requests, please try again later.' }
-});
+export const securityMiddleware = [
+  helmet(),
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", process.env.NODE_ENV === 'production' ? 'https://*.your-domain.com' : 'http://localhost:*']
+    }
+  }),
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP
+    message: { error: 'Too many requests' },
+    standardHeaders: true,
+    legacyHeaders: false
+  })
+];
 
-export const csrfProtection = csrf({ 
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production'
+export const validateRequest = (req, res, next) => {
+  const token = req.cookies.accessToken;
+  const csrfToken = req.headers['x-csrf-token'];
+  
+  if (!token || !csrfToken) {
+    return res.status(403).json({ error: 'Invalid request' });
   }
-});
-
-export const secureHeaders = (req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
   next();
 };
