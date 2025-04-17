@@ -5,7 +5,7 @@ import { authMiddleware } from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-// middleware שבודק תפקידים (האם התפקיד נמצא ברשימה של תפקידים המותרים)
+// middleware שבודק תפקידים
 const requireRole = (allowedRoles) => (req, res, next) => {
   if (!allowedRoles.includes(req.role)) {
     return res.status(403).json({ message: 'Forbidden: insufficient permissions' });
