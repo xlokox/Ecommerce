@@ -269,7 +269,7 @@ class HomeControllers {
   get_top_category_products = async (req, res) => {
     try {
       // הגדרה קבועה של קטגוריות שנחשבות "טופ"
-      const topCategories = ["Shoes", "Watches", "Phones"];
+      const topCategories = ["Shoes", "Watches", "Phones", "Electronics"];
       const products = await productModel
         .find({ category: { $in: topCategories } })
         .limit(12)
