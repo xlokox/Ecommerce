@@ -6,16 +6,16 @@ import { PropagateLoader } from 'react-spinners';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import { overrideStyle } from '../../utils/utils';
-import { seller_login, messageClear } from '../../store/Reducers/authReducer';
+import { seller_login, messageClear, get_user_info, clearAuth } from '../../store/Reducers/authReducer';
 
 const Login = () => {
 
     const navigate = useNavigate()
 
     const dispatch = useDispatch()
-    const {loader,errorMessage,successMessage} = useSelector(state=>state.auth)
+    const {loader, errorMessage, successMessage, token, role, userInfo} = useSelector(state=>state.auth)
 
-    const [state, setState] = useState({ 
+    const [state, setState] = useState({
         email: "",
         password: ""
     })
@@ -32,20 +32,64 @@ const Login = () => {
         dispatch(seller_login(state))
     }
 
+    // Effect for handling successful login
     useEffect(() => {
-
-        if (successMessage) {
-            toast.success(successMessage)
-            dispatch(messageClear()) 
-            navigate('/') 
+        try {
+            // If we have a token, role, and userInfo, redirect to the appropriate dashboard
+            if (token && role === 'seller' && userInfo) {
+                console.log('Login: Redirecting seller to dashboard');
+                navigate('/seller/dashboard');
+            } else if (token && role && userInfo) {
+                console.log('Login: Redirecting to home with role:', role);
+                navigate('/');
+            }
+        } catch (error) {
+            console.error('Error in Login redirect effect:', error);
         }
-        if (errorMessage) {
-            toast.error(errorMessage)
-            dispatch(messageClear())
-        }
-        
+    }, [token, role, userInfo, navigate]);
 
-    },[successMessage,errorMessage])
+    // Separate effect for fetching user info
+    useEffect(() => {
+        try {
+            // Only fetch user info if we have a token but no userInfo
+            if (token && !userInfo) {
+                console.log('Login: Fetching user info with token');
+                dispatch(get_user_info());
+            }
+        } catch (error) {
+            console.error('Error fetching user info:', error);
+        }
+    }, [token, userInfo, dispatch]);
+
+    // Separate effect for handling success messages
+    useEffect(() => {
+        try {
+            if (successMessage) {
+                toast.success(successMessage);
+                dispatch(messageClear());
+                // We don't need to fetch user info here as it's handled in the separate effect
+            }
+        } catch (error) {
+            console.error('Error in Login success message effect:', error);
+        }
+    }, [successMessage, dispatch]);
+
+    // Separate effect for handling error messages
+    useEffect(() => {
+        try {
+            if (errorMessage) {
+                toast.error(errorMessage);
+                dispatch(messageClear());
+                // Clear auth state if there's an error with authentication
+                if (errorMessage.includes('authentication') || errorMessage.includes('token')) {
+                    dispatch(clearAuth());
+                }
+            }
+        } catch (error) {
+            console.error('Error in Login error message effect:', error);
+            toast.error('An error occurred. Please try again.');
+        }
+    }, [errorMessage, dispatch])
 
 
     return (
@@ -56,7 +100,7 @@ const Login = () => {
                 <p className='text-sm mb-3 font-medium'>Please Sing In your account</p>
 
     <form onSubmit={submit}>
-         
+
         <div className='flex flex-col w-full gap-1 mb-3'>
             <label htmlFor="email">Email</label>
             <input onChange={inputHandle} value={state.email}  className='px-3 py-2 outline-none border border-slate-400 bg-transparent rounded-md' type="email" name='email' placeholder='Email' id='email' required />
@@ -67,16 +111,16 @@ const Login = () => {
             <label htmlFor="password">Password</label>
             <input onChange={inputHandle} value={state.password}  className='px-3 py-2 outline-none border border-slate-400 bg-transparent rounded-md' type="password" name='password' placeholder='Password' id='password' required />
         </div>
-  
+
 
         <button disabled={loader ? true : false}  className='bg-slate-800 w-full hover:shadow-blue-300/ hover:shadow-lg text-white rounded-md px-7 py-2 mb-3'>
             {
                loader ? <PropagateLoader color='#fff' cssOverride={overrideStyle} /> : 'Sing In'
-            } 
+            }
             </button>
 
         <div className='flex items-center mb-3 gap-3 justify-center'>
-            <p>Don't Have an account ? <Link className='font-bold' to="/register">Sing Up</Link> </p> 
+            <p>Don't Have an account ? <Link className='font-bold' to="/register">Sing Up</Link> </p>
         </div>
 
         <div className='w-full flex justify-center items-center mb-3'>
@@ -100,10 +144,10 @@ const Login = () => {
 
 
     </form>
- 
+
             </div>
-            </div>  
-            
+            </div>
+
         </div>
     );
 };

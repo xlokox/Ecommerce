@@ -52,7 +52,7 @@ app.use(cors({
     : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'X-CSRF-Token'],
+  allowedHeaders: ['Content-Type', 'X-CSRF-Token', 'Authorization'],
   exposedHeaders: ['X-CSRF-Token'],
   maxAge: 86400 // 24 hours
 }));

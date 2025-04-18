@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import api from "../../api/api";
+import api from "../../api";
 import { jwtDecode } from "jwt-decode";
 
 // Login for admin
@@ -33,11 +33,25 @@ export const seller_login = createAsyncThunk(
 // Get user information from the server
 export const get_user_info = createAsyncThunk(
   "auth/get_user_info",
-  async (_, { rejectWithValue, fulfillWithValue }) => {
+  async (_, { rejectWithValue, fulfillWithValue, getState }) => {
     try {
-      const { data } = await api.get("/get-user", { withCredentials: true });
+      // Get token from state
+      const { token } = getState().auth;
+
+      // Set up headers with token
+      const config = {
+        withCredentials: true,
+        headers: {
+          Authorization: token ? `Bearer ${token}` : ''
+        }
+      };
+
+      console.log('Sending request to get user info with token:', token ? 'Token exists' : 'No token');
+      const { data } = await api.get("/get-user", config);
+      console.log('User info received:', data);
       return fulfillWithValue(data);
     } catch (error) {
+      console.error('Error getting user info:', error?.response?.data || error.message);
       return rejectWithValue(error?.response?.data);
     }
   }
@@ -117,16 +131,39 @@ export const change_password = createAsyncThunk(
 
 // פונקציה לפענוח התפקיד מתוך ה-token
 const returnRole = (token) => {
-  if (token) {
-    const decodedToken = jwtDecode(token); // <-- כאן decode תקין
-    const expireTime = new Date(decodedToken.exp * 1000);
-    if (new Date() > expireTime) {
-      localStorage.removeItem("accessToken");
-      return "";
-    } else {
-      return decodedToken.role || "";
+  if (!token) {
+    return "";
+  }
+
+  try {
+    // Try to decode the token
+    const decodedToken = jwtDecode(token);
+
+    // Check if token is expired
+    if (decodedToken.exp) {
+      const expireTime = new Date(decodedToken.exp * 1000);
+      if (new Date() > expireTime) {
+        localStorage.removeItem("accessToken");
+        return "";
+      }
     }
-  } else {
+
+    // Return the role if it exists
+    return decodedToken.role || "";
+  } catch (error) {
+    // If there's any error in decoding, remove the invalid token
+    console.error("Invalid token:", error.message);
+    localStorage.removeItem("accessToken");
+    return "";
+  }
+};
+
+// Helper function to safely get token from localStorage
+const getTokenFromStorage = () => {
+  try {
+    return localStorage.getItem("accessToken") || "";
+  } catch (error) {
+    console.error("Error accessing localStorage:", error);
     return "";
   }
 };
@@ -137,13 +174,20 @@ export const authReducer = createSlice({
     successMessage: "",
     errorMessage: "",
     loader: false,
-    userInfo: "", 
-    role: returnRole(localStorage.getItem("accessToken")),
-    token: localStorage.getItem("accessToken")
+    userInfo: "",
+    role: returnRole(getTokenFromStorage()),
+    token: getTokenFromStorage()
   },
   reducers: {
     messageClear: (state) => {
       state.errorMessage = "";
+      state.successMessage = "";
+    },
+    clearAuth: (state) => {
+      state.userInfo = "";
+      state.role = "";
+      state.token = "";
+      localStorage.removeItem("accessToken");
     }
   },
   extraReducers: (builder) => {
@@ -166,16 +210,25 @@ export const authReducer = createSlice({
       // Seller Login
       .addCase(seller_login.pending, (state) => {
         state.loader = true;
+        state.errorMessage = "";
+        state.successMessage = "";
       })
       .addCase(seller_login.rejected, (state, { payload }) => {
         state.loader = false;
         state.errorMessage = payload?.error || payload || "Seller login failed";
+        console.error('Seller login rejected:', payload);
       })
       .addCase(seller_login.fulfilled, (state, { payload }) => {
         state.loader = false;
-        state.successMessage = payload?.message;
+        state.successMessage = payload?.message || "Login successful";
         state.token = payload?.token;
         state.role = returnRole(payload?.token);
+        console.log('Seller login successful, role:', state.role);
+
+        // Immediately try to get user info after successful login
+        if (state.token && state.role) {
+          console.log('Triggering user info fetch after login');
+        }
       })
 
       // Seller Register
@@ -194,10 +247,35 @@ export const authReducer = createSlice({
       })
 
       // Get User Info
+      .addCase(get_user_info.pending, (state) => {
+        state.loader = true;
+      })
+      .addCase(get_user_info.rejected, (state, { payload }) => {
+        state.loader = false;
+        state.errorMessage = payload?.error || payload || "Failed to get user info";
+        // Clear auth state on error
+        state.userInfo = "";
+        state.role = "";
+        state.token = "";
+        localStorage.removeItem("accessToken");
+      })
       .addCase(get_user_info.fulfilled, (state, { payload }) => {
         state.loader = false;
-        // אם השרת מחזיר { _id, name, role, ... }, שומר הכל ב-userInfo
-        state.userInfo = payload || {};
+        console.log('User info received in reducer:', payload);
+
+        // The API returns { userInfo: { _id, name, role, ... } }
+        if (payload && payload.userInfo) {
+          state.userInfo = payload.userInfo;
+
+          // Update role from userInfo
+          if (payload.userInfo.role) {
+            state.role = payload.userInfo.role;
+            console.log('Role set from userInfo:', payload.userInfo.role);
+          }
+        } else {
+          console.warn('Unexpected payload format from get_user_info:', payload);
+          state.userInfo = payload || {};
+        }
       })
 
       // Profile Image Upload
@@ -232,9 +310,27 @@ export const authReducer = createSlice({
       .addCase(change_password.fulfilled, (state, action) => {
         state.loader = false;
         state.successMessage = action.payload;
+      })
+
+      // Logout
+      .addCase(logout.pending, (state) => {
+        state.loader = true;
+      })
+      .addCase(logout.rejected, (state, { payload }) => {
+        state.loader = false;
+        state.errorMessage = payload?.error || payload || "Logout failed";
+        console.error('Logout rejected:', payload);
+      })
+      .addCase(logout.fulfilled, (state, { payload }) => {
+        state.loader = false;
+        state.successMessage = payload?.message || "Logout successful";
+        state.userInfo = "";
+        state.role = "";
+        state.token = "";
+        console.log('Logout successful');
       });
   }
 });
 
-export const { messageClear } = authReducer.actions;
+export const { messageClear, clearAuth } = authReducer.actions;
 export default authReducer.reducer;

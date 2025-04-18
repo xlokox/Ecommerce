@@ -1,52 +1,52 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import api from "../../api/api"; 
- 
+import api from "../../api";
+
 export const add_banner = createAsyncThunk(
     'banner/add_banner',
-    async(info ,{rejectWithValue, fulfillWithValue}) => { 
+    async(info ,{rejectWithValue, fulfillWithValue}) => {
         try {
-            const {data} = await api.post(`/banner/add`,info,{withCredentials: true})  
+            const {data} = await api.post(`/banner/add`,info,{withCredentials: true})
             return fulfillWithValue(data)
-        } catch (error) { 
+        } catch (error) {
             return rejectWithValue(error.response.data)
         }
     }
 )
-// End Method 
+// End Method
 
 export const get_banner = createAsyncThunk(
     'banner/get_banner',
-    async(productId ,{rejectWithValue, fulfillWithValue}) => { 
+    async(productId ,{rejectWithValue, fulfillWithValue}) => {
         try {
-            const {data} = await api.get(`/banner/get/${productId}`,{withCredentials: true})  
+            const {data} = await api.get(`/banner/get/${productId}`,{withCredentials: true})
             return fulfillWithValue(data)
-        } catch (error) { 
+        } catch (error) {
             return rejectWithValue(error.response.data)
         }
     }
 )
-// End Method 
+// End Method
 
 export const update_banner = createAsyncThunk(
     'banner/update_banner',
-    async({bannerId,info} ,{rejectWithValue, fulfillWithValue}) => { 
+    async({bannerId,info} ,{rejectWithValue, fulfillWithValue}) => {
         try {
-            const {data} = await api.put(`/banner/update/${bannerId}`,info,{withCredentials: true})  
+            const {data} = await api.put(`/banner/update/${bannerId}`,info,{withCredentials: true})
             return fulfillWithValue(data)
-        } catch (error) { 
+        } catch (error) {
             return rejectWithValue(error.response.data)
         }
     }
 )
-// End Method 
- 
+// End Method
+
 export const bannerReducer = createSlice({
     name: 'banner',
     initialState:{
         successMessage :  '',
         errorMessage : '',
         loader: false,
-        banners : [], 
+        banners : [],
         banner: ''
     },
     reducers : {
@@ -58,34 +58,34 @@ export const bannerReducer = createSlice({
     extraReducers: (builder) => {
         builder
         .addCase(add_banner.pending, (state, { payload }) => {
-            state.loader = true; 
+            state.loader = true;
         })
         .addCase(add_banner.rejected, (state, { payload }) => {
-            state.loader = false; 
+            state.loader = false;
             // שימוש באופציונל צ'יינינג + ברירת מחדל
-            state.errorMessage = payload?.error || payload || "Failed to add banner"; 
+            state.errorMessage = payload?.error || payload || "Failed to add banner";
         })
         .addCase(add_banner.fulfilled, (state, { payload }) => {
-            state.loader = false; 
-            state.successMessage = payload.message; 
-            state.banner = payload.banner; 
+            state.loader = false;
+            state.successMessage = payload.message;
+            state.banner = payload.banner;
         })
 
-        .addCase(get_banner.fulfilled, (state, { payload }) => {            
-            state.banner = payload.banner; 
+        .addCase(get_banner.fulfilled, (state, { payload }) => {
+            state.banner = payload.banner;
         })
 
         .addCase(update_banner.pending, (state, { payload }) => {
-            state.loader = true; 
+            state.loader = true;
         })
         .addCase(update_banner.rejected, (state, { payload }) => {
-            state.loader = false; 
-            state.errorMessage = payload?.error || payload || "Failed to update banner"; 
+            state.loader = false;
+            state.errorMessage = payload?.error || payload || "Failed to update banner";
         })
         .addCase(update_banner.fulfilled, (state, { payload }) => {
-            state.loader = false; 
-            state.successMessage = payload.message; 
-            state.banner = payload.banner; 
+            state.loader = false;
+            state.successMessage = payload.message;
+            state.banner = payload.banner;
         })
     }
 })

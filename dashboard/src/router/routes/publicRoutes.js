@@ -17,6 +17,10 @@ const publicRoutes = [
     element: <Login />,
   },
   {
+    path: "seller/login",
+    element: <Login />,
+  },
+  {
     path: "register",
     element: <Register />,
   },

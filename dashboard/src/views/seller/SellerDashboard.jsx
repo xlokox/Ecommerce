@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { MdCurrencyExchange,MdProductionQuantityLimits } from "react-icons/md";
 import { FaUsers } from "react-icons/fa";
-import { FaCartShopping } from "react-icons/fa6"; 
+import { FaCartShopping } from "react-icons/fa6";
 import Chart from 'react-apexcharts'
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -19,7 +19,7 @@ const SellerDashboard = () => {
 
     useEffect(() => {
         dispatch(get_seller_dashboard_data())
-    }, [])
+    }, [dispatch])
 
     const state = {
         series : [
@@ -91,7 +91,7 @@ const SellerDashboard = () => {
 
 
             <div className='w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-7'>
-                
+
                 <div className='flex justify-between items-center p-5 bg-[#fae8e8] rounded-md gap-3'>
                     <div className='flex flex-col justify-start items-start text-[#5c5a5a]'>
                         <h2 className='text-3xl font-bold'>${totalSale}</h2>
@@ -99,8 +99,8 @@ const SellerDashboard = () => {
                     </div>
 
                     <div className='w-[40px] h-[47px] rounded-full bg-[#fa0305] flex justify-center items-center text-xl'>
-                    <MdCurrencyExchange className='text-[#fae8e8] shadow-lg' /> 
-                    </div> 
+                    <MdCurrencyExchange className='text-[#fae8e8] shadow-lg' />
+                    </div>
                 </div>
 
 
@@ -111,8 +111,8 @@ const SellerDashboard = () => {
                     </div>
 
                     <div className='w-[40px] h-[47px] rounded-full bg-[#760077] flex justify-center items-center text-xl'>
-                    <MdProductionQuantityLimits  className='text-[#fae8e8] shadow-lg' /> 
-                    </div> 
+                    <MdProductionQuantityLimits  className='text-[#fae8e8] shadow-lg' />
+                    </div>
                 </div>
 
 
@@ -123,8 +123,8 @@ const SellerDashboard = () => {
                     </div>
 
                     <div className='w-[40px] h-[47px] rounded-full bg-[#038000] flex justify-center items-center text-xl'>
-                    <FaCartShopping  className='text-[#fae8e8] shadow-lg' /> 
-                    </div> 
+                    <FaCartShopping  className='text-[#fae8e8] shadow-lg' />
+                    </div>
                 </div>
 
 
@@ -135,14 +135,14 @@ const SellerDashboard = () => {
                     </div>
 
                     <div className='w-[40px] h-[47px] rounded-full bg-[#0200f8] flex justify-center items-center text-xl'>
-                    <FaCartShopping  className='text-[#fae8e8] shadow-lg' /> 
-                    </div> 
+                    <FaCartShopping  className='text-[#fae8e8] shadow-lg' />
+                    </div>
                 </div>
- 
+
             </div>
 
-        
-        
+
+
         <div className='w-full flex flex-wrap mt-7'>
             <div className='w-full lg:w-7/12 lg:pr-3'>
                 <div className='w-full bg-[#6a5fdf] p-4 rounded-md'>
@@ -150,7 +150,7 @@ const SellerDashboard = () => {
                 </div>
             </div>
 
-        
+
         <div className='w-full lg:w-5/12 lg:pl-4 mt-6 lg:mt-0'>
             <div className='w-full bg-[#6a5fdf] p-4 rounded-md text-[#d0d2d6]'>
                 <div className='flex justify-between items-center'>
@@ -160,13 +160,13 @@ const SellerDashboard = () => {
 
         <div className='flex flex-col gap-2 pt-6 text-[#d0d2d6]'>
             <ol className='relative border-1 border-slate-600 ml-4'>
-               
+
     {
         recentMessage.map((m, i) => <li className='mb-3 ml-6'>
         <div className='flex absolute -left-5 shadow-lg justify-center items-center w-10 h-10 p-[6px] bg-[#4c7fe2] rounded-full z-10'>
         {
             m.senderId === userInfo._id ? <img className='w-full rounded-full h-full shadow-lg' src={userInfo.image} alt="" /> : <img className='w-full rounded-full h-full shadow-lg' src={customer} alt="" />
-        } 
+        }
         </div>
         <div className='p-3 bg-slate-800 rounded-lg border border-slate-600 shadow-sm'>
         <div className='flex justify-between items-center mb-2'>
@@ -180,7 +180,7 @@ const SellerDashboard = () => {
     </li>)
         }
 
- 
+
 
             </ol>
 
@@ -222,7 +222,7 @@ const SellerDashboard = () => {
             </tr> )
             }
 
-            
+
         </tbody>
 
     </table>
@@ -234,7 +234,7 @@ const SellerDashboard = () => {
 
 
 
-             
+
         </div>
     );
 };
