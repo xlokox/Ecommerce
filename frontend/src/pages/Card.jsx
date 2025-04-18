@@ -49,6 +49,14 @@ const Card = () => {
   useEffect(() => {
     console.log('Cart products:', card_products);
     console.log('Out of stock products:', outofstock_products);
+
+    // Log detailed structure of the first product if available
+    if (card_products.length > 0) {
+      console.log('First product structure:', JSON.stringify(card_products[0], null, 2));
+      if (card_products[0].products && card_products[0].products.length > 0) {
+        console.log('First nested product:', JSON.stringify(card_products[0].products[0], null, 2));
+      }
+    }
   }, [card_products, outofstock_products]);
 
   useEffect(() => {
@@ -61,17 +69,19 @@ const Card = () => {
     }
   }, [successMessage, dispatch, userInfo]);
 
-  const inc = (quantity, stock, card_id) => {
+  const inc = (quantity, stock, card_id, parent_id) => {
     const temp = quantity + 1;
     if (temp <= stock) {
-      dispatch(quantity_inc(card_id));
+      // Use the parent ID for the API call
+      dispatch(quantity_inc(parent_id || card_id));
     }
   };
 
-  const dec = (quantity, card_id) => {
+  const dec = (quantity, card_id, parent_id) => {
     const temp = quantity - 1;
     if (temp !== 0) {
-      dispatch(quantity_dec(card_id));
+      // Use the parent ID for the API call
+      dispatch(quantity_dec(parent_id || card_id));
     }
   };
 
@@ -122,19 +132,40 @@ const Card = () => {
                           <div key={idx} className='w-full flex flex-wrap'>
                             <div className='flex sm:w-full gap-2 w-7/12'>
                               <div className='flex gap-2 justify-start items-center'>
-                                {pt.productInfo && pt.productInfo.images && (
+                                {/* Try different possible image paths */}
+                                {pt.productInfo && pt.productInfo.images && pt.productInfo.images[0] ? (
                                   <img
                                     className='w-[80px] h-[80px]'
                                     src={pt.productInfo.images[0]}
-                                    alt=""
+                                    alt="Product"
                                   />
+                                ) : pt.products && pt.products[0] && pt.products[0].images && pt.products[0].images[0] ? (
+                                  <img
+                                    className='w-[80px] h-[80px]'
+                                    src={pt.products[0].images[0]}
+                                    alt="Product"
+                                  />
+                                ) : pt.images && pt.images[0] ? (
+                                  <img
+                                    className='w-[80px] h-[80px]'
+                                    src={pt.images[0]}
+                                    alt="Product"
+                                  />
+                                ) : (
+                                  <div className='w-[80px] h-[80px] bg-gray-200 flex items-center justify-center'>
+                                    <span>No Image</span>
+                                  </div>
                                 )}
                                 <div className='pr-4 text-slate-600'>
                                   <h2 className='text-md font-semibold'>
-                                    {pt.productInfo ? pt.productInfo.name : 'Product'}
+                                    {pt.productInfo && pt.productInfo.name ? pt.productInfo.name :
+                                     pt.products && pt.products[0] && pt.products[0].name ? pt.products[0].name :
+                                     pt.name ? pt.name : 'Product'}
                                   </h2>
                                   <span className='text-sm'>
-                                    Brand: {pt.productInfo ? pt.productInfo.brand : 'Unknown'}
+                                    Brand: {pt.productInfo && pt.productInfo.brand ? pt.productInfo.brand :
+                                           pt.products && pt.products[0] && pt.products[0].brand ? pt.products[0].brand :
+                                           pt.brand ? pt.brand : 'Unknown'}
                                   </span>
                                 </div>
                               </div>
@@ -142,7 +173,7 @@ const Card = () => {
 
                             <div className='flex justify-between w-5/12 sm:w-full sm:mt-3'>
                               <div className='pl-4 sm:pl-0'>
-                                {pt.productInfo && (
+                                {pt.productInfo && pt.productInfo.price ? (
                                   <>
                                     <h2 className='text-lg text-orange-500'>
                                       $
@@ -158,12 +189,46 @@ const Card = () => {
                                     </p>
                                     <p>-{pt.productInfo.discount || 0}%</p>
                                   </>
+                                ) : pt.products && pt.products[0] && pt.products[0].price ? (
+                                  <>
+                                    <h2 className='text-lg text-orange-500'>
+                                      $
+                                      {pt.products[0].price -
+                                        Math.floor(
+                                          (pt.products[0].price *
+                                            (pt.products[0].discount || 0)) /
+                                            100
+                                        )}
+                                    </h2>
+                                    <p className='line-through'>
+                                      ${pt.products[0].price}
+                                    </p>
+                                    <p>-{pt.products[0].discount || 0}%</p>
+                                  </>
+                                ) : pt.price ? (
+                                  <>
+                                    <h2 className='text-lg text-orange-500'>
+                                      $
+                                      {pt.price -
+                                        Math.floor(
+                                          (pt.price *
+                                            (pt.discount || 0)) /
+                                            100
+                                        )}
+                                    </h2>
+                                    <p className='line-through'>
+                                      ${pt.price}
+                                    </p>
+                                    <p>-{pt.discount || 0}%</p>
+                                  </>
+                                ) : (
+                                  <h2 className='text-lg text-orange-500'>Price not available</h2>
                                 )}
                               </div>
                               <div className='flex gap-2 flex-col'>
                                 <div className='flex bg-slate-200 h-[30px] justify-center items-center text-xl'>
                                   <div
-                                    onClick={() => dec(pt.quantity, pt._id)}
+                                    onClick={() => dec(pt.quantity, pt._id, p._id)}
                                     className='px-3 cursor-pointer'
                                   >
                                     -
@@ -171,7 +236,7 @@ const Card = () => {
                                   <div className='px-3'>{pt.quantity}</div>
                                   <div
                                     onClick={() =>
-                                      inc(pt.quantity, pt.productInfo ? pt.productInfo.stock : 0, pt._id)
+                                      inc(pt.quantity, pt.productInfo ? pt.productInfo.stock : 0, pt._id, p._id)
                                     }
                                     className='px-3 cursor-pointer'
                                   >
@@ -179,9 +244,12 @@ const Card = () => {
                                   </div>
                                 </div>
                                 <button
-                                  onClick={() =>
-                                    dispatch(delete_card_product(pt._id))
-                                  }
+                                  onClick={() => {
+                                    // The correct ID to delete is the parent's _id, not the nested product's _id
+                                    console.log('Deleting product with ID:', p._id);
+                                    console.log('Product details:', p);
+                                    dispatch(delete_card_product(p._id));
+                                  }}
                                   className='px-5 py-[3px] bg-red-500 text-white'
                                 >
                                   Delete
@@ -207,19 +275,40 @@ const Card = () => {
                             <div key={i} className='w-full flex flex-wrap'>
                               <div className='flex sm:w-full gap-2 w-7/12'>
                                 <div className='flex gap-2 justify-start items-center'>
-                                  {p.products && p.products[0] && p.products[0].images && (
+                                  {/* Try different possible image paths for out of stock products */}
+                                  {p.productInfo && p.productInfo.images && p.productInfo.images[0] ? (
+                                    <img
+                                      className='w-[80px] h-[80px]'
+                                      src={p.productInfo.images[0]}
+                                      alt="Product"
+                                    />
+                                  ) : p.products && p.products[0] && p.products[0].images && p.products[0].images[0] ? (
                                     <img
                                       className='w-[80px] h-[80px]'
                                       src={p.products[0].images[0]}
-                                      alt=""
+                                      alt="Product"
                                     />
+                                  ) : p.images && p.images[0] ? (
+                                    <img
+                                      className='w-[80px] h-[80px]'
+                                      src={p.images[0]}
+                                      alt="Product"
+                                    />
+                                  ) : (
+                                    <div className='w-[80px] h-[80px] bg-gray-200 flex items-center justify-center'>
+                                      <span>No Image</span>
+                                    </div>
                                   )}
                                   <div className='pr-4 text-slate-600'>
                                     <h2 className='text-md font-semibold'>
-                                      {p.products && p.products[0] ? p.products[0].name : 'Product'}
+                                      {p.productInfo && p.productInfo.name ? p.productInfo.name :
+                                       p.products && p.products[0] && p.products[0].name ? p.products[0].name :
+                                       p.name ? p.name : 'Product'}
                                     </h2>
                                     <span className='text-sm'>
-                                      Brand: {p.products && p.products[0] ? p.products[0].brand : 'Unknown'}
+                                      Brand: {p.productInfo && p.productInfo.brand ? p.productInfo.brand :
+                                             p.products && p.products[0] && p.products[0].brand ? p.products[0].brand :
+                                             p.brand ? p.brand : 'Unknown'}
                                     </span>
                                   </div>
                                 </div>
@@ -227,7 +316,23 @@ const Card = () => {
 
                               <div className='flex justify-between w-5/12 sm:w-full sm:mt-3'>
                                 <div className='pl-4 sm:pl-0'>
-                                  {p.products && p.products[0] && (
+                                  {p.productInfo && p.productInfo.price ? (
+                                    <>
+                                      <h2 className='text-lg text-orange-500'>
+                                        $
+                                        {p.productInfo.price -
+                                          Math.floor(
+                                            (p.productInfo.price *
+                                              (p.productInfo.discount || 0)) /
+                                              100
+                                          )}
+                                      </h2>
+                                      <p className='line-through'>
+                                        ${p.productInfo.price}
+                                      </p>
+                                      <p>-{p.productInfo.discount || 0}%</p>
+                                    </>
+                                  ) : p.products && p.products[0] && p.products[0].price ? (
                                     <>
                                       <h2 className='text-lg text-orange-500'>
                                         $
@@ -243,12 +348,30 @@ const Card = () => {
                                       </p>
                                       <p>-{p.products[0].discount || 0}%</p>
                                     </>
+                                  ) : p.price ? (
+                                    <>
+                                      <h2 className='text-lg text-orange-500'>
+                                        $
+                                        {p.price -
+                                          Math.floor(
+                                            (p.price *
+                                              (p.discount || 0)) /
+                                              100
+                                          )}
+                                      </h2>
+                                      <p className='line-through'>
+                                        ${p.price}
+                                      </p>
+                                      <p>-{p.discount || 0}%</p>
+                                    </>
+                                  ) : (
+                                    <h2 className='text-lg text-orange-500'>Price not available</h2>
                                   )}
                                 </div>
                                 <div className='flex gap-2 flex-col'>
                                   <div className='flex bg-slate-200 h-[30px] justify-center items-center text-xl'>
                                     <div
-                                      onClick={() => dec(p.quantity, p._id)}
+                                      onClick={() => dec(p.quantity, p._id, p._id)}
                                       className='px-3 cursor-pointer'
                                     >
                                       -
@@ -257,9 +380,12 @@ const Card = () => {
                                     <div className='px-3 cursor-pointer'>+</div>
                                   </div>
                                   <button
-                                    onClick={() =>
-                                      dispatch(delete_card_product(p._id))
-                                    }
+                                    onClick={() => {
+                                      // For out-of-stock products, we use the parent's _id directly
+                                      console.log('Deleting out-of-stock product with ID:', p._id);
+                                      console.log('Out-of-stock product details:', p);
+                                      dispatch(delete_card_product(p._id));
+                                    }}
                                     className='px-5 py-[3px] bg-red-500 text-white'
                                   >
                                     Delete

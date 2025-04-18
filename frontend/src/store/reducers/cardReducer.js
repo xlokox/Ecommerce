@@ -178,8 +178,18 @@ export const cardReducer = createSlice({
       })
 
       // delete_card_product
-      .addCase(delete_card_product.fulfilled, (state, { payload }) => {
+      .addCase(delete_card_product.fulfilled, (state, { payload, meta }) => {
         state.successMessage = payload.message;
+        console.log('Delete card product fulfilled with ID:', meta.arg);
+
+        // Since we're now using the correct ID (the parent product ID),
+        // we can simply filter out the product from the arrays
+        state.card_products = state.card_products.filter(p => p._id !== meta.arg);
+        state.outofstock_products = state.outofstock_products.filter(p => p._id !== meta.arg);
+
+        // Update card_product_count
+        state.card_product_count = state.card_product_count > 0 ? state.card_product_count - 1 : 0;
+        console.log('Updated card_products after deletion:', state.card_products.length);
       })
 
       // quantity_inc
