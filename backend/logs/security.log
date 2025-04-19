@@ -1079,3 +1079,16 @@
 {"level":"info","message":{"ip":"::1","method":"GET","path":"/api/get-card-products/6801418d70e997869e55d29e","timestamp":"2025-04-18T12:52:46.932Z"},"timestamp":"2025-04-18T12:52:46.932Z"}
 {"level":"info","message":{"ip":"::1","method":"GET","path":"/api/get-wishlist/6801418d70e997869e55d29e","timestamp":"2025-04-18T12:52:46.935Z"},"timestamp":"2025-04-18T12:52:46.935Z"}
 {"level":"info","message":{"ip":"::1","method":"GET","path":"/api/home/get-products","timestamp":"2025-04-18T12:52:46.938Z"},"timestamp":"2025-04-18T12:52:46.938Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/login","timestamp":"2025-04-18T15:31:55.357Z"},"timestamp":"2025-04-18T15:31:55.357Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/","timestamp":"2025-04-18T15:32:13.053Z"},"timestamp":"2025-04-18T15:32:13.053Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/favicon.ico","timestamp":"2025-04-18T15:32:13.160Z"},"timestamp":"2025-04-18T15:32:13.160Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/login","timestamp":"2025-04-18T15:32:16.498Z"},"timestamp":"2025-04-18T15:32:16.498Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/customer/login","timestamp":"2025-04-18T15:33:49.883Z"},"timestamp":"2025-04-18T15:33:49.883Z"}
+{"level":"info","message":{"ip":"::1","method":"GET","path":"/api/admin-login","timestamp":"2025-04-18T15:34:08.375Z"},"timestamp":"2025-04-18T15:34:08.375Z"}
+{"level":"info","message":{"ip":"::1","method":"POST","path":"/api/admin-login","timestamp":"2025-04-18T15:36:08.520Z"},"timestamp":"2025-04-18T15:36:08.520Z"}
+{"level":"info","message":{"ip":"::1","method":"POST","path":"/api/admin-login","timestamp":"2025-04-18T15:37:02.762Z"},"timestamp":"2025-04-18T15:37:02.762Z"}
+{"level":"info","message":{"ip":"::1","method":"POST","path":"/api/admin-login","timestamp":"2025-04-18T15:37:04.258Z"},"timestamp":"2025-04-18T15:37:04.258Z"}
+{"level":"info","message":{"ip":"::1","method":"POST","path":"/api/admin-login","timestamp":"2025-04-18T15:37:09.773Z"},"timestamp":"2025-04-18T15:37:09.773Z"}
+{"level":"info","message":{"ip":"::1","method":"POST","path":"/api/admin-login","timestamp":"2025-04-18T15:37:10.593Z"},"timestamp":"2025-04-18T15:37:10.593Z"}
+{"level":"info","message":{"ip":"::1","method":"POST","path":"/api/admin-login","timestamp":"2025-04-18T15:37:30.675Z"},"timestamp":"2025-04-18T15:37:30.675Z"}
+{"level":"info","message":{"ip":"::1","method":"POST","path":"/api/admin-login","timestamp":"2025-04-18T15:41:17.965Z"},"timestamp":"2025-04-18T15:41:17.965Z"}
