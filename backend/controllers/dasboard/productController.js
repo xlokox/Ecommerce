@@ -359,7 +359,7 @@ class ProductController {
     form.parse(req, async (err, fields, files) => {
       if (err) return responseReturn(res, 400, { error: err.message });
       const { oldImage, productId } = fields;
-      const { newImage } = files;
+      const { newImage, images } = files;
       try {
         if (!productId) {
           return responseReturn(res, 400, { error: "No 'productId' provided" });
@@ -368,21 +368,23 @@ class ProductController {
         if (!product) {
           return responseReturn(res, 404, { error: "Product not found" });
         }
-        if (!newImage) {
-          return responseReturn(res, 400, { error: "No 'newImage' file provided" });
+
+        // Use either newImage or images field
+        const imageFile = newImage || images;
+        if (!imageFile) {
+          return responseReturn(res, 400, { error: "No image file provided. Use 'newImage' or 'images' field" });
         }
-        const result = await cloudinary.v2.uploader.upload(newImage.filepath, { folder: "products" });
+
+        const result = await cloudinary.v2.uploader.upload(imageFile.filepath, { folder: "products" });
         if (!result) {
           return responseReturn(res, 404, { error: "Image Upload Failed" });
         }
-        let images = product.images;
-        const index = images.findIndex((img) => img === oldImage);
-        if (index !== -1) {
-          images[index] = result.url;
-        } else {
-          return responseReturn(res, 404, { error: "Old image not found in product" });
-        }
-        await productModel.findByIdAndUpdate(productId, { images });
+
+        // Replace all existing images with just the new image
+        // This makes the uploaded image the only image (main image)
+        const productImages = [result.url];
+
+        await productModel.findByIdAndUpdate(productId, { images: productImages });
         product = await productModel.findById(productId);
         return responseReturn(res, 200, { product, message: "Product Image Updated Successfully" });
       } catch (error) {

@@ -62,8 +62,8 @@ describe('Header Component', () => {
   it('renders correctly when user is logged in', () => {
     const store = createMockStore({ 
       id: '123', 
-      name: 'John Doe',
-      email: 'john@example.com' 
+      name: 'Daniel Knafel',
+      email: 'daniel@example.com' 
     });
     
     cy.mount(
@@ -75,7 +75,7 @@ describe('Header Component', () => {
     );
 
     // Check if user-specific elements are rendered
-    cy.contains('John Doe').should('exist');
+    cy.contains('Daniel Knafel').should('exist');
   });
 
   it('displays categories correctly', () => {
@@ -114,8 +114,8 @@ describe('Header Component', () => {
   it('shows cart and wishlist counts', () => {
     const store = createMockStore({ 
       id: '123', 
-      name: 'John Doe',
-      email: 'john@example.com' 
+      name: 'Daniel Knafel',
+      email: 'daniel@example.com' 
     });
     
     cy.mount(

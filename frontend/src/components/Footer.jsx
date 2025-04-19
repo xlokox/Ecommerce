@@ -33,18 +33,18 @@ const Footer = () => {
               <h2 className='font-bold text-lg mb-2'>Usefull Links</h2>
               <div className='flex justify-between gap-[80px] lg:gap-[40px]'>
                 <ul className='flex flex-col gap-2 text-slate-600 text-sm font-semibold'>
-                  <li><Link to='#!'>About Us</Link></li>
-                  <li><Link to='#!'>About Our Shop</Link></li>
-                  <li><Link to='#!'>Delivery Information</Link></li>
-                  <li><Link to='#!'>Privacy Policy</Link></li>
-                  <li><Link to='#!'>Blogs</Link></li>
+                  <li><Link to='/about'>About Us</Link></li>
+                  <li><Link to='/shops'>Our Shop</Link></li>
+                  <li><Link to='/shipping'>Delivery Information</Link></li>
+                  <li><Link to='/about'>Privacy Policy</Link></li>
+                  <li><Link to='/blog'>Blog</Link></li>
                 </ul>
                 <ul className='flex flex-col gap-2 text-slate-600 text-sm font-semibold'>
-                  <li><Link to='#!'>Our Service</Link></li>
-                  <li><Link to='#!'>Company Profile</Link></li>
-                  <li><Link to='#!'>Delivery Information</Link></li>
-                  <li><Link to='#!'>Privacy Policy</Link></li>
-                  <li><Link to='#!'>Blogs</Link></li>
+                  <li><Link to='/contact'>Contact Us</Link></li>
+                  <li><Link to='/about'>Company Profile</Link></li>
+                  <li><Link to='/shops'>Products</Link></li>
+                  <li><Link to='/about'>Terms & Conditions</Link></li>
+                  <li><Link to='/blog'>Latest News</Link></li>
                 </ul>
               </div>
             </div>

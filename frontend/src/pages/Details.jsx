@@ -384,7 +384,7 @@ const Details = () => {
         {
             moreProducts.map((p,i) => {
                 return (
-        <Link className='block'>
+        <Link className='block' to={`/product/details/${p.slug}`}>
             <div className='relative h-[270px]'>
             <img className='w-full h-full' src={ p.images[0]} alt="" />
             {
@@ -445,7 +445,7 @@ const Details = () => {
             return (
 
                 <SwiperSlide key={i}>
-                    <Link className='block'>
+                    <Link className='block' to={`/product/details/${p.slug}`}>
                         <div className='relative h-[270px]'>
                             <div className='w-full h-full'>
                     <img className='w-full h-full' src={p.images[0] } alt="" />

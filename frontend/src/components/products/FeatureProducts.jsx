@@ -33,6 +33,7 @@ const FeatureProducts = ({ products }) => {
         productId: id
       }));
     } else {
+      toast.error("Please login to add products to cart");
       navigate('/login');
     }
   };
@@ -50,6 +51,7 @@ const FeatureProducts = ({ products }) => {
         slug: pro.slug
       }));
     } else {
+      toast.error("Please login to add products to wishlist");
       navigate('/login');
     }
   };

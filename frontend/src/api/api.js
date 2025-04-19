@@ -12,31 +12,48 @@ const api = axios.create({
   }
 });
 
-// Add CSRF token to requests
+// Add CSRF token and auth token to requests
 api.interceptors.request.use(config => {
-  const token = document.cookie
+  // Add CSRF token if available
+  const csrfToken = document.cookie
     .split('; ')
     .find(row => row.startsWith('XSRF-TOKEN'))
     ?.split('=')[1];
 
-  if (token) {
-    config.headers['X-CSRF-Token'] = token;
+  if (csrfToken) {
+    config.headers['X-CSRF-Token'] = csrfToken;
   }
+
+  // Add customer token from localStorage if available
+  const customerToken = localStorage.getItem('customerToken');
+  if (customerToken) {
+    config.headers['Authorization'] = `Bearer ${customerToken}`;
+  }
+
   return config;
 });
 
-// Handle token refresh
+// Handle token refresh and error responses
 api.interceptors.response.use(
   response => response,
   async error => {
+    // Handle authentication errors
     if (error.response?.status === 401) {
       try {
+        // Try to refresh the token
         await api.post('/auth/refresh-token');
         return api(error.config);
       } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        // Clear token and redirect to login
+        localStorage.removeItem('customerToken');
         window.location.href = '/login';
       }
     }
+
+    // Log all API errors for debugging
+    console.error('API Error:', error.response?.status, error.response?.data);
+
     return Promise.reject(error);
   }
 );

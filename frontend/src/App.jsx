@@ -9,6 +9,10 @@ import Shipping from './pages/Shipping';
 import Details from './pages/Details';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Blog from './pages/Blog';
+import BlogDetails from './pages/BlogDetails';
+import About from './pages/About';
+import Contact from './pages/Contact';
 import { get_category, get_banners } from './store/reducers/homeReducer';
 import { useDispatch } from 'react-redux';
 import CategoryShop from './pages/CategoryShop';
@@ -41,6 +45,10 @@ function App() {
         <Route path='/login' element={<Login />} />
         <Route path='/register' element={<Register />} />
         <Route path='/shops' element={<Shops />} />
+        <Route path='/blog' element={<Blog />} />
+        <Route path='/blog/:id' element={<BlogDetails />} />
+        <Route path='/about' element={<About />} />
+        <Route path='/contact' element={<Contact />} />
         <Route path='/card' element={<Card />} />
         <Route path='/shipping' element={<Shipping />} />
         <Route path='/payment' element={<Payment />} />

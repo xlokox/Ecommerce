@@ -133,17 +133,17 @@ const Header = () => {
                       </Link>
                     </li>
                     <li>
-                      <Link className={`p-2 block ${pathname === '/blog' ? 'text-[#059473]' : 'text-slate-600'}`}>
+                      <Link to='/blog' className={`p-2 block ${pathname === '/blog' ? 'text-[#059473]' : 'text-slate-600'}`}>
                         Blog
                       </Link>
                     </li>
                     <li>
-                      <Link className={`p-2 block ${pathname === '/about' ? 'text-[#059473]' : 'text-slate-600'}`}>
+                      <Link to='/about' className={`p-2 block ${pathname === '/about' ? 'text-[#059473]' : 'text-slate-600'}`}>
                         About Us
                       </Link>
                     </li>
                     <li>
-                      <Link className={`p-2 block ${pathname === '/contact' ? 'text-[#059473]' : 'text-slate-600'}`}>
+                      <Link to='/contact' className={`p-2 block ${pathname === '/contact' ? 'text-[#059473]' : 'text-slate-600'}`}>
                         Contact Us
                       </Link>
                     </li>
@@ -231,17 +231,17 @@ const Header = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link className={`py-2 block ${pathname === '/blog' ? 'text-[#059473]' : 'text-slate-600'}`}>
+                  <Link to='/blog' className={`py-2 block ${pathname === '/blog' ? 'text-[#059473]' : 'text-slate-600'}`}>
                     Blog
                   </Link>
                 </li>
                 <li>
-                  <Link className={`py-2 block ${pathname === '/about' ? 'text-[#059473]' : 'text-slate-600'}`}>
+                  <Link to='/about' className={`py-2 block ${pathname === '/about' ? 'text-[#059473]' : 'text-slate-600'}`}>
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link className={`py-2 block ${pathname === '/contact' ? 'text-[#059473]' : 'text-slate-600'}`}>
+                  <Link to='/contact' className={`py-2 block ${pathname === '/contact' ? 'text-[#059473]' : 'text-slate-600'}`}>
                     Contact Us
                   </Link>
                 </li>
@@ -300,7 +300,7 @@ const Header = () => {
                     {categorys.map((c, i) => (
                       <li key={i} className='flex justify-start items-center gap-2 px-[24px] py-[6px]'>
                         <img src={c.image} className='w-[30px] h-[30px] rounded-full overflow-hidden' alt="" />
-                        <Link to={`/products?category=${c._id}`} className='text-sm block'>
+                        <Link to={`/products?category=${c.name}`} className='text-sm block'>
                           {c.name}
                         </Link>
                       </li>

@@ -6,21 +6,38 @@ class QueryProducts {
 
     // 🔹 סינון לפי קטגוריה
     categoryQuery() {
-        if (this.query.category) {
+        if (this.query.category || this.query.categoryName) {
             console.log('Filtering by category:', this.query.category);
+            console.log('Category name:', this.query.categoryName);
+
             // כאן אנחנו מסננים את המוצרים ב-JavaScript
-            // Check if category is a string or an ObjectId
             this.products = this.products.filter(product => {
-                // Convert both to string for comparison
-                const productCategory = String(product.category);
-                const queryCategory = String(this.query.category);
+                // Convert everything to strings for comparison
+                const productCategory = String(product.category || '');
+                const productCategoryName = String(product.categoryName || '');
+                const queryCategory = String(this.query.category || '');
+                const queryCategoryName = String(this.query.categoryName || '');
 
-                console.log(`Product ${product.name} - Category: ${productCategory}, Query: ${queryCategory}`);
+                // Log for debugging
+                console.log(`Product: ${product.name}`);
+                console.log(`- Product category: ${productCategory}`);
+                console.log(`- Product categoryName: ${productCategoryName}`);
+                console.log(`- Query category: ${queryCategory}`);
+                console.log(`- Query categoryName: ${queryCategoryName}`);
 
-                // Check if the product's category matches the query category
-                // or if the product's category name matches the query category
-                return productCategory === queryCategory ||
-                       (product.categoryName && product.categoryName.toLowerCase() === queryCategory.toLowerCase());
+                // Match if any of these conditions are true:
+                // 1. Product category matches query category (exact match)
+                // 2. Product categoryName matches query categoryName (case insensitive)
+                // 3. Product category matches query categoryName (for backward compatibility)
+                const match =
+                    productCategory === queryCategory ||
+                    (productCategoryName && queryCategoryName &&
+                     productCategoryName.toLowerCase() === queryCategoryName.toLowerCase()) ||
+                    (productCategory && queryCategoryName &&
+                     productCategory.toLowerCase() === queryCategoryName.toLowerCase());
+
+                console.log(`- Match: ${match}`);
+                return match;
             });
 
             console.log('Filtered products count:', this.products.length);

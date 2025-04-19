@@ -95,42 +95,82 @@ class HomeControllers {
     console.log('Category:', req.query.category);
 
     try {
-      let products;
+      // Get all products first
+      let allProducts = await productModel.find({}).sort({ createdAt: -1 });
+      console.log(`Total products in database: ${allProducts.length}`);
 
-      // If category is provided, try to filter by category ID in the database first
-      if (req.query.category) {
-        try {
-          // Try to find products with the exact category ID
-          products = await productModel.find({ category: req.query.category }).populate('category', 'name').sort({ createdAt: -1 });
-          console.log(`Found ${products.length} products with category ID ${req.query.category} in database`);
-        } catch (err) {
-          console.log('Error filtering by category in database:', err.message);
-          // Fallback to getting all products
-          products = await productModel.find({}).populate('category', 'name').sort({ createdAt: -1 });
-        }
-      } else {
-        // Get all products if no category is specified
-        products = await productModel.find({}).populate('category', 'name').sort({ createdAt: -1 });
-      }
+      // Get all categories for reference
+      const allCategories = await categoryModel.find({});
+      console.log(`Total categories in database: ${allCategories.length}`);
+
+      // Create a map of category IDs to names for quick lookup
+      const categoryMap = {};
+      allCategories.forEach(cat => {
+        categoryMap[cat._id.toString()] = cat.name;
+      });
 
       // Add categoryName to each product for easier filtering
-      products = products.map(product => {
+      allProducts = allProducts.map(product => {
         const p = product.toObject();
-        if (p.category && p.category.name) {
-          p.categoryName = p.category.name;
+        // Try to find the category name if the product.category is an ID
+        if (categoryMap[p.category]) {
+          p.categoryName = categoryMap[p.category];
+        } else {
+          // If not an ID, assume it's already a name
+          p.categoryName = p.category;
         }
         return p;
       });
 
-      // Apply additional filters
-      const totalProduct = new queryProducts(products, req.query)
+      // If category filter is provided
+      if (req.query.category) {
+        // Check if it's a valid category ID
+        if (categoryMap[req.query.category]) {
+          // It's an ID, use the name for filtering
+          req.query.categoryName = categoryMap[req.query.category];
+          console.log(`Category ID ${req.query.category} maps to name: ${req.query.categoryName}`);
+        } else {
+          // Try to find by name directly
+          const categoryByName = allCategories.find(c => c.name === req.query.category);
+          if (categoryByName) {
+            req.query.categoryName = categoryByName.name;
+            console.log(`Found category by name: ${req.query.categoryName}`);
+          } else {
+            // Use the raw value as fallback
+            req.query.categoryName = req.query.category;
+            console.log(`Using raw category value: ${req.query.categoryName}`);
+          }
+        }
+      }
+
+      // Apply filters using our utility
+      const queryProcessor = new queryProducts(allProducts, req.query);
+
+      // Apply category filter if provided
+      if (req.query.category) {
+        // Custom category filtering
+        allProducts = allProducts.filter(p => {
+          // Match by category name or ID
+          return p.category === req.query.category ||
+                 p.categoryName === req.query.categoryName ||
+                 p.category === req.query.categoryName;
+        });
+        console.log(`After category filtering: ${allProducts.length} products`);
+
+        // Update the query processor with filtered products
+        queryProcessor.products = allProducts;
+      }
+
+      // Get total count after category filtering
+      const totalProduct = queryProcessor
         .ratingQuery()
         .searchQuery()
         .priceQuery()
         .sortByPrice()
         .countProducts();
 
-      const result = new queryProducts(products, req.query)
+      // Get paginated results
+      const result = queryProcessor
         .ratingQuery()
         .priceQuery()
         .searchQuery()
@@ -139,7 +179,7 @@ class HomeControllers {
         .limit()
         .getProducts();
 
-      console.log(`Returning ${result.length} products after filtering`);
+      console.log(`Returning ${result.length} products after all filtering`);
       return responseReturn(res, 200, { products: result, totalProduct, parPage });
     } catch (error) {
       console.log('Error in query_products:', error.message);
@@ -268,10 +308,13 @@ class HomeControllers {
   // **פונקציה חדשה**: שליפת מוצרים מקטגוריות מובילות (Top Category)
   get_top_category_products = async (req, res) => {
     try {
-      // הגדרה קבועה של קטגוריות שנחשבות "טופ"
-      const topCategories = ["Shoes", "Watches", "Phones", "Electronics"];
+      // Get all categories first
+      const allCategories = await categoryModel.find({});
+      const categoryNames = allCategories.map(cat => cat.name);
+
+      // Use all category names instead of hardcoded list
       const products = await productModel
-        .find({ category: { $in: topCategories } })
+        .find({ category: { $in: categoryNames } })
         .limit(12)
         .sort({ createdAt: -1 });
       return responseReturn(res, 200, { products });
