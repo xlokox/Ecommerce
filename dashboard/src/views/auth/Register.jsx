@@ -90,7 +90,7 @@ const Register = () => {
             </button>
 
         <div className='flex items-center mb-3 gap-3 justify-center'>
-            <p>Already Have an account ? <Link className='font-bold' to="/login">Sing In</Link> </p> 
+            <p>Already Have an account ? <Link className='font-bold' to="/login">Sign In</Link> </p> 
         </div>
 
         <div className='w-full flex justify-center items-center mb-3'>
