@@ -1,0 +1,72 @@
+@startuml E-commerce Use Case Diagram
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title E-commerce System Use Cases
+
+left to right direction
+
+actor "משתמש\n(User)" as User
+actor "מנהל מערכת\n(System Admin)" as Admin
+actor "Payment Gateway" as PaymentGW
+
+package "E-commerce System" {
+    usecase "רישום משתמש חדש\n(User Registration)" as UC1
+    usecase "התחברות משתמש\n(User Login)" as UC2
+    usecase "דפדוף במוצרים\n(Browse Products)" as UC3
+    usecase "הוספת מוצר לעגלה\n(Add to Cart)" as UC4
+    usecase "צפייה בעגלת הקניות\n(View Cart)" as UC5
+    usecase "ביצוע הזמנה\n(Place Order)" as UC6
+    usecase "תשלום\n(Payment)" as UC7
+    usecase "צפייה בהיסטוריית הזמנות\n(View Order History)" as UC8
+    usecase "ניהול מוצרים\n(Manage Products)" as UC9
+    usecase "ניהול משתמשים\n(Manage Users)" as UC10
+    usecase "ניהול דוחות\n(Manage Reports)" as UC11
+    usecase "צ'אט עם הלקוחות\n(Chat with Customers)" as UC12
+}
+
+' User connections
+User --> UC1 : הרשמת משתמש חדש במערכת
+User --> UC2 : התחברות לחשבון באמצעות דוא"ל וסיסמה
+User --> UC3 : צפייה במוצרים וקטגוריות
+User --> UC4 : הוספה לעגלת הקניות
+User --> UC5 : עיון בפריטים לפני רכישה
+User --> UC6 : השלמת רכישה ובחירת אמצעי תשלום
+User --> UC7 : ביצוע התשלום בפועל דרך מערכת חיצונית
+User --> UC8 : גישה לרכישות קודמות
+User --> UC12 : תמיכה בזמן אמת באמצעות צ'אט
+
+' Admin connections
+Admin --> UC9 : הוספה, עריכה ומחיקה של מוצרים
+Admin --> UC10 : ניהול לקוחות במערכת
+Admin --> UC11 : צפייה בגרפים וסטטיסטיקות מכירה
+Admin --> UC12 : תמיכה בזמן אמת באמצעות צ'אט
+
+' Payment Gateway connection
+PaymentGW --> UC7 : ביצוע התשלום בפועל דרך מערכת חיצונית
+
+' Use case relationships
+UC4 ..> UC3 : <<include>>
+UC5 ..> UC4 : <<include>>
+UC6 ..> UC5 : <<include>>
+UC7 ..> UC6 : <<include>>
+UC8 ..> UC2 : <<include>>
+
+note right of UC1
+  הרשמת משתמש חדש במערכת
+  כולל אימות דוא"ל וסיסמה
+end note
+
+note right of UC7
+  ביצוע התשלום בפועל
+  דרך מערכת חיצונית
+  (Stripe/PayPal)
+end note
+
+note right of UC12
+  תמיכה בזמן אמת
+  באמצעות צ'אט
+  בין לקוחות ומנהלים
+end note
+
+@enduml

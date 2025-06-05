@@ -1,0 +1,86 @@
+@startuml Order Processing Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title E-commerce Order Processing Flow
+
+actor Customer
+actor Seller
+actor Admin
+participant "Frontend" as Frontend
+participant "Order Service" as OrderService
+participant "Payment Service" as PaymentService
+participant "Product Service" as ProductService
+participant "Database" as DB
+participant "Stripe" as Stripe
+participant "Email Service" as EmailService
+
+== Add to Cart ==
+Customer -> Frontend: Add product to cart
+Frontend -> Frontend: Store in localStorage
+Frontend -> Customer: Item added to cart
+
+== Checkout Process ==
+Customer -> Frontend: Proceed to checkout
+Frontend -> Frontend: Validate cart items
+Frontend -> ProductService: Verify product availability
+ProductService -> DB: Check stock levels
+ProductService -> Frontend: Stock confirmation
+
+Frontend -> PaymentService: Create payment intent
+PaymentService -> Stripe: Create payment intent
+Stripe -> PaymentService: Return client secret
+PaymentService -> Frontend: Payment intent created
+
+== Payment Processing ==
+Customer -> Frontend: Enter payment details
+Frontend -> Stripe: Process payment
+Stripe -> Frontend: Payment confirmation
+
+alt Payment Successful
+    Frontend -> OrderService: POST /api/orders
+    OrderService -> DB: Create order record
+    OrderService -> ProductService: Update stock levels
+    ProductService -> DB: Decrease product quantities
+    
+    OrderService -> EmailService: Send order confirmation
+    EmailService -> Customer: Order confirmation email
+    
+    OrderService -> Frontend: Order created successfully
+    Frontend -> Customer: Show order success page
+    
+else Payment Failed
+    Frontend -> Customer: Show payment error
+end
+
+== Order Management ==
+Seller -> Frontend: View orders
+Frontend -> OrderService: GET /api/seller/orders
+OrderService -> DB: Get seller's orders
+OrderService -> Frontend: Order list
+Frontend -> Seller: Display orders
+
+== Order Status Update ==
+Seller -> Frontend: Update order status
+Frontend -> OrderService: PUT /api/orders/:id/status
+OrderService -> DB: Update order status
+OrderService -> EmailService: Send status update email
+EmailService -> Customer: Order status notification
+OrderService -> Frontend: Status updated
+Frontend -> Seller: Confirmation
+
+== Order Tracking ==
+Customer -> Frontend: Track order
+Frontend -> OrderService: GET /api/orders/:id/tracking
+OrderService -> DB: Get order details
+OrderService -> Frontend: Order status
+Frontend -> Customer: Display tracking info
+
+== Admin Order Overview ==
+Admin -> Frontend: View all orders
+Frontend -> OrderService: GET /api/admin/orders
+OrderService -> DB: Get all orders
+OrderService -> Frontend: All orders
+Frontend -> Admin: Display admin dashboard
+
+@enduml

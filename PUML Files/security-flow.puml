@@ -1,0 +1,135 @@
+@startuml Security Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title E-commerce Security Implementation Flow
+
+actor User
+participant "Frontend" as Frontend
+participant "API Gateway" as Gateway
+participant "Auth Middleware" as AuthMW
+participant "Rate Limiter" as RateLimit
+participant "Validation" as Validation
+participant "Backend Service" as Backend
+participant "Database" as DB
+
+== Request Security Flow ==
+User -> Frontend: Make request
+Frontend -> Frontend: Validate input (client-side)
+Frontend -> Gateway: Send request with JWT
+
+Gateway -> RateLimit: Check rate limits
+alt Rate limit exceeded
+    RateLimit -> Frontend: 429 Too Many Requests
+    Frontend -> User: Show rate limit error
+else Rate limit OK
+    Gateway -> AuthMW: Verify JWT token
+    
+    alt Invalid/Expired token
+        AuthMW -> Frontend: 401 Unauthorized
+        Frontend -> User: Redirect to login
+    else Valid token
+        AuthMW -> Validation: Validate request data
+        
+        alt Invalid data
+            Validation -> Frontend: 400 Bad Request
+            Frontend -> User: Show validation errors
+        else Valid data
+            Validation -> Backend: Process request
+            Backend -> DB: Execute operation
+            DB -> Backend: Return result
+            Backend -> Frontend: Success response
+            Frontend -> User: Show result
+        end
+    end
+end
+
+== Password Security ==
+User -> Frontend: Register/Login with password
+Frontend -> Backend: Send credentials
+Backend -> Backend: Hash password with bcrypt
+note right: Salt rounds: 12
+Backend -> DB: Store hashed password
+Backend -> Frontend: Success (no password returned)
+
+== JWT Token Security ==
+Backend -> Backend: Generate JWT token
+note right
+  Payload: { userId, role, exp }
+  Secret: Environment variable
+  Expiry: 24 hours
+end note
+Backend -> Frontend: Return token
+Frontend -> Frontend: Store in httpOnly cookie
+note right: Not in localStorage for security
+
+== Role-Based Access Control ==
+Frontend -> AuthMW: Request with JWT
+AuthMW -> AuthMW: Extract user role from token
+AuthMW -> AuthMW: Check required permissions
+alt Insufficient permissions
+    AuthMW -> Frontend: 403 Forbidden
+else Sufficient permissions
+    AuthMW -> Backend: Allow request
+end
+
+== Input Validation & Sanitization ==
+Frontend -> Validation: Submit form data
+Validation -> Validation: Sanitize input
+note right
+  - Remove HTML tags
+  - Escape special characters
+  - Validate data types
+  - Check length limits
+end note
+Validation -> Validation: Validate against schema
+alt Validation fails
+    Validation -> Frontend: Return validation errors
+else Validation passes
+    Validation -> Backend: Process clean data
+end
+
+== SQL Injection Prevention ==
+Backend -> DB: Use parameterized queries
+note right
+  MongoDB: Use proper query operators
+  Avoid string concatenation
+  Use mongoose schema validation
+end note
+
+== XSS Prevention ==
+Frontend -> Frontend: Sanitize user input
+Frontend -> Frontend: Use Content Security Policy
+note right
+  - Escape HTML output
+  - Validate all inputs
+  - Use CSP headers
+end note
+
+== CSRF Protection ==
+Frontend -> Backend: Include CSRF token
+Backend -> Backend: Verify CSRF token
+note right
+  - Use SameSite cookies
+  - Verify origin headers
+  - Implement CSRF tokens
+end note
+
+== File Upload Security ==
+User -> Frontend: Upload file
+Frontend -> Validation: Validate file
+Validation -> Validation: Check file type & size
+note right
+  - Allowed types: jpg, png, pdf
+  - Max size: 5MB
+  - Scan for malware
+end note
+alt Invalid file
+    Validation -> Frontend: Reject upload
+else Valid file
+    Validation -> Backend: Process upload
+    Backend -> Backend: Generate unique filename
+    Backend -> Backend: Store in secure location
+end
+
+@enduml

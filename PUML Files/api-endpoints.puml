@@ -1,0 +1,118 @@
+@startuml API Endpoints
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title E-commerce API Endpoints Structure
+
+package "Authentication APIs" {
+    [POST /api/auth/admin-login] as AdminLogin
+    [POST /api/auth/seller-register] as SellerRegister
+    [POST /api/auth/seller-login] as SellerLogin
+    [POST /api/auth/customer-register] as CustomerRegister
+    [POST /api/auth/customer-login] as CustomerLogin
+    [GET /api/auth/logout] as Logout
+}
+
+package "Product Management APIs" {
+    [GET /api/products] as GetProducts
+    [POST /api/products] as CreateProduct
+    [PUT /api/products/:id] as UpdateProduct
+    [DELETE /api/products/:id] as DeleteProduct
+    [GET /api/products/search] as SearchProducts
+    [GET /api/products/:id] as GetProduct
+    [POST /api/products/:id/review] as AddReview
+}
+
+package "Order Management APIs" {
+    [POST /api/orders] as CreateOrder
+    [GET /api/orders] as GetOrders
+    [GET /api/orders/:id] as GetOrder
+    [PUT /api/orders/:id/status] as UpdateOrderStatus
+    [GET /api/seller/orders] as GetSellerOrders
+    [GET /api/admin/orders] as GetAdminOrders
+}
+
+package "Cart & Wishlist APIs" {
+    [POST /api/cart/add] as AddToCart
+    [GET /api/cart] as GetCart
+    [PUT /api/cart/:id] as UpdateCartItem
+    [DELETE /api/cart/:id] as RemoveFromCart
+    [POST /api/wishlist/add] as AddToWishlist
+    [GET /api/wishlist] as GetWishlist
+    [DELETE /api/wishlist/:id] as RemoveFromWishlist
+}
+
+package "Chat APIs" {
+    [GET /api/chat/seller/messages] as GetSellerMessages
+    [POST /api/chat/seller/send-message] as SendSellerMessage
+    [GET /api/chat/admin/messages] as GetAdminMessages
+    [POST /api/chat/admin/send-message] as SendAdminMessage
+    [PUT /api/chat/message/:id/seen] as MarkMessageSeen
+}
+
+package "File Upload APIs" {
+    [POST /api/upload/images] as UploadImages
+    [DELETE /api/upload/images/:id] as DeleteImage
+}
+
+package "Category APIs" {
+    [GET /api/categories] as GetCategories
+    [POST /api/categories] as CreateCategory
+    [PUT /api/categories/:id] as UpdateCategory
+    [DELETE /api/categories/:id] as DeleteCategory
+}
+
+package "Payment APIs" {
+    [POST /api/payment/create-intent] as CreatePaymentIntent
+    [POST /api/payment/confirm] as ConfirmPayment
+    [GET /api/payment/status/:id] as GetPaymentStatus
+}
+
+package "Dashboard APIs" {
+    [GET /api/seller/dashboard] as SellerDashboard
+    [GET /api/admin/dashboard] as AdminDashboard
+    [GET /api/seller/analytics] as SellerAnalytics
+    [GET /api/admin/analytics] as AdminAnalytics
+}
+
+note right of AdminLogin
+  Admin authentication
+  Returns JWT token
+end note
+
+note right of CreateProduct
+  Requires seller authentication
+  Supports multiple image uploads
+end note
+
+note right of CreateOrder
+  Processes customer orders
+  Integrates with payment system
+end note
+
+note right of AddToCart
+  Manages shopping cart
+  Supports quantity updates
+end note
+
+note right of GetSellerMessages
+  Real-time chat system
+  WebSocket integration
+end note
+
+note right of UploadImages
+  Cloudinary integration
+  Supports multiple formats
+end note
+
+note right of CreatePaymentIntent
+  Stripe integration
+  Secure payment processing
+end note
+
+note right of SellerDashboard
+  Analytics and metrics
+  Order management
+end note
+
+@enduml
