@@ -1,0 +1,115 @@
+@startuml Make Payment Sequence Diagram
+
+!theme plain
+title Make Payment Use Case\n(תשלום)
+
+actor "User\n(משתמש)" as User
+actor "Payment Gateway\n(שער תשלום)" as PaymentGW
+participant "Payment Page\n(עמוד תשלום)" as PaymentPage
+participant "Order Reducer\n(Redux)" as OrderReducer
+participant "API Layer" as API
+participant "Order Controller" as OrderController
+participant "Customer Order Model\n(MongoDB)" as CustomerOrderModel
+participant "Auth Order Model\n(MongoDB)" as AuthOrderModel
+
+User -> PaymentPage: Navigate to payment page\nwith orderId\n(מעבר לעמוד תשלום עם מזהה הזמנה)
+activate PaymentPage
+
+PaymentPage -> PaymentPage: Display order summary:\n- Products\n- Total amount\n- Shipping info\n(הצגת סיכום הזמנה)
+
+PaymentPage -> PaymentPage: Show payment options:\n- Credit Card\n- PayPal\n- Stripe\n(הצגת אפשרויות תשלום)
+
+User -> PaymentPage: Select payment method\n(בחירת אמצעי תשלום)
+
+User -> PaymentPage: Enter payment details\n(הזנת פרטי תשלום)
+
+PaymentPage -> PaymentPage: Validate payment form\n(בדיקת תקינות טופס תשלום)
+
+User -> PaymentPage: Click "Pay Now" button\n(לחיצה על "שלם עכשיו")
+
+PaymentPage -> PaymentGW: Process payment request\nwith order details\n(עיבוד בקשת תשלום)
+activate PaymentGW
+
+PaymentGW -> PaymentGW: Validate payment details\n(בדיקת תקינות פרטי תשלום)
+
+alt Payment validation fails
+    PaymentGW --> PaymentPage: Payment failed\n(תשלום נכשל)
+    PaymentPage --> User: Display payment error\n(הצגת שגיאת תשלום)
+else Payment validation succeeds
+    PaymentGW -> PaymentGW: Process payment transaction\n(עיבוד עסקת תשלום)
+    
+    alt Transaction fails
+        PaymentGW --> PaymentPage: Transaction failed\n(עסקה נכשלה)
+        PaymentPage --> User: Display transaction error\n(הצגת שגיאת עסקה)
+    else Transaction succeeds
+        PaymentGW --> PaymentPage: Payment successful\n+ transaction ID\n(תשלום הצליח + מזהה עסקה)
+        deactivate PaymentGW
+        
+        PaymentPage -> OrderReducer: dispatch(order_confirm(orderId))
+        activate OrderReducer
+        
+        OrderReducer -> API: POST /api/order/confirm/:orderId
+        activate API
+        
+        API -> OrderController: order_confirm(req, res)
+        activate OrderController
+        
+        OrderController -> OrderController: Validate orderId format\n(בדיקת תקינות מזהה הזמנה)
+        
+        alt Invalid orderId
+            OrderController --> API: 400 - Invalid order ID
+            API --> OrderReducer: Error response
+            OrderReducer --> PaymentPage: Show error
+            PaymentPage --> User: Display error\n(הצגת שגיאה)
+        else Valid orderId
+            OrderController -> CustomerOrderModel: findByIdAndUpdate(orderId, \n{payment_status: 'paid'})
+            activate CustomerOrderModel
+            CustomerOrderModel --> OrderController: Customer order updated\n(הזמנת לקוח עודכנה)
+            deactivate CustomerOrderModel
+            
+            OrderController -> AuthOrderModel: updateMany({orderId}, \n{payment_status: 'paid', delivery_status: 'pending'})
+            activate AuthOrderModel
+            AuthOrderModel --> OrderController: Seller orders updated\n(הזמנות מוכרים עודכנו)
+            deactivate AuthOrderModel
+            
+            OrderController --> API: 200 - Order Confirmed Successfully
+            deactivate OrderController
+            
+            API --> OrderReducer: Success response
+            deactivate API
+            
+            OrderReducer -> OrderReducer: Update order state\n(עדכון מצב הזמנה)
+            
+            OrderReducer --> PaymentPage: Payment confirmed
+            deactivate OrderReducer
+            
+            PaymentPage --> User: Redirect to order confirmation\npage with success message\n(הפניה לעמוד אישור הזמנה)
+        end
+    end
+end
+
+deactivate PaymentPage
+
+note right of PaymentGW
+  External payment gateway handles:
+  - Credit card validation
+  - Secure payment processing
+  - Transaction authorization
+  - Fraud detection
+  
+  (שער תשלום חיצוני מטפל ב:
+  בדיקת כרטיס אשראי, עיבוד מאובטח,
+  הרשאת עסקאות, זיהוי הונאות)
+end note
+
+note right of OrderController
+  Payment confirmation updates:
+  1. Customer order: payment_status = 'paid'
+  2. All seller orders: payment_status = 'paid'
+     and delivery_status = 'pending'
+  
+  This triggers the fulfillment process
+  for each seller.
+end note
+
+@enduml

@@ -1,0 +1,127 @@
+@startuml View Shopping Cart Sequence Diagram
+
+!theme plain
+title View Shopping Cart Use Case\n(צפייה בעגלת הקניות)
+
+actor "User\n(משתמש)" as User
+participant "Cart Page\n(עמוד עגלה)" as CartPage
+participant "Cart Reducer\n(Redux)" as CartReducer
+participant "API Layer" as API
+participant "Card Controller" as CardController
+participant "Card Model\n(MongoDB)" as CardModel
+participant "Product Model\n(MongoDB)" as ProductModel
+
+User -> CartPage: Navigate to cart page\n(מעבר לעמוד העגלה)
+activate CartPage
+
+CartPage -> CartPage: Get userId from auth state\n(קבלת מזהה משתמש ממצב האימות)
+
+CartPage -> CartReducer: dispatch(get_card_products(userId))
+activate CartReducer
+
+CartReducer -> API: GET /api/home/card/get-card-products/:userId
+activate API
+
+API -> CardController: get_card_products(req, res)
+activate CardController
+
+CardController -> CardController: Extract userId from params\n(חילוץ מזהה משתמש מהפרמטרים)
+
+CardController -> CardController: Convert userId to ObjectId\n(המרת מזהה משתמש ל-ObjectId)
+
+CardController -> CardModel: aggregate pipeline to join with products
+activate CardModel
+note right of CardModel
+  Aggregation pipeline:
+  1. Match cart items by userId
+  2. Lookup products collection
+  3. Join cart items with product details
+end note
+
+CardModel --> CardController: Cart products with full details\n(מוצרי עגלה עם פרטים מלאים)
+deactivate CardModel
+
+CardController -> CardController: Filter out-of-stock products\n(סינון מוצרים שאינם במלאי)
+
+CardController -> CardController: Calculate totals:\n- buy_product_item (available items)\n- outOfStockProduct (unavailable)\n- price (total price)\n- shipping_fee\n(חישוב סיכומים)
+
+CardController --> API: 200 - Cart data with calculations
+deactivate CardController
+
+API --> CartReducer: Success response with cart data
+deactivate API
+
+CartReducer -> CartReducer: Update cart state:\n- card_products\n- price\n- card_product_count\n- shipping_fee\n- outOfStockProduct\n- buy_product_item\n(עדכון מצב העגלה)
+
+CartReducer --> CartPage: Cart data updated
+deactivate CartReducer
+
+CartPage -> CartPage: Render cart items:\n- Available products\n- Out of stock products\n- Price summary\n- Shipping information\n(הצגת פריטי עגלה)
+
+CartPage --> User: Display cart contents\n(הצגת תוכן העגלה)
+
+alt User wants to update quantity
+    User -> CartPage: Click quantity +/- buttons\n(לחיצה על כפתורי כמות)
+    
+    CartPage -> CartReducer: dispatch(quantity_inc/dec(cardId))
+    activate CartReducer
+    
+    CartReducer -> API: PUT /api/home/card/quantity-inc/:card_id\nor PUT /api/home/card/quantity-dec/:card_id
+    activate API
+    
+    API -> CardController: quantity_inc/dec(req, res)
+    activate CardController
+    
+    CardController -> CardModel: findByIdAndUpdate(cardId, {quantity})
+    activate CardModel
+    CardModel --> CardController: Updated cart item\n(פריט עגלה מעודכן)
+    deactivate CardModel
+    
+    CardController --> API: 200 - Quantity updated
+    deactivate CardController
+    
+    API --> CartReducer: Success response
+    deactivate API
+    
+    CartReducer -> CartReducer: Update cart state\n(עדכון מצב העגלה)
+    
+    CartReducer --> CartPage: Refresh cart display
+    deactivate CartReducer
+    
+    CartPage --> User: Show updated quantities\n(הצגת כמויות מעודכנות)
+end
+
+alt User wants to remove item
+    User -> CartPage: Click remove item button\n(לחיצה על כפתור הסרה)
+    
+    CartPage -> CartReducer: dispatch(delete_card_product(cardId))
+    activate CartReducer
+    
+    CartReducer -> API: DELETE /api/home/card/delete-card-product/:cardId
+    activate API
+    
+    API -> CardController: delete_card_product(req, res)
+    activate CardController
+    
+    CardController -> CardModel: findByIdAndDelete(cardId)
+    activate CardModel
+    CardModel --> CardController: Item removed\n(פריט הוסר)
+    deactivate CardModel
+    
+    CardController --> API: 200 - Item deleted
+    deactivate CardController
+    
+    API --> CartReducer: Success response
+    deactivate API
+    
+    CartReducer -> CartReducer: Remove item from state\n(הסרת פריט ממצב)
+    
+    CartReducer --> CartPage: Refresh cart display
+    deactivate CartReducer
+    
+    CartPage --> User: Show updated cart\n(הצגת עגלה מעודכנת)
+end
+
+deactivate CartPage
+
+@enduml

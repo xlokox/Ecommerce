@@ -1,0 +1,11 @@
+@startuml Simple Test
+
+title Simple UML Test
+
+actor User
+participant System
+
+User -> System: Hello
+System --> User: Hello Back
+
+@enduml

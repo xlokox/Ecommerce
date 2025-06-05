@@ -1,0 +1,91 @@
+@startuml User Registration Sequence Diagram
+
+!theme plain
+title User Registration Use Case\n(רישום משתמש חדש)
+
+actor "User\n(משתמש)" as User
+participant "Register Page\n(דף רישום)" as RegisterPage
+participant "Auth Reducer\n(Redux)" as AuthReducer
+participant "API Layer" as API
+participant "Customer Auth Controller" as AuthController
+participant "Customer Model\n(MongoDB)" as CustomerModel
+participant "Seller Customer Model\n(Chat)" as ChatModel
+participant "JWT Token Creator" as TokenCreator
+
+User -> RegisterPage: Enter registration details\n(הזנת פרטי רישום)
+activate RegisterPage
+
+RegisterPage -> RegisterPage: Validate form data\n(בדיקת תקינות נתונים)
+
+RegisterPage -> AuthReducer: dispatch(customer_register(info))
+activate AuthReducer
+
+AuthReducer -> API: POST /api/customer/register
+activate API
+
+API -> AuthController: customer_register(req, res)
+activate AuthController
+
+AuthController -> AuthController: Validate required fields\n(בדיקת שדות חובה)
+
+AuthController -> CustomerModel: findOne({email})
+activate CustomerModel
+CustomerModel --> AuthController: Check if user exists\n(בדיקה אם משתמש קיים)
+deactivate CustomerModel
+
+alt User already exists
+    AuthController --> API: 400 - Email already exists
+    API --> AuthReducer: Error response
+    AuthReducer --> RegisterPage: Show error message
+    RegisterPage --> User: Display error\n(הצגת שגיאה)
+else User doesn't exist
+    AuthController -> AuthController: Hash password with bcrypt\n(הצפנת סיסמה)
+    
+    AuthController -> CustomerModel: create({name, email, hashedPassword})
+    activate CustomerModel
+    CustomerModel --> AuthController: New customer created\n(לקוח חדש נוצר)
+    deactivate CustomerModel
+    
+    AuthController -> ChatModel: create({myId: customer.id})
+    activate ChatModel
+    ChatModel --> AuthController: Chat record created\n(רשומת צ'אט נוצרה)
+    deactivate ChatModel
+    
+    AuthController -> TokenCreator: createToken({id, name, email, role: 'customer'})
+    activate TokenCreator
+    TokenCreator --> AuthController: JWT Token
+    deactivate TokenCreator
+    
+    AuthController -> AuthController: Set HTTP-only cookie\n(הגדרת עוגיה מאובטחת)
+    
+    AuthController --> API: 201 - Registration successful + token
+    deactivate AuthController
+    
+    API --> AuthReducer: Success response with token
+    deactivate API
+    
+    AuthReducer -> AuthReducer: Store token in localStorage\n(שמירת טוקן במחסן מקומי)
+    
+    AuthReducer --> RegisterPage: Registration successful
+    deactivate AuthReducer
+    
+    RegisterPage --> User: Redirect to dashboard/home\n(הפניה לדף הבית)
+end
+
+deactivate RegisterPage
+
+note right of AuthController
+  Password is hashed using bcrypt
+  with salt rounds = 10
+  (הסיסמה מוצפנת באמצעות bcrypt)
+end note
+
+note right of TokenCreator
+  JWT token includes:
+  - User ID
+  - Name, Email
+  - Role: 'customer'
+  - Expiry: 7 days
+end note
+
+@enduml

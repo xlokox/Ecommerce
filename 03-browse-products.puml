@@ -1,0 +1,105 @@
+@startuml Browse Products Activity Diagram
+
+!theme plain
+title Browse Products Use Case\n(דפדוף במוצרים)
+
+|User|
+start
+:User visits Home page\n(משתמש נכנס לעמוד הבית);
+
+|Frontend|
+:Load Home component\n(טעינת רכיב הבית);
+:Dispatch get_products()\n(שליחת בקשה לקבלת מוצרים);
+
+|Redux Store|
+:homeReducer processes request\n(מעבד הבקשה ב-Redux);
+
+|API Layer|
+:GET /api/home/get-products\n(קריאה לשרת);
+
+|Backend Controller|
+:homeControllers.get_products()\n(פונקציית קבלת מוצרים);
+
+|Database|
+:Query products from MongoDB\n(שאילתה למוצרים במסד הנתונים);
+:Return products array\n(החזרת מערך מוצרים);
+
+|Backend Controller|
+:Process products data\n(עיבוד נתוני מוצרים);
+:Categorize products:\n- Latest products\n- Top rated products\n- Discount products\n(סיווג מוצרים);
+
+|API Layer|
+:Return JSON response\n(החזרת תגובה ב-JSON);
+
+|Redux Store|
+:Update state with products\n(עדכון מצב עם מוצרים);
+
+|Frontend|
+:Render product components:\n- FeatureProducts\n- Products\n- Categorys\n(הצגת רכיבי מוצרים);
+
+|User|
+if (User wants to filter?) then (yes)
+  |User|
+  :Select category or search\n(בחירת קטגוריה או חיפוש);
+  
+  |Frontend|
+  :Navigate to CategoryShop\nor SearchProducts\n(מעבר לעמוד קטגוריה או חיפוש);
+  
+  |API Layer|
+  :GET /api/home/query-products\nwith filters\n(קריאה עם מסננים);
+  
+  |Backend Controller|
+  :Apply filters and pagination\n(החלת מסננים וחלוקה לעמודים);
+  
+  |Database|
+  :Query filtered products\n(שאילתה למוצרים מסוננים);
+  
+  |Frontend|
+  :Display filtered results\n(הצגת תוצאות מסוננות);
+else (no)
+  |User|
+  :Browse all products\n(דפדוף בכל המוצרים);
+endif
+
+if (User clicks on product?) then (yes)
+  |User|
+  :Click product for details\n(לחיצה על מוצר לפרטים);
+  
+  |Frontend|
+  :Navigate to Details page\n(מעבר לעמוד פרטים);
+  
+  |API Layer|
+  :GET /api/home/product-details/:slug\n(קבלת פרטי מוצר);
+  
+  |Backend Controller|
+  :Get product details and reviews\n(קבלת פרטי מוצר וביקורות);
+  
+  |Database|
+  :Return product details\n(החזרת פרטי מוצר);
+  
+  |Frontend|
+  :Display product details\n(הצגת פרטי מוצר);
+  
+  |User|
+  :View product information\n(צפייה במידע על המוצר);
+else (no)
+  |User|
+  :Continue browsing\n(המשך דפדוף);
+endif
+
+stop
+
+note right
+  Products are categorized into:
+  - Latest products (מוצרים חדשים)
+  - Top rated products (מוצרים מדורגים)
+  - Discount products (מוצרים במבצע)
+  
+  Filtering options include:
+  - Category (קטגוריה)
+  - Price range (טווח מחירים)
+  - Search terms (מילות חיפוש)
+  - Rating (דירוג)
+end note
+
+@enduml
