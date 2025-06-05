@@ -1,0 +1,78 @@
+@startuml User Login Sequence
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Sequence: התחברות משתמש (User Login)
+
+actor "משתמש\n(User)" as User
+participant "Frontend\n(React App)" as Frontend
+participant "Auth Controller\n(Backend)" as AuthController
+participant "User Service\n(Business Logic)" as UserService
+participant "JWT Service\n(Token Manager)" as JWTService
+participant "Database\n(MongoDB)" as Database
+
+User -> Frontend: 1. מילוי פרטי התחברות
+activate Frontend
+
+Frontend -> Frontend: 2. אימות נתונים בצד לקוח
+Frontend -> AuthController: 3. POST /api/auth/login
+activate AuthController
+
+AuthController -> UserService: 4. authenticateUser(email, password)
+activate UserService
+
+UserService -> Database: 5. findUserByEmail(email)
+activate Database
+
+Database --> UserService: 6. נתוני משתמש או null
+deactivate Database
+
+alt משתמש נמצא
+    UserService -> UserService: 7. comparePassword(password, hashedPassword)
+    
+    alt סיסמה נכונה
+        UserService -> JWTService: 8. generateToken(userId, role)
+        activate JWTService
+        
+        JWTService --> UserService: 9. JWT Token
+        deactivate JWTService
+        
+        UserService -> Database: 10. updateLastLogin(userId)
+        activate Database
+        
+        Database --> UserService: 11. עדכון הושלם
+        deactivate Database
+        
+        UserService --> AuthController: 12. {token, user, success: true}
+        deactivate UserService
+        
+        AuthController --> Frontend: 13. 200 OK + {token, user}
+        deactivate AuthController
+        
+        Frontend -> Frontend: 14. שמירת Token ב-localStorage
+        Frontend --> User: 15. הפניה לדשבורד לפי תפקיד
+        deactivate Frontend
+        
+    else סיסמה שגויה
+        UserService --> AuthController: 16. שגיאה - סיסמה שגויה
+        deactivate UserService
+        
+        AuthController --> Frontend: 17. 401 Unauthorized
+        deactivate AuthController
+        
+        Frontend --> User: 18. הודעת שגיאה - פרטים שגויים
+        deactivate Frontend
+    end
+    
+else משתמש לא נמצא
+    UserService --> AuthController: 19. שגיאה - משתמש לא קיים
+    deactivate UserService
+    
+    AuthController --> Frontend: 20. 401 Unauthorized
+    deactivate AuthController
+    
+    Frontend --> User: 21. הודעת שגיאה - פרטים שגויים
+    deactivate Frontend
+end
+
+@enduml

@@ -1,0 +1,89 @@
+@startuml Browse Products Sequence
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Sequence: דפדוף במוצרים (Browse Products)
+
+actor "משתמש\n(User)" as User
+participant "Frontend\n(React App)" as Frontend
+participant "Product Controller\n(Backend)" as ProductController
+participant "Product Service\n(Business Logic)" as ProductService
+participant "Database\n(MongoDB)" as Database
+
+User -> Frontend: 1. כניסה לעמוד המוצרים
+activate Frontend
+
+Frontend -> ProductController: 2. GET /api/products
+activate ProductController
+
+ProductController -> ProductService: 3. getAllProducts()
+activate ProductService
+
+ProductService -> Database: 4. find({status: 'active'})
+activate Database
+
+Database --> ProductService: 5. רשימת מוצרים
+deactivate Database
+
+ProductService --> ProductController: 6. מוצרים מעובדים
+deactivate ProductService
+
+ProductController --> Frontend: 7. 200 OK + products[]
+deactivate ProductController
+
+Frontend --> User: 8. הצגת רשימת מוצרים
+deactivate Frontend
+
+== סינון מוצרים ==
+
+User -> Frontend: 9. בחירת קטגוריה/מחיר
+activate Frontend
+
+Frontend -> ProductController: 10. GET /api/products?category=X&price=Y
+activate ProductController
+
+ProductController -> ProductService: 11. getFilteredProducts(filters)
+activate ProductService
+
+ProductService -> Database: 12. find({category: X, price: {$lte: Y}})
+activate Database
+
+Database --> ProductService: 13. מוצרים מסוננים
+deactivate Database
+
+ProductService --> ProductController: 14. תוצאות מסוננות
+deactivate ProductService
+
+ProductController --> Frontend: 15. 200 OK + filtered_products[]
+deactivate ProductController
+
+Frontend --> User: 16. הצגת תוצאות מסוננות
+deactivate Frontend
+
+== חיפוש מוצרים ==
+
+User -> Frontend: 17. הזנת מילות חיפוש
+activate Frontend
+
+Frontend -> ProductController: 18. GET /api/products/search?q=keyword
+activate ProductController
+
+ProductController -> ProductService: 19. searchProducts(keyword)
+activate ProductService
+
+ProductService -> Database: 20. $text search query
+activate Database
+
+Database --> ProductService: 21. תוצאות חיפוש
+deactivate Database
+
+ProductService --> ProductController: 22. מוצרים רלוונטיים
+deactivate ProductService
+
+ProductController --> Frontend: 23. 200 OK + search_results[]
+deactivate ProductController
+
+Frontend --> User: 24. הצגת תוצאות חיפוש
+deactivate Frontend
+
+@enduml

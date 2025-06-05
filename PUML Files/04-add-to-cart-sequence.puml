@@ -1,0 +1,84 @@
+@startuml Add to Cart Sequence
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Sequence: הוספת מוצר לעגלה (Add to Cart)
+
+actor "משתמש\n(User)" as User
+participant "Frontend\n(React App)" as Frontend
+participant "Cart Controller\n(Backend)" as CartController
+participant "Cart Service\n(Business Logic)" as CartService
+participant "Product Service\n(Product Logic)" as ProductService
+participant "Database\n(MongoDB)" as Database
+
+User -> Frontend: 1. בחירת מוצר וכמות
+activate Frontend
+
+Frontend -> Frontend: 2. אימות כמות (> 0)
+
+Frontend -> CartController: 3. POST /api/cart/add
+note right: {productId, quantity, userId}
+activate CartController
+
+CartController -> ProductService: 4. checkProductAvailability(productId)
+activate ProductService
+
+ProductService -> Database: 5. findById(productId)
+activate Database
+
+Database --> ProductService: 6. פרטי מוצר + מלאי
+deactivate Database
+
+ProductService --> CartController: 7. {available: true/false, stock}
+deactivate ProductService
+
+alt מוצר זמין
+    CartController -> CartService: 8. addToCart(userId, productId, quantity)
+    activate CartService
+    
+    CartService -> Database: 9. findOne({userId, productId})
+    activate Database
+    
+    Database --> CartService: 10. פריט קיים או null
+    deactivate Database
+    
+    alt פריט כבר בעגלה
+        CartService -> Database: 11. updateOne({userId, productId}, {$inc: {quantity}})
+        activate Database
+        
+        Database --> CartService: 12. עדכון הושלם
+        deactivate Database
+        
+    else פריט חדש
+        CartService -> Database: 13. insertOne({userId, productId, quantity, addedAt})
+        activate Database
+        
+        Database --> CartService: 14. פריט נוסף
+        deactivate Database
+    end
+    
+    CartService -> Database: 15. countDocuments({userId})
+    activate Database
+    
+    Database --> CartService: 16. מספר פריטים בעגלה
+    deactivate Database
+    
+    CartService --> CartController: 17. {success: true, cartCount}
+    deactivate CartService
+    
+    CartController --> Frontend: 18. 200 OK + {success, cartCount}
+    deactivate CartController
+    
+    Frontend -> Frontend: 19. עדכון מונה עגלה
+    Frontend --> User: 20. הודעת הצלחה + עדכון UI
+    deactivate Frontend
+
+else מוצר לא זמין
+    CartController --> Frontend: 21. 400 Bad Request - אזל מהמלאי
+    deactivate CartController
+    
+    Frontend --> User: 22. הודעת שגיאה - המוצר אזל
+    deactivate Frontend
+end
+
+@enduml

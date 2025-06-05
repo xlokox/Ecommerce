@@ -1,0 +1,45 @@
+@startuml Add to Cart Use Case
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Use Case: הוספת מוצר לעגלה (Add to Cart)
+
+left to right direction
+
+actor "משתמש\n(User)" as User
+
+package "E-commerce System" {
+    usecase "הוספת מוצר לעגלה\n(Add Product to Cart)" as UC1
+    usecase "בדיקת זמינות מלאי\n(Check Stock Availability)" as UC2
+    usecase "בחירת כמות\n(Select Quantity)" as UC3
+    usecase "שמירה בעגלה\n(Save to Cart)" as UC4
+    usecase "עדכון מונה עגלה\n(Update Cart Counter)" as UC5
+    usecase "הצגת הודעת אישור\n(Show Confirmation)" as UC6
+}
+
+' Main flow
+User --> UC1 : הוספה לעגלת הקניות
+
+' Include relationships
+UC1 ..> UC2 : <<include>>
+UC1 ..> UC3 : <<include>>
+UC1 ..> UC4 : <<include>>
+UC1 ..> UC5 : <<include>>
+UC1 ..> UC6 : <<include>>
+
+note right of UC1
+  **Use Case:** הוספת מוצר לעגלה
+  **Actor:** משתמש
+  **תיאור:** הוספה לעגלת הקניות
+  
+  **תנאים מוקדמים:**
+  - המוצר קיים במערכת
+  - המוצר זמין במלאי
+  
+  **תוצאה מוצלחת:**
+  - המוצר נוסף לעגלה
+  - עדכון מונה העגלה
+  - הודעת אישור למשתמש
+end note
+
+@enduml

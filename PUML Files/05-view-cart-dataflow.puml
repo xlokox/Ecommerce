@@ -1,0 +1,80 @@
+@startuml View Cart Data Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Data Flow: צפייה בעגלת הקניות (View Cart)
+
+!define ENTITY rectangle
+!define PROCESS circle
+!define DATASTORE database
+
+ENTITY "משתמש\n(User)" as User
+PROCESS "1.0\nטעינת עגלה\n(Load Cart)" as P1
+PROCESS "2.0\nאימות פריטים\n(Validate Items)" as P2
+PROCESS "3.0\nחישוב מחירים\n(Calculate Prices)" as P3
+PROCESS "4.0\nעדכון פריט\n(Update Item)" as P4
+PROCESS "5.0\nהסרת פריט\n(Remove Item)" as P5
+DATASTORE "D1\nעגלות קניות\n(Carts DB)" as CartsDB
+DATASTORE "D2\nמוצרים\n(Products DB)" as ProductsDB
+DATASTORE "D3\nהגדרות מערכת\n(System Settings)" as SettingsDB
+
+' Data flows with labels
+User -> P1 : "בקשת צפייה\n(View Request)\n{user_id}"
+
+P1 -> CartsDB : "שאילתת עגלה\n(Cart Query)\n{user_id}"
+CartsDB -> P1 : "פריטי עגלה\n(Cart Items)\n{items[], timestamps}"
+
+P1 -> P2 : "פריטים לאימות\n(Items to Validate)\n{cart_items[]}"
+
+P2 -> ProductsDB : "בדיקת זמינות\n(Availability Check)\n{product_ids[]}"
+ProductsDB -> P2 : "סטטוס מוצרים\n(Products Status)\n{availability[], current_prices[], stock_levels[]}"
+
+P2 -> P3 : "פריטים מאומתים\n(Validated Items)\n{valid_items[], warnings[]}"
+
+P3 -> SettingsDB : "הגדרות תמחור\n(Pricing Settings)\n{tax_rate, shipping_rules}"
+SettingsDB -> P3 : "כללי תמחור\n(Pricing Rules)\n{tax_percentage, shipping_cost, discounts}"
+
+P3 -> P1 : "חישובי מחיר\n(Price Calculations)\n{subtotal, tax, shipping, total}"
+
+User -> P4 : "עדכון כמות\n(Quantity Update)\n{item_id, new_quantity}"
+
+P4 -> ProductsDB : "בדיקת מלאי\n(Stock Check)\n{product_id, requested_quantity}"
+ProductsDB -> P4 : "זמינות מלאי\n(Stock Availability)\n{available_quantity, max_per_customer}"
+
+P4 -> CartsDB : "עדכון פריט\n(Update Item)\n{item_id, quantity, updated_at}"
+CartsDB -> P4 : "אישור עדכון\n(Update Confirmation)\n{success, new_item_data}"
+
+P4 -> P3 : "בקשת חישוב מחדש\n(Recalculation Request)\n{updated_items[]}"
+
+User -> P5 : "הסרת פריט\n(Remove Item)\n{item_id}"
+
+P5 -> CartsDB : "מחיקת פריט\n(Delete Item)\n{item_id, user_id}"
+CartsDB -> P5 : "אישור מחיקה\n(Delete Confirmation)\n{deleted_count}"
+
+P5 -> P3 : "בקשת חישוב מחדש\n(Recalculation Request)\n{remaining_items[]}"
+
+P1 -> User : "תוכן עגלה\n(Cart Content)\n{items[], totals, availability_warnings}"
+P4 -> User : "עדכון הושלם\n(Update Complete)\n{success, updated_totals}"
+P5 -> User : "הסרה הושלמה\n(Removal Complete)\n{success, updated_cart}"
+
+note right of CartsDB
+  **מבנה פריט בעגלה:**
+  - _id: ObjectId
+  - user_id: ObjectId
+  - product_id: ObjectId
+  - quantity: Number
+  - price_at_time: Number
+  - added_at: Date
+  - updated_at: Date
+end note
+
+note right of SettingsDB
+  **הגדרות מערכת:**
+  - tax_rate: Number
+  - shipping_cost: Number
+  - free_shipping_threshold: Number
+  - max_items_per_cart: Number
+  - currency: String
+end note
+
+@enduml

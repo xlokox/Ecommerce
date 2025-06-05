@@ -1,0 +1,64 @@
+@startuml User Login Data Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Data Flow: התחברות משתמש (User Login)
+
+!define ENTITY rectangle
+!define PROCESS circle
+!define DATASTORE database
+
+ENTITY "משתמש\n(User)" as User
+PROCESS "1.0\nאימות נתונים\n(Validate Input)" as P1
+PROCESS "2.0\nחיפוש משתמש\n(Find User)" as P2
+PROCESS "3.0\nאימות סיסמה\n(Verify Password)" as P3
+PROCESS "4.0\nיצירת Token\n(Generate Token)" as P4
+PROCESS "5.0\nעדכון התחברות\n(Update Login)" as P5
+DATASTORE "D1\nמשתמשים\n(Users DB)" as UsersDB
+DATASTORE "D2\nסשנים\n(Sessions DB)" as SessionsDB
+DATASTORE "D3\nלוג מערכת\n(System Log)" as SystemLog
+
+' Main data flow - clean and organized
+User -> P1 : "פרטי התחברות\n{email, password}"
+
+P1 -> P2 : "נתונים מאומתים\n{email, password}"
+
+P2 -> UsersDB : "שאילתת חיפוש\n{email}"
+UsersDB --> P2 : "נתוני משתמש\n{id, hashed_password, role}"
+
+P2 -> P3 : "נתונים לאימות\n{user_data, input_password}"
+
+P3 -> P4 : "משתמש מאומת\n{user_id, role, email}"
+
+P4 -> P5 : "פרטי Token\n{token, user_id, expires_at}"
+
+P5 -> UsersDB : "עדכון התחברות\n{user_id, last_login}"
+P5 -> SessionsDB : "שמירת סשן\n{user_id, token, expires_at}"
+
+P5 -> User : "תוצאת התחברות\n{success, token, user_data}"
+
+' Logging flows - separate and clean
+P1 -> SystemLog : "לוג ניסיון\n{email, timestamp}"
+P3 -> SystemLog : "לוג אימות\n{user_id, success}"
+P4 -> SystemLog : "לוג Token\n{user_id, token_id}"
+
+note bottom of UsersDB
+  **מבנה נתונים:**
+  - _id: ObjectId
+  - email: String (unique)
+  - password: String (hashed)
+  - role: String
+  - last_login: Date
+  - status: String
+end note
+
+note bottom of SessionsDB
+  **מבנה סשן:**
+  - _id: ObjectId
+  - user_id: ObjectId
+  - token: String
+  - created_at: Date
+  - expires_at: Date
+end note
+
+@enduml

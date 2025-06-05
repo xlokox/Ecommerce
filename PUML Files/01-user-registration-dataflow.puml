@@ -1,0 +1,68 @@
+@startuml User Registration Data Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Data Flow: רישום משתמש חדש (User Registration)
+
+!define ENTITY rectangle
+!define PROCESS circle
+!define DATASTORE database
+
+ENTITY "משתמש חדש\n(New User)" as User
+PROCESS "1.0\nאימות נתונים\n(Validate Data)" as P1
+PROCESS "2.0\nבדיקת קיום\n(Check Existence)" as P2
+PROCESS "3.0\nהצפנת סיסמה\n(Encrypt Password)" as P3
+PROCESS "4.0\nשמירת משתמש\n(Save User)" as P4
+PROCESS "5.0\nשליחת אימייל\n(Send Email)" as P5
+DATASTORE "D1\nמשתמשים\n(Users DB)" as UsersDB
+DATASTORE "D2\nלוג מערכת\n(System Log)" as SystemLog
+ENTITY "מערכת אימייל\n(Email System)" as EmailSystem
+
+' Data flows with labels
+User -> P1 : "פרטי הרשמה\n(Registration Data)\n{name, email, password}"
+
+P1 -> P2 : "נתונים מאומתים\n(Validated Data)\n{validated_user_data}"
+
+P2 -> UsersDB : "שאילתת חיפוש\n(Search Query)\n{email}"
+UsersDB -> P2 : "תוצאת חיפוש\n(Search Result)\n{user_exists: boolean}"
+
+P2 -> P3 : "נתונים לעיבוד\n(Data for Processing)\n{user_data}"
+
+P3 -> P4 : "נתונים מוכנים\n(Ready Data)\n{user_data + hashed_password}"
+
+P4 -> UsersDB : "נתוני משתמש חדש\n(New User Data)\n{id, name, email, hashed_password, created_at}"
+UsersDB -> P4 : "אישור שמירה\n(Save Confirmation)\n{user_id, status}"
+
+P4 -> P5 : "פרטי משתמש\n(User Details)\n{user_id, email, name}"
+
+P5 -> EmailSystem : "בקשת שליחת אימייל\n(Email Request)\n{to, subject, template, data}"
+EmailSystem -> P5 : "סטטוס שליחה\n(Send Status)\n{sent: boolean, message_id}"
+
+P1 -> SystemLog : "לוג אימות\n(Validation Log)\n{timestamp, action, result}"
+P2 -> SystemLog : "לוג בדיקה\n(Check Log)\n{timestamp, email, exists}"
+P4 -> SystemLog : "לוג יצירה\n(Creation Log)\n{timestamp, user_id, status}"
+P5 -> SystemLog : "לוג אימייל\n(Email Log)\n{timestamp, email, sent_status}"
+
+P4 -> User : "תוצאת הרשמה\n(Registration Result)\n{success, user_id, message}"
+
+note right of UsersDB
+  **מבנה נתונים:**
+  - _id: ObjectId
+  - name: String
+  - email: String (unique)
+  - password: String (hashed)
+  - role: String
+  - createdAt: Date
+  - status: String
+end note
+
+note right of SystemLog
+  **מבנה לוג:**
+  - timestamp: DateTime
+  - action: String
+  - user_id: String
+  - details: Object
+  - ip_address: String
+end note
+
+@enduml

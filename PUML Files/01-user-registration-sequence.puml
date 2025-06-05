@@ -1,0 +1,65 @@
+@startuml User Registration Sequence
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Sequence: רישום משתמש חדש (User Registration)
+
+actor "משתמש חדש\n(New User)" as User
+participant "Frontend\n(React App)" as Frontend
+participant "Auth Controller\n(Backend)" as AuthController
+participant "User Service\n(Business Logic)" as UserService
+participant "Database\n(MongoDB)" as Database
+participant "Email Service\n(External)" as EmailService
+
+User -> Frontend: 1. מילוי טופס הרשמה
+activate Frontend
+
+Frontend -> Frontend: 2. אימות נתונים בצד לקוח
+Frontend -> AuthController: 3. POST /api/auth/register
+activate AuthController
+
+AuthController -> UserService: 4. validateUserData()
+activate UserService
+
+UserService -> UserService: 5. בדיקת תקינות נתונים
+UserService -> Database: 6. findUserByEmail()
+activate Database
+
+Database --> UserService: 7. תוצאת חיפוש
+deactivate Database
+
+alt משתמש לא קיים
+    UserService -> UserService: 8. hashPassword()
+    UserService -> Database: 9. createUser()
+    activate Database
+    
+    Database --> UserService: 10. משתמש נוצר בהצלחה
+    deactivate Database
+    
+    UserService -> EmailService: 11. sendConfirmationEmail()
+    activate EmailService
+    
+    EmailService --> UserService: 12. אימייל נשלח
+    deactivate EmailService
+    
+    UserService --> AuthController: 13. הרשמה הושלמה
+    deactivate UserService
+    
+    AuthController --> Frontend: 14. 201 Created + user data
+    deactivate AuthController
+    
+    Frontend --> User: 15. הודעת הצלחה + הפניה להתחברות
+    deactivate Frontend
+
+else משתמש כבר קיים
+    UserService --> AuthController: 16. שגיאה - משתמש קיים
+    deactivate UserService
+    
+    AuthController --> Frontend: 17. 409 Conflict
+    deactivate AuthController
+    
+    Frontend --> User: 18. הודעת שגיאה
+    deactivate Frontend
+end
+
+@enduml
