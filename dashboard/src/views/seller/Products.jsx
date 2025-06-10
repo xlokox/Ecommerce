@@ -4,14 +4,15 @@ import { Link } from 'react-router-dom';
 import Pagination from '../Pagination'; 
 import { FaEdit, FaEye, FaTrash } from 'react-icons/fa'; 
 import { useDispatch, useSelector } from 'react-redux';
-import { get_products } from '../../store/Reducers/productReducer';
+import { get_products, delete_product, messageClear } from '../../store/Reducers/productReducer';
+import toast from 'react-hot-toast';
 import { LuImageMinus } from "react-icons/lu";
 
 
 const Products = () => {
 
   const dispatch = useDispatch();
-  const { products, totalProduct } = useSelector(state => state.product);
+  const { products, totalProduct, successMessage, errorMessage, loader } = useSelector(state => state.product);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [searchValue, setSearchValue] = useState('');
@@ -25,6 +26,25 @@ const Products = () => {
     };
     dispatch(get_products(obj));
   }, [searchValue, currentPage, parPage, dispatch]);
+
+  // Handle delete product
+  const handleDeleteProduct = (productId, productName) => {
+    if (window.confirm(`Are you sure you want to delete "${productName}"?`)) {
+      dispatch(delete_product(productId));
+    }
+  };
+
+  // Handle success/error messages
+  useEffect(() => {
+    if (successMessage) {
+      toast.success(successMessage);
+      dispatch(messageClear());
+    }
+    if (errorMessage) {
+      toast.error(errorMessage);
+      dispatch(messageClear());
+    }
+  }, [successMessage, errorMessage, dispatch]);
 
   return (
     <div className='px-2 lg:px-7 pt-5'>
@@ -76,9 +96,13 @@ const Products = () => {
                       <Link className='p-[6px] bg-green-500 rounded hover:shadow-lg hover:shadow-green-500/50'>
                         <FaEye />
                       </Link>
-                      <Link className='p-[6px] bg-red-500 rounded hover:shadow-lg hover:shadow-red-500/50'>
+                      <button
+                        onClick={() => handleDeleteProduct(d._id, d.name)}
+                        disabled={loader}
+                        className='p-[6px] bg-red-500 rounded hover:shadow-lg hover:shadow-red-500/50 disabled:opacity-50'
+                      >
                         <FaTrash />
-                      </Link>
+                      </button>
                     </div>
                   </td>
                 </tr>

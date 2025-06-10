@@ -4,12 +4,33 @@ import { GrEmoji } from 'react-icons/gr'
 import { IoSend } from 'react-icons/io5'
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom'
-import { add_friend, messageClear, send_message,updateMessage } from '../../store/reducers/chatReducer';
+import { add_friend, messageClear, send_message,updateMessage, get_available_sellers } from '../../store/reducers/chatReducer';
 import toast from 'react-hot-toast';
 import io from 'socket.io-client'
 import {FaList} from 'react-icons/fa'
 
-const socket = io('http://localhost:5001')
+// 🚀 Enhanced Socket Connection for Customer Chat
+const socket = io('http://localhost:5001', {
+    autoConnect: true,
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 5,
+    timeout: 20000,
+    transports: ['websocket', 'polling']
+});
+
+// 🔧 Socket Connection Logging
+socket.on('connect', () => {
+    console.log('✅ Customer Chat Socket Connected:', socket.id);
+});
+
+socket.on('disconnect', (reason) => {
+    console.log('❌ Customer Chat Socket Disconnected:', reason);
+});
+
+socket.on('connect_error', (error) => {
+    console.error('🔥 Customer Chat Socket Connection Error:', error);
+});
 
 const Chat = () => {
 
@@ -18,43 +39,123 @@ const Chat = () => {
     const dispatch = useDispatch()
     const {sellerId} = useParams()
     const {userInfo } = useSelector(state => state.auth)
-    const {fb_messages,currentFd,my_friends,successMessage } = useSelector(state => state.chat)
+    const {fb_messages,currentFd,my_friends,successMessage,available_sellers } = useSelector(state => state.chat)
     const [text,setText] = useState('')
     const [receverMessage,setReceverMessage] = useState('')
     const [activeSeller,setActiveSeller] = useState([])
     const [show, setShow] = useState(false)
+    const [isTyping, setIsTyping] = useState(false)
     
     useEffect(() => {
-        socket.emit('add_user',userInfo.id, userInfo)
-    },[])
-
-    useEffect(() => {
-        dispatch(add_friend({
-            sellerId: sellerId || "",
-            userId: userInfo.id
-        }))
-    },[sellerId])
-
-    const send = () => {
-        if (text) {
-            dispatch(send_message({
-                userId: userInfo.id,
-                text,
-                sellerId,
-                name: userInfo.name 
-            }))
-            setText('')
+        if (userInfo?.id) {
+            socket.emit('add_user', userInfo.id, userInfo);
+            console.log('🔗 Customer connected to socket:', userInfo.id);
         }
-    }
+    }, [userInfo]);
+
+    // 🚀 Get available sellers when component mounts
+    useEffect(() => {
+        if (userInfo?.id) {
+            console.log('📋 Getting available sellers...');
+            dispatch(get_available_sellers());
+        }
+    }, [userInfo, dispatch]);
+
+    // 🚀 Auto-connect to seller when available
+    useEffect(() => {
+        if (userInfo?.id && available_sellers.length > 0 && !sellerId) {
+            // If no specific seller is selected, connect to the first available seller
+            const firstSeller = available_sellers[0];
+            console.log('🔗 Auto-connecting to seller:', firstSeller);
+
+            dispatch(add_friend({
+                sellerId: firstSeller._id,
+                userId: userInfo.id
+            }));
+        } else if (sellerId && userInfo?.id) {
+            // Connect to specific seller from URL
+            dispatch(add_friend({
+                sellerId: sellerId,
+                userId: userInfo.id
+            }));
+        }
+    }, [sellerId, userInfo, available_sellers, dispatch]);
+
+    // 🚀 Enhanced Send Message Function
+    const send = (e) => {
+        if (e) e.preventDefault();
+        if (text.trim()) {
+            const messageData = {
+                userId: userInfo.id,
+                text: text.trim(),
+                sellerId,
+                name: userInfo.name,
+                timestamp: new Date().toISOString()
+            };
+
+            console.log('📤 Customer sending message:', messageData);
+            dispatch(send_message(messageData));
+            setText('');
+
+            // Stop typing indicator
+            socket.emit('typing', {
+                senderId: userInfo.id,
+                receiverId: sellerId,
+                typing: false
+            });
+        }
+    };
+
+    // 🎯 Handle Enter Key Press
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            send();
+        }
+    };
+
+    // 🔤 Handle Typing Indicator
+    const handleTyping = (value) => {
+        setText(value);
+
+        if (value.trim() && sellerId) {
+            socket.emit('typing', {
+                senderId: userInfo.id,
+                receiverId: sellerId,
+                typing: true
+            });
+        } else {
+            socket.emit('typing', {
+                senderId: userInfo.id,
+                receiverId: sellerId,
+                typing: false
+            });
+        }
+    };
 
     useEffect(() => {
         socket.on('seller_message', msg => {
-            setReceverMessage(msg)
-        })
+            console.log('📨 Received seller message:', msg);
+            setReceverMessage(msg);
+        });
+
         socket.on('activeSeller', (sellers) => {
-            setActiveSeller(sellers)
-        })
-    },[])
+            setActiveSeller(sellers);
+        });
+
+        socket.on('typing', (data) => {
+            if (data.senderId === sellerId) {
+                setIsTyping(true);
+                setTimeout(() => setIsTyping(false), 3000);
+            }
+        });
+
+        return () => {
+            socket.off('seller_message');
+            socket.off('activeSeller');
+            socket.off('typing');
+        };
+    }, [sellerId]);
 
     useEffect(() => {
         if (successMessage) {
@@ -161,20 +262,46 @@ const Chat = () => {
                         <input className='hidden' type="file" />
                     </div>
                     <div className='border h-[40px] p-0 ml-2 w-[calc(100%-90px)] rounded-full relative'>
-                        <input value={text} onChange={(e) => setText(e.target.value)} type="text" placeholder='input message' className='w-full rounded-full h-full outline-none p-3' />
-                        <div className='text-2xl right-2 top-2 absolute cursor-auto'>
+                        <input
+                            value={text}
+                            onChange={(e) => handleTyping(e.target.value)}
+                            onKeyPress={handleKeyPress}
+                            type="text"
+                            placeholder='Type your message...'
+                            className='w-full rounded-full h-full outline-none p-3 focus:border-blue-500 transition-colors'
+                            disabled={!sellerId}
+                        />
+                        <div className='text-2xl right-2 top-2 absolute cursor-pointer hover:text-yellow-500 transition-colors'>
                             <span><GrEmoji /></span>
                         </div>
-
                     </div>
                     <div className='w-[40px] p-2 justify-center items-center rounded-full'>
-                        <div onClick={send} className='text-2xl cursor-pointer'>
+                        <div
+                            onClick={send}
+                            className={`text-2xl cursor-pointer transition-colors ${
+                                text.trim() ? 'text-blue-500 hover:text-blue-600' : 'text-gray-400'
+                            }`}
+                        >
                             <IoSend />
                         </div>
                     </div>
                 </div>
-            </div> : <div onClick={() => setShow(true)} className='w-full h-[400px] flex justify-center items-center text-lg ont-bold text-slate-600'>
-                <span>Select Seller</span>
+            </div> : <div onClick={() => setShow(true)} className='w-full h-[400px] flex justify-center items-center text-lg font-bold text-slate-600 flex-col gap-4'>
+                {available_sellers.length > 0 ? (
+                    <>
+                        <div className='text-blue-500 text-4xl'>💬</div>
+                        <span>Connecting to Support...</span>
+                        <div className='text-sm text-gray-500'>
+                            You'll be connected to: {available_sellers[0]?.shopInfo?.shopName || available_sellers[0]?.name}
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div className='text-gray-400 text-4xl'>🔍</div>
+                        <span>Loading Support...</span>
+                        <div className='text-sm text-gray-500'>Please wait while we connect you</div>
+                    </>
+                )}
             </div>
             }
             

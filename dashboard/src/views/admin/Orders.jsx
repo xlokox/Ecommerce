@@ -72,11 +72,11 @@ const Orders = () => {
               <div className={show === o._id ? 'block border-b border-slate-700 bg-[#8288ed]' : 'hidden'}>
                    
             {
-                o.suborder.map((so, i) =>  <div className=' flex justify-start items-start border-b border-slate-700'>
+                o.suborder.map((so, i) =>  <div key={so._id || i} className=' flex justify-start items-start border-b border-slate-700'>
                 <div className='py-3 w-[25%] font-medium whitespace-nowrap pl-3'>#{so._id}</div>
                 <div className='py-3 w-[13%] font-medium'>${so.price}</div>
                 <div className='py-3 w-[18%] font-medium'>{so.payment_status}</div>
-                <div className='py-3 w-[18%] font-medium'>{so.delivery_status}</div> 
+                <div className='py-3 w-[18%] font-medium'>{so.delivery_status}</div>
             </div>)
             }
              

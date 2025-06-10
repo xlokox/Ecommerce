@@ -28,6 +28,13 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
       console.log('Adding token to request');
     }
+
+    // For FormData requests (file uploads), remove Content-Type to let browser set it
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+      console.log('FormData detected, removing Content-Type header');
+    }
+
     return config;
   },
   (error) => {
@@ -44,7 +51,7 @@ api.interceptors.response.use(
   (error) => {
     console.error('API Error:', error.response?.status, error.response?.data);
 
-    // Handle authentication errors
+    // Handle authentication errors - NO UNAUTHORIZED REDIRECTS!
     if (error.response) {
       if (error.response.status === 401) {
         // If unauthorized, clear token and redirect to login
@@ -53,10 +60,12 @@ api.interceptors.response.use(
         if (!window.location.pathname.includes('/login')) {
           window.location.href = '/login';
         }
-      } else if (error.response.status === 403) {
-        // Forbidden - redirect to unauthorized page
-        window.location.href = '/unauthorized';
       }
+      // ✅ REMOVED 403 UNAUTHORIZED REDIRECT - NO MORE UNAUTHORIZED PAGES!
+      // else if (error.response.status === 403) {
+      //   // Forbidden - redirect to unauthorized page
+      //   window.location.href = '/unauthorized';
+      // }
     }
     return Promise.reject(error);
   }

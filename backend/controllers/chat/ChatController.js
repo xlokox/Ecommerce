@@ -16,20 +16,42 @@ class ChatController {
 
       if (!seller || !user) return responseReturn(res, 404, { error: "Seller or User not found" });
 
-      const checkSeller = await sellerCustomerModel.findOne({ myId: userId, 'myFriends.fdId': sellerId });
-      if (!checkSeller) {
-        await sellerCustomerModel.updateOne(
-          { myId: userId },
-          { $push: { myFriends: { fdId: sellerId, name: seller.shopInfo?.shopName, image: seller.image || "" } } }
-        );
+      // Check if customer already has this seller as friend
+      let customerDoc = await sellerCustomerModel.findOne({ myId: userId });
+      if (!customerDoc) {
+        // Create new document for customer
+        customerDoc = await sellerCustomerModel.create({
+          myId: userId,
+          myFriends: [{ fdId: sellerId, name: seller.shopInfo?.shopName || seller.name, image: seller.image || "" }]
+        });
+      } else {
+        // Check if seller is already in friends list
+        const sellerExists = customerDoc.myFriends.some(f => f.fdId === sellerId);
+        if (!sellerExists) {
+          await sellerCustomerModel.updateOne(
+            { myId: userId },
+            { $push: { myFriends: { fdId: sellerId, name: seller.shopInfo?.shopName || seller.name, image: seller.image || "" } } }
+          );
+        }
       }
 
-      const checkCustomer = await sellerCustomerModel.findOne({ myId: sellerId, 'myFriends.fdId': userId });
-      if (!checkCustomer) {
-        await sellerCustomerModel.updateOne(
-          { myId: sellerId },
-          { $push: { myFriends: { fdId: userId, name: user.name, image: "" } } }
-        );
+      // Check if seller already has this customer as friend
+      let sellerDoc = await sellerCustomerModel.findOne({ myId: sellerId });
+      if (!sellerDoc) {
+        // Create new document for seller
+        sellerDoc = await sellerCustomerModel.create({
+          myId: sellerId,
+          myFriends: [{ fdId: userId, name: user.name, image: "" }]
+        });
+      } else {
+        // Check if customer is already in friends list
+        const customerExists = sellerDoc.myFriends.some(f => f.fdId === userId);
+        if (!customerExists) {
+          await sellerCustomerModel.updateOne(
+            { myId: sellerId },
+            { $push: { myFriends: { fdId: userId, name: user.name, image: "" } } }
+          );
+        }
       }
 
       const messages = await sellerCustomerMessage.find({
@@ -39,10 +61,22 @@ class ChatController {
         ]
       });
 
+      // Get updated customer data
       const myFriendsData = await sellerCustomerModel.findOne({ myId: userId });
       const currentFriend = myFriendsData?.myFriends.find(f => f.fdId === sellerId);
 
-      responseReturn(res, 200, { myFriends: myFriendsData?.myFriends || [], currentFriend, messages });
+      console.log('✅ Customer-Seller relationship established:', {
+        customerId: userId,
+        sellerId: sellerId,
+        friendsCount: myFriendsData?.myFriends.length || 0,
+        messagesCount: messages.length
+      });
+
+      responseReturn(res, 200, {
+        MyFriends: myFriendsData?.myFriends || [],
+        currentFd: currentFriend,
+        messages
+      });
     } catch (error) {
       console.error("Error in add_customer_friend:", error);
       responseReturn(res, 500, { error: "Internal Server Error" });
@@ -102,6 +136,25 @@ class ChatController {
       responseReturn(res, 200, { sellers });
     } catch (error) {
       console.error("Error in get_sellers:", error);
+      responseReturn(res, 500, { error: "Internal Server Error" });
+    }
+  };
+
+  // 🚀 New method to get available sellers for customers
+  get_available_sellers = async (req, res) => {
+    try {
+      // Get all active sellers (you can add status filter if needed)
+      const sellers = await sellerModel.find({ status: 'active' }).select('_id name shopInfo image');
+
+      // If no active sellers, get any seller
+      if (sellers.length === 0) {
+        const allSellers = await sellerModel.find({}).select('_id name shopInfo image');
+        responseReturn(res, 200, { sellers: allSellers });
+      } else {
+        responseReturn(res, 200, { sellers });
+      }
+    } catch (error) {
+      console.error("Error in get_available_sellers:", error);
       responseReturn(res, 500, { error: "Internal Server Error" });
     }
   };

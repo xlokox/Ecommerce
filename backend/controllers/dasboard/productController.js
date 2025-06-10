@@ -393,6 +393,53 @@ class ProductController {
       }
     });
   };
+
+  // מחיקת מוצר
+  product_delete = async (req, res) => {
+    try {
+      const { productId } = req.params;
+
+      if (!productId) {
+        return responseReturn(res, 400, { error: "Product ID is required" });
+      }
+
+      // בדיקת מוצר קיים
+      const existingProduct = await productModel.findById(productId);
+      if (!existingProduct) {
+        return responseReturn(res, 404, { error: "Product not found" });
+      }
+
+      // מחיקת תמונות מ-Cloudinary (אופציונלי)
+      try {
+        if (existingProduct.images && existingProduct.images.length > 0) {
+          for (const imageUrl of existingProduct.images) {
+            // Extract public_id from Cloudinary URL
+            const publicId = imageUrl.split('/').pop().split('.')[0];
+            if (publicId && publicId !== 'product_placeholder') {
+              await cloudinary.v2.uploader.destroy(`products/${publicId}`);
+              console.log(`Deleted image: products/${publicId}`);
+            }
+          }
+        }
+      } catch (imageError) {
+        console.log('Error deleting images from Cloudinary:', imageError.message);
+        // Continue with product deletion even if image deletion fails
+      }
+
+      // מחיקת המוצר מהמסד נתונים
+      await productModel.findByIdAndDelete(productId);
+
+      console.log(`Product ${productId} deleted successfully`);
+      return responseReturn(res, 200, {
+        message: "Product deleted successfully",
+        productId: productId
+      });
+
+    } catch (error) {
+      console.log("product_delete Error:", error.message);
+      return responseReturn(res, 500, { error: error.message });
+    }
+  };
 }
 
 export default new ProductController();

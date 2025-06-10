@@ -8,11 +8,16 @@ import { useDispatch } from 'react-redux';
 import defaultUserImage from '../assets/user.png';
 
 const SellerLayout = () => {
+  console.log('🏗️ SellerLayout is rendering!')
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { userInfo } = useSelector(state => state.auth);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  console.log('🏗️ SellerLayout - Current pathname:', pathname)
+  console.log('🏗️ SellerLayout - User info:', userInfo)
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -135,6 +140,7 @@ const SellerLayout = () => {
 
         {/* Content */}
         <div className={`ml-0 transition-all duration-300 ${sidebarOpen ? 'md:ml-[260px]' : 'ml-0'} w-full min-h-screen`}>
+          {console.log('🏗️ SellerLayout - About to render Outlet')}
           <Outlet />
         </div>
       </div>

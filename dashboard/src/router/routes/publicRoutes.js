@@ -4,7 +4,7 @@ const Login = lazy(() => import("../../views/auth/Login"));
 const Register = lazy(() => import("../../views/auth/Register"));
 const AdminLogin = lazy(() => import("../../views/auth/AdminLogin"));
 const Home = lazy(() => import("../../views/Home"));
-const UnAuthorized = lazy(() => import("../../views/UnAuthorized"));
+// const UnAuthorized = lazy(() => import("../../views/UnAuthorized")); // DISABLED
 const Success = lazy(() => import("../../views/Success"));
 
 const publicRoutes = [
@@ -28,10 +28,11 @@ const publicRoutes = [
     path: "admin/login",
     element: <AdminLogin />,
   },
-  {
-    path: "unauthorized",
-    element: <UnAuthorized />,
-  },
+  // UNAUTHORIZED ROUTE DISABLED - ALL AUTHENTICATED USERS CAN ACCESS DASHBOARD
+  // {
+  //   path: "unauthorized",
+  //   element: <UnAuthorized />,
+  // },
   {
     path: "success",
     element: <Success />,

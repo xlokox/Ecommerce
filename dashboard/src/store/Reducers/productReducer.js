@@ -4,14 +4,15 @@ import api from "../../api";
 export const add_product = createAsyncThunk(
     'product/add_product',
     async(product,{rejectWithValue, fulfillWithValue}) => {
-        
-        try { 
-            const {data} = await api.post('/product-add',product,{withCredentials: true}) 
-            // console.log(data)
+
+        try {
+            console.log('🚀 Sending product data to API...');
+            const {data} = await api.post('/product-add',product,{withCredentials: true})
+            console.log('✅ Product added successfully:', data);
             return fulfillWithValue(data)
         } catch (error) {
-            // console.log(error.response.data)
-            return rejectWithValue(error.response.data)
+            console.error('❌ Product add failed:', error.response?.data || error.message);
+            return rejectWithValue(error.response?.data || { error: error.message })
         }
     }
 )
@@ -61,14 +62,27 @@ export const get_product = createAsyncThunk(
 export const update_product = createAsyncThunk(
     'product/update_product',
     async( product ,{rejectWithValue, fulfillWithValue}) => {
-        
+
         try {
-             
-            const {data} = await api.post('/product-update', product,{withCredentials: true}) 
+
+            const {data} = await api.post('/product-update', product,{withCredentials: true})
             console.log(data)
             return fulfillWithValue(data)
         } catch (error) {
             // console.log(error.response.data)
+            return rejectWithValue(error.response.data)
+        }
+    }
+)
+
+export const delete_product = createAsyncThunk(
+    'product/delete_product',
+    async(productId,{rejectWithValue, fulfillWithValue}) => {
+
+        try {
+            const {data} = await api.delete(`/product-delete/${productId}`,{withCredentials: true})
+            return fulfillWithValue(data)
+        } catch (error) {
             return rejectWithValue(error.response.data)
         }
     }
@@ -158,11 +172,25 @@ export const productReducer = createSlice({
              
         })
 
-        .addCase(product_image_update.fulfilled, (state, { payload }) => { 
-            state.product = payload.product 
-            state.successMessage = payload.message  
+        .addCase(product_image_update.fulfilled, (state, { payload }) => {
+            state.product = payload.product
+            state.successMessage = payload.message
         })
- 
+
+        .addCase(delete_product.pending, (state, { payload }) => {
+            state.loader = true;
+        })
+        .addCase(delete_product.rejected, (state, { payload }) => {
+            state.loader = false;
+            state.errorMessage = payload.error
+        })
+        .addCase(delete_product.fulfilled, (state, { payload }) => {
+            state.loader = false;
+            state.successMessage = payload.message;
+            // Remove the deleted product from the products array
+            state.products = state.products.filter(product => product._id !== payload.productId);
+            state.totalProduct = state.totalProduct - 1;
+        })
 
     }
 

@@ -33,6 +33,19 @@ export const send_message = createAsyncThunk(
   }
 );
 
+export const get_available_sellers = createAsyncThunk(
+  "chat/get_available_sellers",
+  async (_, { rejectWithValue, fulfillWithValue }) => {
+    try {
+      const { data } = await api.get("/chat/customer/get-available-sellers");
+      return fulfillWithValue(data);
+    } catch (error) {
+      console.error('Error getting available sellers:', error);
+      return rejectWithValue(error?.response?.data || { error: 'Failed to get sellers' });
+    }
+  }
+);
+
 export const chatReducer = createSlice({
   name: "chat",
   initialState: {
@@ -41,6 +54,7 @@ export const chatReducer = createSlice({
     currentFd: "",
     errorMessage: "",
     successMessage: "",
+    available_sellers: [],
   },
   reducers: {
     messageClear: (state) => {
@@ -75,6 +89,10 @@ export const chatReducer = createSlice({
         state.my_friends = tempFriends;
         state.fb_messages = [...state.fb_messages, payload.message];
         state.successMessage = "Message Send Success";
+      })
+      // get_available_sellers
+      .addCase(get_available_sellers.fulfilled, (state, { payload }) => {
+        state.available_sellers = payload.sellers;
       });
   },
 });

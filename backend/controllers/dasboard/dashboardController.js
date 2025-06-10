@@ -26,6 +26,7 @@ class DashboardController {
   get_admin_dashboard_data = async (req, res) => {
     const { id } = req;
     try {
+      // Basic stats
       const totalSale = await myShopWallet.aggregate([
         {
           $group: {
@@ -39,28 +40,131 @@ class DashboardController {
       const totalSeller = await sellerModel.find({}).countDocuments();
       const messages = await adminSellerMessage.find({}).limit(3);
       const recentOrders = await customerOrder.find({}).limit(5);
+
+      // Monthly sales data for the last 12 months
+      const monthlySales = await customerOrder.aggregate([
+        {
+          $match: {
+            createdAt: {
+              $gte: new Date(new Date().setMonth(new Date().getMonth() - 12))
+            }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$createdAt" },
+              month: { $month: "$createdAt" }
+            },
+            totalSales: { $sum: "$price" },
+            orderCount: { $sum: 1 }
+          }
+        },
+        {
+          $sort: { "_id.year": 1, "_id.month": 1 }
+        }
+      ]);
+
+      // Daily sales for the last 30 days
+      const dailySales = await customerOrder.aggregate([
+        {
+          $match: {
+            createdAt: {
+              $gte: new Date(new Date().setDate(new Date().getDate() - 30))
+            }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$createdAt" },
+              month: { $month: "$createdAt" },
+              day: { $dayOfMonth: "$createdAt" }
+            },
+            totalSales: { $sum: "$price" },
+            orderCount: { $sum: 1 }
+          }
+        },
+        {
+          $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 }
+        }
+      ]);
+
+      // Order status distribution
+      const orderStatusStats = await customerOrder.aggregate([
+        {
+          $group: {
+            _id: "$delivery_status",
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+
+      // Payment status distribution
+      const paymentStatusStats = await customerOrder.aggregate([
+        {
+          $group: {
+            _id: "$payment_status",
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+
+      // Top selling products
+      const topProducts = await customerOrder.aggregate([
+        { $unwind: "$products" },
+        {
+          $group: {
+            _id: "$products.productId",
+            totalSold: { $sum: "$products.quantity" },
+            totalRevenue: { $sum: { $multiply: ["$products.quantity", "$products.price"] } }
+          }
+        },
+        {
+          $lookup: {
+            from: "products",
+            localField: "_id",
+            foreignField: "_id",
+            as: "productInfo"
+          }
+        },
+        { $unwind: "$productInfo" },
+        {
+          $project: {
+            name: "$productInfo.name",
+            totalSold: 1,
+            totalRevenue: 1,
+            image: "$productInfo.images"
+          }
+        },
+        { $sort: { totalSold: -1 } },
+        { $limit: 5 }
+      ]);
+
       responseReturn(res, 200, {
         totalProduct,
         totalOrder,
         totalSeller,
         messages,
         recentOrders,
-        totalSale: totalSale.length > 0 ? totalSale[0].totalAmount : 0
+        totalSale: totalSale.length > 0 ? totalSale[0].totalAmount : 0,
+        monthlySales,
+        dailySales,
+        orderStatusStats,
+        paymentStatusStats,
+        topProducts
       });
     } catch (error) {
       console.log(error.message);
+      responseReturn(res, 500, { error: error.message });
     }
   };
 
   get_seller_dashboard_data = async (req, res) => {
     const { id } = req;
     try {
-      const totalSale = await sellerWallet.aggregate([
-        {
-          $match: { 
-            sellerId: { $eq: id }
-          }
-        },
+      // Use the same admin data for sellers (since sellers are admins)
+      const totalSale = await myShopWallet.aggregate([
         {
           $group: {
             _id: null,
@@ -68,31 +172,128 @@ class DashboardController {
           }
         }
       ]);
-      const totalProduct = await productModel.find({ sellerId: new ObjectId(id) }).countDocuments();
-      const totalOrder = await authOrder.find({ sellerId: new ObjectId(id) }).countDocuments();
-      const totalPendingOrder = await authOrder.find({
-        $and: [
-          { sellerId: { $eq: new ObjectId(id) } },
-          { delivery_status: { $eq: "pending" } }
-        ]
-      }).countDocuments();
-      const messages = await sellerCustomerMessage.find({
-        $or: [
-          { senderId: { $eq: id } },
-          { receverId: { $eq: id } }
-        ]
-      }).limit(3);
-      const recentOrders = await authOrder.find({ sellerId: new ObjectId(id) }).limit(5);
+      const totalProduct = await productModel.find({}).countDocuments();
+      const totalOrder = await customerOrder.find({}).countDocuments();
+      const totalSeller = await sellerModel.find({}).countDocuments();
+      const messages = await adminSellerMessage.find({}).limit(3);
+      const recentOrders = await customerOrder.find({}).limit(5);
+
+      // Monthly sales data for the last 12 months
+      const monthlySales = await customerOrder.aggregate([
+        {
+          $match: {
+            createdAt: {
+              $gte: new Date(new Date().setMonth(new Date().getMonth() - 12))
+            }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$createdAt" },
+              month: { $month: "$createdAt" }
+            },
+            totalSales: { $sum: "$price" },
+            orderCount: { $sum: 1 }
+          }
+        },
+        {
+          $sort: { "_id.year": 1, "_id.month": 1 }
+        }
+      ]);
+
+      // Daily sales for the last 30 days
+      const dailySales = await customerOrder.aggregate([
+        {
+          $match: {
+            createdAt: {
+              $gte: new Date(new Date().setDate(new Date().getDate() - 30))
+            }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: "$createdAt" },
+              month: { $month: "$createdAt" },
+              day: { $dayOfMonth: "$createdAt" }
+            },
+            totalSales: { $sum: "$price" },
+            orderCount: { $sum: 1 }
+          }
+        },
+        {
+          $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 }
+        }
+      ]);
+
+      // Order status distribution
+      const orderStatusStats = await customerOrder.aggregate([
+        {
+          $group: {
+            _id: "$delivery_status",
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+
+      // Payment status distribution
+      const paymentStatusStats = await customerOrder.aggregate([
+        {
+          $group: {
+            _id: "$payment_status",
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+
+      // Top selling products
+      const topProducts = await customerOrder.aggregate([
+        { $unwind: "$products" },
+        {
+          $group: {
+            _id: "$products.productId",
+            totalSold: { $sum: "$products.quantity" },
+            totalRevenue: { $sum: { $multiply: ["$products.quantity", "$products.price"] } }
+          }
+        },
+        {
+          $lookup: {
+            from: "products",
+            localField: "_id",
+            foreignField: "_id",
+            as: "productInfo"
+          }
+        },
+        { $unwind: "$productInfo" },
+        {
+          $project: {
+            name: "$productInfo.name",
+            totalSold: 1,
+            totalRevenue: 1,
+            image: "$productInfo.images"
+          }
+        },
+        { $sort: { totalSold: -1 } },
+        { $limit: 5 }
+      ]);
+
       responseReturn(res, 200, {
         totalProduct,
         totalOrder,
-        totalPendingOrder,
+        totalSeller,
         messages,
         recentOrders,
-        totalSale: totalSale.length > 0 ? totalSale[0].totalAmount : 0
+        totalSale: totalSale.length > 0 ? totalSale[0].totalAmount : 0,
+        monthlySales,
+        dailySales,
+        orderStatusStats,
+        paymentStatusStats,
+        topProducts
       });
     } catch (error) {
       console.log(error.message);
+      responseReturn(res, 500, { error: error.message });
     }
   };
 
@@ -153,6 +354,63 @@ class DashboardController {
         { $sample: { size: 5 } }
       ]);
       responseReturn(res, 200, { banners });
+    } catch (error) {
+      responseReturn(res, 500, { error: error.message });
+    }
+  };
+
+  // Real-time analytics endpoint
+  get_analytics_data = async (req, res) => {
+    try {
+      // Get today's sales
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const todaySales = await customerOrder.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: today }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalSales: { $sum: "$price" },
+            orderCount: { $sum: 1 }
+          }
+        }
+      ]);
+
+      // Get hourly sales for today
+      const hourlySales = await customerOrder.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: today }
+          }
+        },
+        {
+          $group: {
+            _id: { $hour: "$createdAt" },
+            sales: { $sum: "$price" },
+            orders: { $sum: 1 }
+          }
+        },
+        {
+          $sort: { "_id": 1 }
+        }
+      ]);
+
+      // Get recent activity (last 10 orders)
+      const recentActivity = await customerOrder.find({})
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .select('_id price payment_status delivery_status createdAt');
+
+      responseReturn(res, 200, {
+        todaySales: todaySales.length > 0 ? todaySales[0] : { totalSales: 0, orderCount: 0 },
+        hourlySales,
+        recentActivity
+      });
     } catch (error) {
       responseReturn(res, 500, { error: error.message });
     }

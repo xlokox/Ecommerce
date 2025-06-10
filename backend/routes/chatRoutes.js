@@ -17,7 +17,7 @@ if (!ChatController.seller_admin_message_insert) console.error("❌ seller_admin
 if (!ChatController.get_admin_messages) console.error("❌ get_admin_messages is missing!");
 if (!ChatController.get_seller_messages) console.error("❌ get_seller_messages is missing!");
 
-// ✅ Customer Routes
+// ✅ Customer Routes (public endpoint for getting sellers)
 router.post('/chat/customer/add-customer-friend', ChatController.add_customer_friend);
 router.post('/chat/customer/send-message-to-seller', ChatController.customer_message_add);
 

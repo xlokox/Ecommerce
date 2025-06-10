@@ -65,6 +65,10 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working' });
 });
 
+// Public chat endpoint for getting available sellers
+import ChatController from './controllers/chat/ChatController.js';
+app.get('/api/chat/customer/get-available-sellers', ChatController.get_available_sellers);
+
 // Protected routes
 app.use('/api/payment', validateRequest, authMiddleware);
 app.use('/api/order', validateRequest, authMiddleware);
@@ -112,35 +116,106 @@ const removeUser = (socketId) => {
   allSeller = allSeller.filter(c => c.socketId !== socketId);
 };
 
-// אירועי Socket.io
+// 🚀 Enhanced Socket.io Events with Modern Chat Features
 io.on('connection', (soc) => {
-  console.log('✅ Socket.io Connected');
+  console.log('✅ Socket.io Connected:', soc.id);
 
   soc.on('add_user', (customerId, userInfo) => {
+    console.log('👤 Customer connected:', customerId);
     addUser(customerId, soc.id, userInfo);
     io.emit('activeSeller', allSeller);
+    io.emit('activeCustomer', allCustomer);
   });
 
   soc.on('add_seller', (sellerId, userInfo) => {
+    console.log('🏪 Seller connected:', sellerId);
     addSeller(sellerId, soc.id, userInfo);
     io.emit('activeSeller', allSeller);
+    io.emit('activeCustomer', allCustomer);
   });
 
+  // 📤 Enhanced Seller to Customer Message
   soc.on('send_seller_message', (msg) => {
+    console.log('📤 Seller message:', msg);
     const customer = findCustomer(msg.receverId);
     if (customer) {
-      soc.to(customer.socketId).emit('seller_message', msg);
+      soc.to(customer.socketId).emit('seller_message', {
+        ...msg,
+        timestamp: new Date().toISOString(),
+        delivered: true
+      });
+      console.log('✅ Message delivered to customer:', customer.customerId);
+    } else {
+      console.log('❌ Customer not found:', msg.receverId);
     }
   });
 
+  // 📤 Enhanced Customer to Seller Message
   soc.on('send_customer_message', (msg) => {
+    console.log('📤 Customer message:', msg);
     const seller = findSeller(msg.receverId);
     if (seller) {
-      soc.to(seller.socketId).emit('customer_message', msg);
+      soc.to(seller.socketId).emit('customer_message', {
+        ...msg,
+        timestamp: new Date().toISOString(),
+        delivered: true
+      });
+      console.log('✅ Message delivered to seller:', seller.sellerId);
+    } else {
+      console.log('❌ Seller not found:', msg.receverId);
     }
   });
 
+  // 🔤 Typing Indicator
+  soc.on('typing', (data) => {
+    console.log('⌨️ Typing indicator:', data);
+    const { senderId, receiverId, typing } = data;
+
+    // Find receiver (could be customer or seller)
+    const customer = findCustomer(receiverId);
+    const seller = findSeller(receiverId);
+
+    if (customer) {
+      soc.to(customer.socketId).emit('typing', {
+        senderId,
+        typing,
+        timestamp: new Date().toISOString()
+      });
+    } else if (seller) {
+      soc.to(seller.socketId).emit('typing', {
+        senderId,
+        typing,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // 📖 Message Read Status
+  soc.on('message_read', (data) => {
+    console.log('📖 Message read:', data);
+    const { messageId, readBy, senderId } = data;
+
+    const customer = findCustomer(senderId);
+    const seller = findSeller(senderId);
+
+    if (customer) {
+      soc.to(customer.socketId).emit('message_read_confirmation', {
+        messageId,
+        readBy,
+        timestamp: new Date().toISOString()
+      });
+    } else if (seller) {
+      soc.to(seller.socketId).emit('message_read_confirmation', {
+        messageId,
+        readBy,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // 🔄 Admin Messages (existing functionality)
   soc.on('send_message_admin_to_seller', (msg) => {
+    console.log('📤 Admin to seller message:', msg);
     const seller = findSeller(msg.receverId);
     if (seller) {
       soc.to(seller.socketId).emit('receved_admin_message', msg);
@@ -148,22 +223,32 @@ io.on('connection', (soc) => {
   });
 
   soc.on('send_message_seller_to_admin', (msg) => {
+    console.log('📤 Seller to admin message:', msg);
     if (admin.socketId) {
       soc.to(admin.socketId).emit('receved_seller_message', msg);
     }
   });
 
   soc.on('add_admin', (adminInfo) => {
+    console.log('👑 Admin connected:', adminInfo.name);
     delete adminInfo.email;
     delete adminInfo.password;
     admin = { ...adminInfo, socketId: soc.id };
     io.emit('activeSeller', allSeller);
+    io.emit('activeCustomer', allCustomer);
   });
 
+  // 🔌 Enhanced Disconnect Handler
   soc.on('disconnect', () => {
-    console.log('❌ User disconnected');
+    console.log('❌ User disconnected:', soc.id);
     removeUser(soc.id);
     io.emit('activeSeller', allSeller);
+    io.emit('activeCustomer', allCustomer);
+  });
+
+  // 🏥 Connection Health Check
+  soc.on('ping', () => {
+    soc.emit('pong', { timestamp: new Date().toISOString() });
   });
 });
 

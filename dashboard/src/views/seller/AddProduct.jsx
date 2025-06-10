@@ -108,6 +108,21 @@ const AddProduct = () => {
 
   const add = (e) => {
     e.preventDefault();
+
+    // Validation
+    if (!state.name || !state.price || !state.stock || !category) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    console.log('🚀 Creating product with data:', {
+      name: state.name,
+      category,
+      price: state.price,
+      stock: state.stock,
+      images: images.length
+    });
+
     const formData = new FormData();
     formData.append('name', state.name);
     formData.append('description', state.description);
@@ -120,6 +135,8 @@ const AddProduct = () => {
     images.forEach(img => {
       formData.append('images', img);
     });
+
+    console.log('📤 Dispatching add_product with FormData');
     dispatch(add_product(formData));
   };
 

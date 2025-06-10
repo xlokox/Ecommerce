@@ -23,6 +23,13 @@ router.get(
   dashboardController.get_admin_dashboard_data
 );
 
+router.get(
+  '/admin/get-analytics-data',
+  authMiddleware,
+  requireRole(['admin']),
+  dashboardController.get_analytics_data
+);
+
 // הוספת/עדכון באנרים היא רק ל‑admin
 router.post(
   '/banner/add',
