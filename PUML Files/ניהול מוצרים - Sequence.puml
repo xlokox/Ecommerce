@@ -1,0 +1,127 @@
+@startuml ניהול מוצרים - Sequence
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Sequence: ניהול מוצרים (Product Management)
+
+actor "מוכר/מנהל\n(Seller/Admin)" as Seller
+participant "Frontend\n(React App)" as Frontend
+participant "Product Controller\n(Backend)" as ProductController
+participant "Product Service\n(Business Logic)" as ProductService
+participant "Image Service\n(Image Upload)" as ImageService
+participant "Database\n(MongoDB)" as Database
+
+== הוספת מוצר חדש ==
+
+Seller -> Frontend: 1. מילוי טופס מוצר חדש
+activate Frontend
+
+Frontend -> Frontend: 2. אימות נתונים בצד לקוח
+
+Frontend -> ProductController: 3. POST /api/products
+note right: {name, description, price, category, images}
+activate ProductController
+
+ProductController -> ProductService: 4. validateProductData(productData)
+activate ProductService
+
+ProductService -> ProductService: 5. בדיקת תקינות נתונים
+
+ProductService -> ImageService: 6. uploadImages(imageFiles)
+activate ImageService
+
+ImageService --> ProductService: 7. URLs של תמונות
+deactivate ImageService
+
+ProductService -> Database: 8. insertOne(productData)
+activate Database
+
+Database --> ProductService: 9. מוצר נוצר בהצלחה
+deactivate Database
+
+ProductService --> ProductController: 10. {productId, success: true}
+deactivate ProductService
+
+ProductController --> Frontend: 11. 201 Created + product data
+deactivate ProductController
+
+Frontend --> Seller: 12. הודעת הצלחה + הפניה לרשימת מוצרים
+deactivate Frontend
+
+== עדכון מוצר קיים ==
+
+Seller -> Frontend: 13. בחירת מוצר לעריכה
+activate Frontend
+
+Frontend -> ProductController: 14. GET /api/products/:id
+activate ProductController
+
+ProductController -> ProductService: 15. getProductById(productId)
+activate ProductService
+
+ProductService -> Database: 16. findById(productId)
+activate Database
+
+Database --> ProductService: 17. פרטי מוצר
+deactivate Database
+
+ProductService --> ProductController: 18. נתוני מוצר
+deactivate ProductService
+
+ProductController --> Frontend: 19. 200 OK + product data
+deactivate ProductController
+
+Frontend --> Seller: 20. הצגת טופס עריכה
+deactivate Frontend
+
+Seller -> Frontend: 21. עדכון פרטי מוצר
+activate Frontend
+
+Frontend -> ProductController: 22. PUT /api/products/:id
+activate ProductController
+
+ProductController -> ProductService: 23. updateProduct(productId, updateData)
+activate ProductService
+
+ProductService -> Database: 24. updateOne({_id: productId}, updateData)
+activate Database
+
+Database --> ProductService: 25. עדכון הושלם
+deactivate Database
+
+ProductService --> ProductController: 26. {success: true, updated}
+deactivate ProductService
+
+ProductController --> Frontend: 27. 200 OK + updated product
+deactivate ProductController
+
+Frontend --> Seller: 28. הודעת עדכון הצלחה
+deactivate Frontend
+
+== מחיקת מוצר ==
+
+Seller -> Frontend: 29. לחיצה על "מחק מוצר"
+activate Frontend
+
+Frontend -> ProductController: 30. DELETE /api/products/:id
+activate ProductController
+
+ProductController -> ProductService: 31. deleteProduct(productId)
+activate ProductService
+
+ProductService -> Database: 32. updateOne({_id: productId}, {status: 'deleted'})
+activate Database
+
+Database --> ProductService: 33. מוצר סומן כמחוק
+deactivate Database
+
+ProductService --> ProductController: 34. {success: true, deleted}
+deactivate ProductService
+
+ProductController --> Frontend: 35. 200 OK + deletion confirmed
+deactivate ProductController
+
+Frontend --> Seller: 36. הודעת מחיקה + עדכון רשימה
+deactivate Frontend
+
+@enduml

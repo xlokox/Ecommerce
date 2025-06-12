@@ -1,0 +1,68 @@
+@startuml צ'אט עם הלקוחות - Data Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Data Flow: צ'אט עם הלקוחות (Customer Chat)
+
+!define ENTITY rectangle
+!define PROCESS circle
+!define DATASTORE database
+
+' Clean layout to avoid crossing lines
+ENTITY "לקוח\n(Customer)" as Customer
+ENTITY "מוכר/מנהל\n(Seller/Admin)" as Seller
+
+PROCESS "1.0\nיצירת שיחה\n(Create Conversation)" as P1
+PROCESS "2.0\nשליחת הודעה\n(Send Message)" as P2
+PROCESS "3.0\nהעברה בזמן אמת\n(Real-time Delivery)" as P3
+PROCESS "4.0\nניהול שיחות\n(Manage Conversations)" as P4
+PROCESS "5.0\nארכיון הודעות\n(Archive Messages)" as P5
+
+DATASTORE "D1\nשיחות\n(Conversations DB)" as ConversationsDB
+DATASTORE "D2\nהודעות\n(Messages DB)" as MessagesDB
+DATASTORE "D3\nמשתמשים מחוברים\n(Active Users)" as ActiveUsersDB
+DATASTORE "D4\nהתראות\n(Notifications)" as NotificationsDB
+
+' Main flow paths - separated to avoid crossing
+Customer --> P1 : "בקשת שיחה חדשה"
+Customer --> P2 : "הודעה חדשה"
+Seller --> P2 : "תשובה"
+Seller --> P4 : "ניהול שיחות"
+
+P1 --> P2 : "שיחה נוצרה"
+P2 --> P3 : "הודעה לשליחה"
+P3 --> Customer : "הודעה התקבלה"
+P3 --> Seller : "הודעה התקבלה"
+
+P4 --> P5 : "שיחות לארכיון"
+
+' Database interactions - positioned to avoid crossing
+P1 --> ConversationsDB : "יצירת שיחה"
+P2 --> MessagesDB : "שמירת הודעה"
+P3 --> ActiveUsersDB : "בדיקת משתמשים מחוברים"
+P3 --> NotificationsDB : "יצירת התראה"
+P4 --> ConversationsDB : "עדכון סטטוס שיחה"
+P5 --> MessagesDB : "ארכיון הודעות"
+
+note bottom of ConversationsDB
+  **מבנה שיחה:**
+  - _id: ObjectId
+  - customer_id: ObjectId
+  - seller_id: ObjectId
+  - status: String
+  - created_at: Date
+  - last_message_at: Date
+end note
+
+note bottom of MessagesDB
+  **מבנה הודעה:**
+  - _id: ObjectId
+  - conversation_id: ObjectId
+  - sender_id: ObjectId
+  - sender_type: String
+  - message: String
+  - timestamp: Date
+  - read_status: Boolean
+end note
+
+@enduml

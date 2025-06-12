@@ -1,0 +1,155 @@
+@startuml צ'אט עם הלקוחות - Sequence
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Sequence: צ'אט עם הלקוחות (Customer Chat)
+
+actor "לקוח\n(Customer)" as Customer
+actor "מוכר/מנהל\n(Seller/Admin)" as Seller
+participant "Frontend\n(React App)" as Frontend
+participant "Chat Controller\n(Backend)" as ChatController
+participant "Chat Service\n(Business Logic)" as ChatService
+participant "Socket.io\n(Real-time)" as SocketIO
+participant "Database\n(MongoDB)" as Database
+
+== התחלת שיחה ==
+
+Customer -> Frontend: 1. לחיצה על "צ'אט עם תמיכה"
+activate Frontend
+
+Frontend -> ChatController: 2. POST /api/chat/start
+activate ChatController
+
+ChatController -> ChatService: 3. startConversation(customerId)
+activate ChatService
+
+ChatService -> Database: 4. findOrCreateConversation(customerId)
+activate Database
+
+Database --> ChatService: 5. conversation_id
+deactivate Database
+
+ChatService --> ChatController: 6. {conversationId, success: true}
+deactivate ChatService
+
+ChatController --> Frontend: 7. 200 OK + conversation data
+deactivate ChatController
+
+Frontend -> SocketIO: 8. join room (conversationId)
+activate SocketIO
+
+SocketIO --> Frontend: 9. חיבור לחדר הושלם
+deactivate SocketIO
+
+Frontend --> Customer: 10. פתיחת חלון צ'אט
+deactivate Frontend
+
+== שליחת הודעה ==
+
+Customer -> Frontend: 11. כתיבת הודעה
+activate Frontend
+
+Frontend -> ChatController: 12. POST /api/chat/message
+note right: {conversationId, message, senderId}
+activate ChatController
+
+ChatController -> ChatService: 13. sendMessage(messageData)
+activate ChatService
+
+ChatService -> Database: 14. insertOne(messageData)
+activate Database
+
+Database --> ChatService: 15. הודעה נשמרה
+deactivate Database
+
+ChatService -> SocketIO: 16. emit message to room
+activate SocketIO
+
+SocketIO -> Frontend: 17. broadcast message to all participants
+note right: Real-time delivery
+
+ChatService --> ChatController: 18. {messageId, success: true}
+deactivate ChatService
+
+ChatController --> Frontend: 19. 201 Created + message data
+deactivate ChatController
+
+Frontend --> Customer: 20. הצגת הודעה בצ'אט
+deactivate Frontend
+
+== מוכר מצטרף לשיחה ==
+
+SocketIO -> Seller: 21. התראה על הודעה חדשה
+activate Seller
+
+Seller -> Frontend: 22. פתיחת פאנל צ'אט
+activate Frontend
+
+Frontend -> ChatController: 23. GET /api/chat/conversations
+activate ChatController
+
+ChatController -> ChatService: 24. getActiveConversations(sellerId)
+activate ChatService
+
+ChatService -> Database: 25. find active conversations
+activate Database
+
+Database --> ChatService: 26. רשימת שיחות פעילות
+deactivate Database
+
+ChatService --> ChatController: 27. conversations list
+deactivate ChatService
+
+ChatController --> Frontend: 28. 200 OK + conversations
+deactivate ChatController
+
+Frontend --> Seller: 29. הצגת רשימת שיחות
+deactivate Frontend
+
+Seller -> Frontend: 30. בחירת שיחה
+activate Frontend
+
+Frontend -> SocketIO: 31. join conversation room
+activate SocketIO
+
+SocketIO --> Frontend: 32. חיבור לשיחה
+deactivate SocketIO
+
+Frontend --> Seller: 33. הצגת היסטוריית שיחה
+deactivate Frontend
+
+== מענה מהמוכר ==
+
+Seller -> Frontend: 34. כתיבת תשובה
+activate Frontend
+
+Frontend -> ChatController: 35. POST /api/chat/message
+activate ChatController
+
+ChatController -> ChatService: 36. sendMessage(replyData)
+activate ChatService
+
+ChatService -> Database: 37. insertOne(replyData)
+activate Database
+
+Database --> ChatService: 38. תשובה נשמרה
+deactivate Database
+
+ChatService -> SocketIO: 39. emit reply to customer
+activate SocketIO
+
+SocketIO -> Customer: 40. הצגת תשובה בזמן אמת
+deactivate SocketIO
+
+ChatService --> ChatController: 41. {messageId, success: true}
+deactivate ChatService
+
+ChatController --> Frontend: 42. 201 Created + reply data
+deactivate ChatController
+
+Frontend --> Seller: 43. אישור שליחת תשובה
+deactivate Frontend
+
+deactivate Seller
+
+@enduml

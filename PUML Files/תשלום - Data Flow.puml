@@ -1,0 +1,76 @@
+@startuml תשלום - Data Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Data Flow: תשלום (Payment Processing)
+
+!define ENTITY rectangle
+!define PROCESS circle
+!define DATASTORE database
+
+' Clean layout to avoid crossing lines
+ENTITY "לקוח\n(Customer)" as Customer
+ENTITY "שער תשלומים\n(Payment Gateway)" as PaymentGateway
+
+PROCESS "1.0\nאימות נתונים\n(Validate Data)" as P1
+PROCESS "2.0\nעיבוד תשלום\n(Process Payment)" as P2
+PROCESS "3.0\nעדכון הזמנה\n(Update Order)" as P3
+PROCESS "4.0\nיצירת קבלה\n(Generate Receipt)" as P4
+PROCESS "5.0\nטיפול בשגיאות\n(Handle Errors)" as P5
+
+DATASTORE "D1\nהזמנות\n(Orders DB)" as OrdersDB
+DATASTORE "D2\nתשלומים\n(Payments DB)" as PaymentsDB
+DATASTORE "D3\nקבלות\n(Receipts DB)" as ReceiptsDB
+DATASTORE "D4\nלוג תשלומים\n(Payment Log)" as PaymentLog
+
+' Main linear flow
+Customer --> P1 : "פרטי תשלום"
+P1 --> P2 : "נתונים מאומתים"
+P2 --> P3 : "תשלום מאושר"
+P3 --> P4 : "הזמנה עודכנה"
+P4 --> Customer : "קבלה + אישור"
+
+' Error handling flow
+P2 --> P5 : "תשלום נדחה"
+P5 --> Customer : "הודעת שגיאה"
+
+' External gateway interaction
+P2 --> PaymentGateway : "בקשת עיבוד"
+PaymentGateway --> P2 : "תוצאת עיבוד"
+
+' Database interactions - positioned to avoid crossing
+P1 --> OrdersDB : "אימות הזמנה"
+P2 --> PaymentsDB : "שמירת תשלום"
+P3 --> OrdersDB : "עדכון סטטוס"
+P4 --> ReceiptsDB : "שמירת קבלה"
+
+' Logging flows - positioned at bottom
+P1 --> PaymentLog : "לוג אימות"
+P2 --> PaymentLog : "לוג עיבוד"
+P3 --> PaymentLog : "לוג עדכון"
+P5 --> PaymentLog : "לוג שגיאות"
+
+note bottom of PaymentsDB
+  **מבנה תשלום:**
+  - _id: ObjectId
+  - order_id: ObjectId
+  - amount: Number
+  - currency: String
+  - payment_method: String
+  - transaction_id: String
+  - status: String
+  - processed_at: Date
+end note
+
+note bottom of ReceiptsDB
+  **מבנה קבלה:**
+  - _id: ObjectId
+  - payment_id: ObjectId
+  - receipt_number: String
+  - items: Array[Object]
+  - total_amount: Number
+  - tax_amount: Number
+  - issued_at: Date
+end note
+
+@enduml

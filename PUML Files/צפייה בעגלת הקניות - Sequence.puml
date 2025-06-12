@@ -1,0 +1,106 @@
+@startuml צפייה בעגלת הקניות - Sequence
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Sequence: צפייה בעגלת הקניות (View Cart)
+
+actor "משתמש\n(User)" as User
+participant "Frontend\n(React App)" as Frontend
+participant "Cart Controller\n(Backend)" as CartController
+participant "Cart Service\n(Business Logic)" as CartService
+participant "Product Service\n(Product Logic)" as ProductService
+participant "Database\n(MongoDB)" as Database
+
+User -> Frontend: 1. לחיצה על אייקון העגלה
+activate Frontend
+
+Frontend -> CartController: 2. GET /api/cart
+activate CartController
+
+CartController -> CartService: 3. getUserCart(userId)
+activate CartService
+
+CartService -> Database: 4. find({userId}).populate('productId')
+activate Database
+
+Database --> CartService: 5. פריטי עגלה + פרטי מוצרים
+deactivate Database
+
+CartService -> ProductService: 6. validateCartItems(cartItems)
+activate ProductService
+
+ProductService -> Database: 7. בדיקת זמינות כל פריט
+activate Database
+
+Database --> ProductService: 8. סטטוס זמינות לכל פריט
+deactivate Database
+
+ProductService --> CartService: 9. פריטים מאומתים + התראות
+deactivate ProductService
+
+CartService -> CartService: 10. חישוב סכומים
+note right: סכום ביניים, מס, משלוח, סכום כולל
+
+CartService --> CartController: 11. עגלה מלאה + חישובים
+deactivate CartService
+
+CartController --> Frontend: 12. 200 OK + cart data
+deactivate CartController
+
+Frontend --> User: 13. הצגת תוכן העגלה
+deactivate Frontend
+
+== עדכון כמות ==
+
+User -> Frontend: 14. שינוי כמות פריט
+activate Frontend
+
+Frontend -> CartController: 15. PUT /api/cart/item/:id
+note right: {quantity: newQuantity}
+activate CartController
+
+CartController -> CartService: 16. updateCartItem(itemId, quantity)
+activate CartService
+
+CartService -> ProductService: 17. checkStockAvailability(productId, quantity)
+activate ProductService
+
+ProductService -> Database: 18. בדיקת מלאי
+activate Database
+
+Database --> ProductService: 19. זמינות מלאי
+deactivate Database
+
+ProductService --> CartService: 20. אישור/דחיית עדכון
+deactivate ProductService
+
+alt כמות זמינה
+    CartService -> Database: 21. updateOne({_id: itemId}, {quantity, updatedAt})
+    activate Database
+    
+    Database --> CartService: 22. עדכון הושלם
+    deactivate Database
+    
+    CartService -> CartService: 23. חישוב מחדש של סכומים
+    
+    CartService --> CartController: 24. עגלה מעודכנת
+    deactivate CartService
+    
+    CartController --> Frontend: 25. 200 OK + updated cart
+    deactivate CartController
+    
+    Frontend --> User: 26. הצגת עגלה מעודכנת
+    deactivate Frontend
+
+else כמות לא זמינה
+    CartService --> CartController: 27. 400 Bad Request - מלאי לא מספיק
+    deactivate CartService
+    
+    CartController --> Frontend: 28. שגיאת זמינות
+    deactivate CartController
+    
+    Frontend --> User: 29. הודעת שגיאה
+    deactivate Frontend
+end
+
+@enduml

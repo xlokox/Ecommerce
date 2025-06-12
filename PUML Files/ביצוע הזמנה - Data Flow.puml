@@ -1,0 +1,68 @@
+@startuml ביצוע הזמנה - Data Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Data Flow: ביצוע הזמנה (Place Order)
+
+!define ENTITY rectangle
+!define PROCESS circle
+!define DATASTORE database
+
+' Clean layout to avoid crossing lines
+ENTITY "משתמש\n(User)" as User
+
+PROCESS "1.0\nטעינת עגלה\n(Load Cart)" as P1
+PROCESS "2.0\nאימות מלאי\n(Validate Stock)" as P2
+PROCESS "3.0\nיצירת הזמנה\n(Create Order)" as P3
+PROCESS "4.0\nעדכון מלאי\n(Update Stock)" as P4
+PROCESS "5.0\nניקוי עגלה\n(Clear Cart)" as P5
+
+DATASTORE "D1\nעגלות קניות\n(Carts DB)" as CartsDB
+DATASTORE "D2\nמוצרים\n(Products DB)" as ProductsDB
+DATASTORE "D3\nהזמנות\n(Orders DB)" as OrdersDB
+DATASTORE "D4\nפריטי הזמנה\n(Order Items DB)" as OrderItemsDB
+DATASTORE "D5\nלוג מערכת\n(System Log)" as SystemLog
+
+' Main linear flow
+User --> P1 : "בקשת ביצוע הזמנה"
+P1 --> P2 : "פריטי עגלה"
+P2 --> P3 : "פריטים מאומתים"
+P3 --> P4 : "פרטי הזמנה"
+P4 --> P5 : "בקשת ניקוי עגלה"
+P5 --> User : "הזמנה הושלמה"
+
+' Database interactions - positioned to avoid crossing
+P1 --> CartsDB : "טעינת עגלה"
+P2 --> ProductsDB : "בדיקת מלאי"
+P3 --> OrdersDB : "יצירת הזמנה"
+P3 --> OrderItemsDB : "יצירת פריטים"
+P4 --> ProductsDB : "עדכון מלאי"
+P5 --> CartsDB : "ניקוי עגלה"
+
+' Logging flows - positioned at bottom
+P1 --> SystemLog : "לוג טעינה"
+P2 --> SystemLog : "לוג אימות"
+P3 --> SystemLog : "לוג יצירה"
+P4 --> SystemLog : "לוג עדכון"
+P5 --> SystemLog : "לוג ניקוי"
+
+note bottom of OrdersDB
+  **מבנה הזמנה:**
+  - _id: ObjectId
+  - user_id: ObjectId
+  - order_number: String
+  - total_amount: Number
+  - status: String
+  - created_at: Date
+end note
+
+note bottom of OrderItemsDB
+  **מבנה פריט הזמנה:**
+  - _id: ObjectId
+  - order_id: ObjectId
+  - product_id: ObjectId
+  - quantity: Number
+  - price_at_time: Number
+end note
+
+@enduml

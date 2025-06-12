@@ -1,0 +1,119 @@
+@startuml תשלום - Sequence
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Sequence: תשלום (Payment Processing)
+
+actor "לקוח\n(Customer)" as Customer
+participant "Frontend\n(React App)" as Frontend
+participant "Payment Controller\n(Backend)" as PaymentController
+participant "Payment Service\n(Business Logic)" as PaymentService
+participant "Payment Gateway\n(External API)" as PaymentGateway
+participant "Order Service\n(Order Logic)" as OrderService
+participant "Database\n(MongoDB)" as Database
+
+Customer -> Frontend: 1. בחירת אמצעי תשלום
+activate Frontend
+
+Frontend -> Frontend: 2. אימות פרטי תשלום
+
+Frontend -> PaymentController: 3. POST /api/payments/process
+note right: {orderId, paymentMethod, cardDetails}
+activate PaymentController
+
+PaymentController -> PaymentService: 4. validatePaymentData(paymentData)
+activate PaymentService
+
+PaymentService -> PaymentService: 5. בדיקת תקינות נתונים
+
+PaymentService -> Database: 6. findOrderById(orderId)
+activate Database
+
+Database --> PaymentService: 7. פרטי הזמנה
+deactivate Database
+
+PaymentService -> PaymentGateway: 8. processPayment(amount, cardDetails)
+activate PaymentGateway
+
+PaymentGateway -> PaymentGateway: 9. עיבוד תשלום
+
+alt תשלום מאושר
+    PaymentGateway --> PaymentService: 10. {success: true, transactionId, authCode}
+    deactivate PaymentGateway
+    
+    PaymentService -> Database: 11. insertOne(paymentRecord)
+    activate Database
+    
+    Database --> PaymentService: 12. רשומת תשלום נשמרה
+    deactivate Database
+    
+    PaymentService -> OrderService: 13. updateOrderStatus(orderId, 'paid')
+    activate OrderService
+    
+    OrderService -> Database: 14. updateOne({_id: orderId}, {status: 'paid', paidAt: now})
+    activate Database
+    
+    Database --> OrderService: 15. הזמנה עודכנה
+    deactivate Database
+    
+    OrderService --> PaymentService: 16. הזמנה עודכנה בהצלחה
+    deactivate OrderService
+    
+    PaymentService -> PaymentService: 17. generateReceipt(paymentData)
+    
+    PaymentService --> PaymentController: 18. {success: true, transactionId, receipt}
+    deactivate PaymentService
+    
+    PaymentController --> Frontend: 19. 200 OK + payment success
+    deactivate PaymentController
+    
+    Frontend --> Customer: 20. הצגת אישור תשלום + קבלה
+    deactivate Frontend
+
+else תשלום נדחה
+    PaymentGateway --> PaymentService: 21. {success: false, errorCode, errorMessage}
+    deactivate PaymentGateway
+    
+    PaymentService -> Database: 22. insertOne(failedPaymentRecord)
+    activate Database
+    
+    Database --> PaymentService: 23. רשומת כישלון נשמרה
+    deactivate Database
+    
+    PaymentService --> PaymentController: 24. {success: false, error}
+    deactivate PaymentService
+    
+    PaymentController --> Frontend: 25. 400 Bad Request + error details
+    deactivate PaymentController
+    
+    Frontend --> Customer: 26. הודעת שגיאה + הצעות פתרון
+    deactivate Frontend
+end
+
+== אימות תשלום נוסף ==
+
+Customer -> Frontend: 27. ניסיון תשלום חוזר
+activate Frontend
+
+Frontend -> PaymentController: 28. POST /api/payments/retry
+activate PaymentController
+
+PaymentController -> PaymentService: 29. retryPayment(orderId, newPaymentMethod)
+activate PaymentService
+
+PaymentService -> PaymentGateway: 30. processPayment(amount, newCardDetails)
+activate PaymentGateway
+
+PaymentGateway --> PaymentService: 31. תוצאת תשלום
+deactivate PaymentGateway
+
+PaymentService --> PaymentController: 32. תוצאה סופית
+deactivate PaymentService
+
+PaymentController --> Frontend: 33. תוצאת ניסיון חוזר
+deactivate PaymentController
+
+Frontend --> Customer: 34. הודעה על תוצאה
+deactivate Frontend
+
+@enduml

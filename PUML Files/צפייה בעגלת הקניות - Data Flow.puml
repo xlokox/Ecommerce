@@ -1,0 +1,62 @@
+@startuml צפייה בעגלת הקניות - Data Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Data Flow: צפייה בעגלת הקניות (View Cart)
+
+!define ENTITY rectangle
+!define PROCESS circle
+!define DATASTORE database
+
+' Clean layout to avoid crossing lines
+ENTITY "משתמש\n(User)" as User
+
+PROCESS "1.0\nטעינת עגלה\n(Load Cart)" as P1
+PROCESS "2.0\nאימות פריטים\n(Validate Items)" as P2
+PROCESS "3.0\nחישוב מחירים\n(Calculate Prices)" as P3
+PROCESS "4.0\nעדכון פריט\n(Update Item)" as P4
+PROCESS "5.0\nהסרת פריט\n(Remove Item)" as P5
+
+DATASTORE "D1\nעגלות קניות\n(Carts DB)" as CartsDB
+DATASTORE "D2\nמוצרים\n(Products DB)" as ProductsDB
+DATASTORE "D3\nהגדרות מערכת\n(System Settings)" as SettingsDB
+
+' Main flow paths - separated to avoid crossing
+User --> P1 : "בקשת צפייה"
+User --> P4 : "עדכון כמות"
+User --> P5 : "הסרת פריט"
+
+P1 --> P2 : "פריטים לאימות"
+P2 --> P3 : "פריטים מאומתים"
+P3 --> User : "תוכן עגלה"
+
+P4 --> P3 : "בקשת חישוב מחדש"
+P5 --> P3 : "בקשת חישוב מחדש"
+
+' Database interactions - positioned to avoid crossing
+P1 --> CartsDB : "שאילתת עגלה"
+P2 --> ProductsDB : "בדיקת זמינות"
+P3 --> SettingsDB : "הגדרות תמחור"
+P4 --> CartsDB : "עדכון פריט"
+P4 --> ProductsDB : "בדיקת מלאי"
+P5 --> CartsDB : "מחיקת פריט"
+
+note bottom of CartsDB
+  **מבנה פריט בעגלה:**
+  - _id: ObjectId
+  - user_id: ObjectId
+  - product_id: ObjectId
+  - quantity: Number
+  - price_at_time: Number
+  - added_at: Date
+end note
+
+note bottom of SettingsDB
+  **הגדרות מערכת:**
+  - tax_rate: Number
+  - shipping_cost: Number
+  - free_shipping_threshold: Number
+  - currency: String
+end note
+
+@enduml

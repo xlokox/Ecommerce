@@ -1,0 +1,102 @@
+@startuml ביצוע הזמנה - Sequence
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Sequence: ביצוע הזמנה (Place Order)
+
+actor "משתמש\n(User)" as User
+participant "Frontend\n(React App)" as Frontend
+participant "Order Controller\n(Backend)" as OrderController
+participant "Order Service\n(Business Logic)" as OrderService
+participant "Cart Service\n(Cart Logic)" as CartService
+participant "Product Service\n(Product Logic)" as ProductService
+participant "Database\n(MongoDB)" as Database
+
+User -> Frontend: 1. לחיצה על "ביצוע הזמנה"
+activate Frontend
+
+Frontend -> OrderController: 2. POST /api/orders/create
+activate OrderController
+
+OrderController -> CartService: 3. getUserCart(userId)
+activate CartService
+
+CartService -> Database: 4. find({userId}).populate('productId')
+activate Database
+
+Database --> CartService: 5. פריטי עגלה + פרטי מוצרים
+deactivate Database
+
+CartService --> OrderController: 6. עגלה מלאה
+deactivate CartService
+
+OrderController -> ProductService: 7. validateCartStock(cartItems)
+activate ProductService
+
+ProductService -> Database: 8. בדיקת מלאי לכל פריט
+activate Database
+
+Database --> ProductService: 9. סטטוס זמינות
+deactivate Database
+
+ProductService --> OrderController: 10. אימות מלאי
+deactivate ProductService
+
+alt מלאי זמין
+    OrderController -> OrderService: 11. createOrder(cartItems, userInfo)
+    activate OrderService
+    
+    OrderService -> Database: 12. insertOne(orderData)
+    activate Database
+    
+    Database --> OrderService: 13. הזמנה נוצרה
+    deactivate Database
+    
+    OrderService -> Database: 14. insertMany(orderItems)
+    activate Database
+    
+    Database --> OrderService: 15. פריטי הזמנה נוצרו
+    deactivate Database
+    
+    OrderService -> ProductService: 16. updateStock(orderItems)
+    activate ProductService
+    
+    ProductService -> Database: 17. updateMany(products, {$inc: {stock: -quantity}})
+    activate Database
+    
+    Database --> ProductService: 18. מלאי עודכן
+    deactivate Database
+    
+    ProductService --> OrderService: 19. עדכון מלאי הושלם
+    deactivate ProductService
+    
+    OrderService -> CartService: 20. clearUserCart(userId)
+    activate CartService
+    
+    CartService -> Database: 21. deleteMany({userId})
+    activate Database
+    
+    Database --> CartService: 22. עגלה נוקתה
+    deactivate Database
+    
+    CartService --> OrderService: 23. עגלה נוקתה
+    deactivate CartService
+    
+    OrderService --> OrderController: 24. {orderId, orderNumber, success: true}
+    deactivate OrderService
+    
+    OrderController --> Frontend: 25. 201 Created + order details
+    deactivate OrderController
+    
+    Frontend --> User: 26. הפניה לעמוד תשלום
+    deactivate Frontend
+
+else מלאי לא זמין
+    OrderController --> Frontend: 27. 400 Bad Request - מלאי לא מספיק
+    deactivate OrderController
+    
+    Frontend --> User: 28. הודעת שגיאה + עדכון עגלה
+    deactivate Frontend
+end
+
+@enduml

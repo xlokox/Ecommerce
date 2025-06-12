@@ -1,0 +1,63 @@
+@startuml ניהול דוחות - Data Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Data Flow: ניהול דוחות (Reports Management)
+
+!define ENTITY rectangle
+!define PROCESS circle
+!define DATASTORE database
+
+' Clean layout to avoid crossing lines
+ENTITY "מנהל/מוכר\n(Admin/Seller)" as Admin
+
+PROCESS "1.0\nאיסוף נתונים\n(Collect Data)" as P1
+PROCESS "2.0\nעיבוד נתונים\n(Process Data)" as P2
+PROCESS "3.0\nחישוב מדדים\n(Calculate Metrics)" as P3
+PROCESS "4.0\nיצירת דוח\n(Generate Report)" as P4
+PROCESS "5.0\nייצוא דוח\n(Export Report)" as P5
+
+DATASTORE "D1\nהזמנות\n(Orders DB)" as OrdersDB
+DATASTORE "D2\nמוצרים\n(Products DB)" as ProductsDB
+DATASTORE "D3\nמשתמשים\n(Users DB)" as UsersDB
+DATASTORE "D4\nדוחות שמורים\n(Saved Reports)" as ReportsDB
+DATASTORE "D5\nקבצי ייצוא\n(Export Files)" as FilesStorage
+
+' Main linear flow
+Admin --> P1 : "בקשת דוח"
+P1 --> P2 : "נתונים גולמיים"
+P2 --> P3 : "נתונים מעובדים"
+P3 --> P4 : "מדדים מחושבים"
+P4 --> Admin : "דוח מוכן"
+
+Admin --> P5 : "בקשת ייצוא"
+P5 --> Admin : "קובץ מיוצא"
+
+' Database interactions - positioned to avoid crossing
+P1 --> OrdersDB : "שאילתת הזמנות"
+P1 --> ProductsDB : "שאילתת מוצרים"
+P1 --> UsersDB : "שאילתת משתמשים"
+
+P4 --> ReportsDB : "שמירת דוח"
+P5 --> ReportsDB : "טעינת דוח"
+P5 --> FilesStorage : "יצירת קובץ"
+
+note bottom of OrdersDB
+  **נתוני הזמנות:**
+  - סכומי מכירות
+  - כמויות נמכרות
+  - תאריכי הזמנות
+  - סטטוס הזמנות
+end note
+
+note bottom of ReportsDB
+  **דוחות שמורים:**
+  - _id: ObjectId
+  - report_type: String
+  - parameters: Object
+  - data: Object
+  - created_by: ObjectId
+  - created_at: Date
+end note
+
+@enduml

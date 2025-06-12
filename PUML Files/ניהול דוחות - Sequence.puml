@@ -1,0 +1,113 @@
+@startuml ניהול דוחות - Sequence
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Sequence: ניהול דוחות (Reports Management)
+
+actor "מנהל/מוכר\n(Admin/Seller)" as Admin
+participant "Frontend\n(React App)" as Frontend
+participant "Reports Controller\n(Backend)" as ReportsController
+participant "Reports Service\n(Business Logic)" as ReportsService
+participant "Analytics Service\n(Analytics Logic)" as AnalyticsService
+participant "Database\n(MongoDB)" as Database
+
+Admin -> Frontend: 1. כניסה לעמוד הדוחות
+activate Frontend
+
+Frontend -> ReportsController: 2. GET /api/reports/dashboard
+activate ReportsController
+
+ReportsController -> ReportsService: 3. getDashboardData(userId, role)
+activate ReportsService
+
+ReportsService -> Database: 4. aggregate sales data
+activate Database
+
+Database --> ReportsService: 5. נתוני מכירות
+deactivate Database
+
+ReportsService -> Database: 6. aggregate orders data
+activate Database
+
+Database --> ReportsService: 7. נתוני הזמנות
+deactivate Database
+
+ReportsService -> AnalyticsService: 8. calculateMetrics(salesData, ordersData)
+activate AnalyticsService
+
+AnalyticsService --> ReportsService: 9. מדדים מחושבים
+deactivate AnalyticsService
+
+ReportsService --> ReportsController: 10. דוח דשבורד מלא
+deactivate ReportsService
+
+ReportsController --> Frontend: 11. 200 OK + dashboard data
+deactivate ReportsController
+
+Frontend --> Admin: 12. הצגת דשבורד דוחות
+deactivate Frontend
+
+== יצירת דוח מותאם ==
+
+Admin -> Frontend: 13. בחירת פרמטרי דוח
+activate Frontend
+
+Frontend -> ReportsController: 14. POST /api/reports/custom
+note right: {dateRange, reportType, filters}
+activate ReportsController
+
+ReportsController -> ReportsService: 15. generateCustomReport(params)
+activate ReportsService
+
+ReportsService -> Database: 16. complex aggregation query
+activate Database
+
+Database --> ReportsService: 17. נתונים מסוננים
+deactivate Database
+
+ReportsService -> AnalyticsService: 18. processReportData(rawData)
+activate AnalyticsService
+
+AnalyticsService --> ReportsService: 19. דוח מעובד
+deactivate AnalyticsService
+
+ReportsService -> ReportsService: 20. formatForExport(reportData)
+
+ReportsService --> ReportsController: 21. דוח מוכן + קובץ
+deactivate ReportsService
+
+ReportsController --> Frontend: 22. 200 OK + report + download link
+deactivate ReportsController
+
+Frontend --> Admin: 23. הצגת דוח + אפשרות הורדה
+deactivate Frontend
+
+== ייצוא דוח ==
+
+Admin -> Frontend: 24. לחיצה על "ייצוא"
+activate Frontend
+
+Frontend -> ReportsController: 25. GET /api/reports/export/:reportId
+activate ReportsController
+
+ReportsController -> ReportsService: 26. exportReport(reportId, format)
+activate ReportsService
+
+ReportsService -> Database: 27. findReportById(reportId)
+activate Database
+
+Database --> ReportsService: 28. נתוני דוח
+deactivate Database
+
+ReportsService -> ReportsService: 29. convertToFormat(data, format)
+
+ReportsService --> ReportsController: 30. קובץ מוכן להורדה
+deactivate ReportsService
+
+ReportsController --> Frontend: 31. 200 OK + file stream
+deactivate ReportsController
+
+Frontend --> Admin: 32. הורדת קובץ
+deactivate Frontend
+
+@enduml

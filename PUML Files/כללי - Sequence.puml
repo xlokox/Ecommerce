@@ -1,0 +1,150 @@
+@startuml כללי - Sequence
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Sequence: תהליך כללי במערכת E-commerce (General E-commerce Flow)
+
+actor "משתמש\n(User)" as User
+participant "Frontend\n(React App)" as Frontend
+participant "Auth Controller\n(Authentication)" as AuthController
+participant "Product Controller\n(Products)" as ProductController
+participant "Cart Controller\n(Shopping Cart)" as CartController
+participant "Order Controller\n(Orders)" as OrderController
+participant "Payment Controller\n(Payments)" as PaymentController
+participant "Database\n(MongoDB)" as Database
+
+== שלב 1: התחברות למערכת ==
+
+User -> Frontend: 1. כניסה לאתר
+activate Frontend
+
+Frontend -> AuthController: 2. בדיקת אימות
+activate AuthController
+
+AuthController -> Database: 3. אימות משתמש
+activate Database
+
+Database --> AuthController: 4. סטטוס אימות
+deactivate Database
+
+AuthController --> Frontend: 5. תוצאת אימות
+deactivate AuthController
+
+Frontend --> User: 6. הצגת דף בית / התחברות
+deactivate Frontend
+
+== שלב 2: דפדוף וחיפוש מוצרים ==
+
+User -> Frontend: 7. חיפוש מוצרים
+activate Frontend
+
+Frontend -> ProductController: 8. GET /api/products
+activate ProductController
+
+ProductController -> Database: 9. שאילתת מוצרים
+activate Database
+
+Database --> ProductController: 10. רשימת מוצרים
+deactivate Database
+
+ProductController --> Frontend: 11. מוצרים + מטא-דאטה
+deactivate ProductController
+
+Frontend --> User: 12. הצגת תוצאות
+deactivate Frontend
+
+== שלב 3: הוספה לעגלה ==
+
+User -> Frontend: 13. הוספת מוצר לעגלה
+activate Frontend
+
+Frontend -> CartController: 14. POST /api/cart/add
+activate CartController
+
+CartController -> Database: 15. עדכון עגלה
+activate Database
+
+Database --> CartController: 16. אישור הוספה
+deactivate Database
+
+CartController --> Frontend: 17. עגלה מעודכנת
+deactivate CartController
+
+Frontend --> User: 18. הודעת הצלחה
+deactivate Frontend
+
+== שלב 4: ביצוע הזמנה ==
+
+User -> Frontend: 19. מעבר לתשלום
+activate Frontend
+
+Frontend -> OrderController: 20. POST /api/orders/create
+activate OrderController
+
+OrderController -> Database: 21. יצירת הזמנה
+activate Database
+
+Database --> OrderController: 22. הזמנה נוצרה
+deactivate Database
+
+OrderController --> Frontend: 23. פרטי הזמנה
+deactivate OrderController
+
+Frontend --> User: 24. מעבר לתשלום
+deactivate Frontend
+
+== שלב 5: עיבוד תשלום ==
+
+User -> Frontend: 25. ביצוע תשלום
+activate Frontend
+
+Frontend -> PaymentController: 26. POST /api/payments/process
+activate PaymentController
+
+PaymentController -> PaymentController: 27. עיבוד תשלום
+
+PaymentController -> Database: 28. שמירת תשלום
+activate Database
+
+Database --> PaymentController: 29. תשלום נשמר
+deactivate Database
+
+PaymentController -> OrderController: 30. עדכון סטטוס הזמנה
+activate OrderController
+
+OrderController -> Database: 31. עדכון הזמנה
+activate Database
+
+Database --> OrderController: 32. הזמנה עודכנה
+deactivate Database
+
+OrderController --> PaymentController: 33. אישור עדכון
+deactivate OrderController
+
+PaymentController --> Frontend: 34. אישור תשלום
+deactivate PaymentController
+
+Frontend --> User: 35. הצגת אישור + קבלה
+deactivate Frontend
+
+== שלב 6: מעקב הזמנה ==
+
+User -> Frontend: 36. צפייה בהיסטוריית הזמנות
+activate Frontend
+
+Frontend -> OrderController: 37. GET /api/orders/user/:id
+activate OrderController
+
+OrderController -> Database: 38. שאילתת הזמנות משתמש
+activate Database
+
+Database --> OrderController: 39. רשימת הזמנות
+deactivate Database
+
+OrderController --> Frontend: 40. היסטוריית הזמנות
+deactivate OrderController
+
+Frontend --> User: 41. הצגת הזמנות + סטטוס
+deactivate Frontend
+
+@enduml

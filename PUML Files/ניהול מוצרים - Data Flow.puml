@@ -1,0 +1,70 @@
+@startuml ניהול מוצרים - Data Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Data Flow: ניהול מוצרים (Product Management)
+
+!define ENTITY rectangle
+!define PROCESS circle
+!define DATASTORE database
+
+' Clean layout to avoid crossing lines
+ENTITY "מוכר/מנהל\n(Seller/Admin)" as Seller
+
+PROCESS "1.0\nאימות נתונים\n(Validate Data)" as P1
+PROCESS "2.0\nעיבוד תמונות\n(Process Images)" as P2
+PROCESS "3.0\nיצירת מוצר\n(Create Product)" as P3
+PROCESS "4.0\nעדכון מוצר\n(Update Product)" as P4
+PROCESS "5.0\nמחיקת מוצר\n(Delete Product)" as P5
+
+DATASTORE "D1\nמוצרים\n(Products DB)" as ProductsDB
+DATASTORE "D2\nקטגוריות\n(Categories DB)" as CategoriesDB
+DATASTORE "D3\nתמונות\n(Images Storage)" as ImagesStorage
+DATASTORE "D4\nלוג פעילות\n(Activity Log)" as ActivityLog
+
+' Main flow paths - separated to avoid crossing
+Seller --> P1 : "נתוני מוצר חדש"
+Seller --> P4 : "עדכון מוצר"
+Seller --> P5 : "מחיקת מוצר"
+
+P1 --> P2 : "נתונים מאומתים"
+P2 --> P3 : "תמונות מעובדות"
+P3 --> Seller : "מוצר נוצר"
+
+P4 --> Seller : "מוצר עודכן"
+P5 --> Seller : "מוצר נמחק"
+
+' Database interactions - positioned to avoid crossing
+P1 --> CategoriesDB : "אימות קטגוריה"
+P2 --> ImagesStorage : "העלאת תמונות"
+P3 --> ProductsDB : "יצירת מוצר"
+P4 --> ProductsDB : "עדכון מוצר"
+P5 --> ProductsDB : "מחיקת מוצר"
+
+' Logging flows - positioned at bottom
+P3 --> ActivityLog : "לוג יצירה"
+P4 --> ActivityLog : "לוג עדכון"
+P5 --> ActivityLog : "לוג מחיקה"
+
+note bottom of ProductsDB
+  **מבנה מוצר:**
+  - _id: ObjectId
+  - name: String
+  - description: String
+  - price: Number
+  - category: String
+  - images: Array[String]
+  - seller_id: ObjectId
+  - stock: Number
+  - status: String
+end note
+
+note bottom of ImagesStorage
+  **אחסון תמונות:**
+  - קבצי תמונה
+  - גדלים שונים
+  - URLs ציבוריים
+  - מטא-דאטה
+end note
+
+@enduml
