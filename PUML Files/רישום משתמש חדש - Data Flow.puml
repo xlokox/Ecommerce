@@ -1,0 +1,55 @@
+@startuml רישום משתמש חדש - Data Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Data Flow: רישום משתמש חדש (User Registration)
+
+!define ENTITY rectangle
+!define PROCESS circle
+!define DATASTORE database
+
+' Layout from left to right to avoid crossing lines
+ENTITY "משתמש חדש\n(New User)" as User
+
+PROCESS "1.0\nאימות נתונים\n(Validate Data)" as P1
+PROCESS "2.0\nבדיקת קיום\n(Check Existence)" as P2
+PROCESS "3.0\nהצפנת סיסמה\n(Encrypt Password)" as P3
+PROCESS "4.0\nשמירת משתמש\n(Save User)" as P4
+PROCESS "5.0\nשליחת אימייל\n(Send Email)" as P5
+
+DATASTORE "D1\nמשתמשים\n(Users DB)" as UsersDB
+DATASTORE "D2\nלוג מערכת\n(System Log)" as SystemLog
+ENTITY "מערכת אימייל\n(Email System)" as EmailSystem
+
+' Clean linear flow without crossing
+User --> P1 : "פרטי הרשמה"
+P1 --> P2 : "נתונים מאומתים"
+P2 --> P3 : "נתונים לעיבוד"
+P3 --> P4 : "נתונים מוכנים"
+P4 --> P5 : "פרטי משתמש"
+P5 --> User : "תוצאת הרשמה"
+
+' Database interactions - positioned to avoid crossing
+P2 --> UsersDB : "שאילתת חיפוש"
+P4 --> UsersDB : "שמירת משתמש"
+
+' Email system
+P5 --> EmailSystem : "שליחת אימייל"
+
+' Logging - positioned at bottom to avoid crossing
+P1 --> SystemLog : "לוג אימות"
+P2 --> SystemLog : "לוג בדיקה"
+P4 --> SystemLog : "לוג יצירה"
+P5 --> SystemLog : "לוג אימייל"
+
+note bottom of UsersDB
+  **מבנה נתונים:**
+  - _id: ObjectId
+  - name: String
+  - email: String (unique)
+  - password: String (hashed)
+  - role: String
+  - createdAt: Date
+end note
+
+@enduml

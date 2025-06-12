@@ -1,0 +1,67 @@
+@startuml
+left to right direction
+
+actor "מנהל מערכת" as admin
+
+package "מערכת ניהול חנות מקוונת" {
+    usecase "ניהול מוצרים" as manage_products
+    usecase "ניווט לדף ניהול מוצרים" as navigate_to_product_management
+    usecase "הצגת רשימת מוצרים קיימים" as display_existing_products
+
+    ' Core CRUD Operations '
+    usecase "הוספת מוצר חדש" as add_product
+    usecase "עריכת מוצר קיים" as edit_product
+    usecase "מחיקת מוצר" as delete_product
+
+    ' Common Flows for Add/Edit '
+    usecase "מילוי/עדכון פרטי מוצר ושמירה" as fill_and_save_product_details
+    usecase "אימות פרטי מוצר" as validate_product_details
+    usecase "עדכון בסיס נתונים" as update_database
+    usecase "הצגת הודעת אישור פעולה" as show_success_message
+
+    ' Delete Flow '
+    usecase "אישור מחיקה" as confirm_deletion
+
+    ' Alternate Flow A1: פרטים חסרים/לא תקינים '
+    usecase "הצגת שגיאות ליד שדות בעייתיים" as show_validation_errors
+}
+
+admin --> navigate_to_product_management : "נווט"
+navigate_to_product_management --> manage_products
+
+manage_products ..> display_existing_products : <<include>>
+
+' Add Product Flow '
+admin --> add_product : "לוחץ 'הוסף מוצר חדש'"
+add_product ..> fill_and_save_product_details : <<include>> "ממלא פרטים"
+fill_and_save_product_details --> validate_product_details
+validate_product_details ..> update_database : <<include>> "אם תקין"
+update_database --> show_success_message
+
+' Edit Product Flow '
+admin --> edit_product : "בוחר מוצר לעריכה"
+edit_product ..> fill_and_save_product_details : <<include>> "מעדכן פרטים"
+' The rest of the flow (validation, update, success) is shared with Add Product '
+
+' Delete Product Flow '
+admin --> delete_product : "בוחר מוצר למחיקה"
+delete_product ..> confirm_deletion : <<include>> "מאשר"
+confirm_deletion --> update_database : "מחק מהדאטהבייס"
+update_database --> show_success_message
+
+
+' Alternate Flow A1: פרטים חסרים/לא תקינים '
+validate_product_details ..> show_validation_errors : <<extend>> "אם פרטים לא תקינים (A1)"
+show_validation_errors --> fill_and_save_product_details : "מנהל מתקן ומנסה שוב (3b)"
+
+
+note bottom of manage_products
+  **תנאי מקדים:**
+  - מנהל המערכת מחובר למערכת הניהול.
+
+  **תנאי סיום:**
+  - **הצלחה**: מוצר נוסף/עודכן/נמחק.
+  - **כישלון**: הפעולה לא הושלמה.
+end note
+
+@enduml

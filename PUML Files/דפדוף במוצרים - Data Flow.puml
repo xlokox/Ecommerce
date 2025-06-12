@@ -1,0 +1,56 @@
+@startuml דפדוף במוצרים - Data Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Data Flow: דפדוף במוצרים (Browse Products)
+
+!define ENTITY rectangle
+!define PROCESS circle
+!define DATASTORE database
+
+' Clean layout to avoid crossing lines
+ENTITY "משתמש\n(User)" as User
+
+PROCESS "1.0\nטעינת מוצרים\n(Load Products)" as P1
+PROCESS "2.0\nסינון מוצרים\n(Filter Products)" as P2
+PROCESS "3.0\nחיפוש מוצרים\n(Search Products)" as P3
+PROCESS "4.0\nמיון תוצאות\n(Sort Results)" as P4
+PROCESS "5.0\nעיבוד תצוגה\n(Process Display)" as P5
+
+DATASTORE "D1\nמוצרים\n(Products DB)" as ProductsDB
+DATASTORE "D2\nקטגוריות\n(Categories DB)" as CategoriesDB
+DATASTORE "D3\nלוג חיפושים\n(Search Log)" as SearchLog
+
+' Main flow paths - separated to avoid crossing
+User --> P1 : "בקשת צפייה"
+User --> P2 : "קריטריוני סינון"
+User --> P3 : "מילות חיפוש"
+
+P1 --> P4 : "מוצרים"
+P2 --> P4 : "מוצרים מסוננים"
+P3 --> P4 : "תוצאות חיפוש"
+
+P4 --> P5 : "מוצרים ממוינים"
+P5 --> User : "תצוגה מעובדת"
+
+' Database interactions - positioned to avoid crossing
+P1 --> ProductsDB : "שאילתת מוצרים"
+P1 --> CategoriesDB : "שאילתת קטגוריות"
+P2 --> ProductsDB : "שאילתה מסוננת"
+P3 --> ProductsDB : "חיפוש טקסט"
+
+' Logging
+P3 --> SearchLog : "לוג חיפוש"
+
+note bottom of ProductsDB
+  **מבנה מוצר:**
+  - _id: ObjectId
+  - name: String
+  - price: Number
+  - category: String
+  - images: Array[String]
+  - rating: Number
+  - stock: Number
+end note
+
+@enduml

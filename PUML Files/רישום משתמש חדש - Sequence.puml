@@ -1,4 +1,4 @@
-@startuml User Registration Sequence
+@startuml רישום משתמש חדש - Sequence
 !theme plain
 skinparam backgroundColor #f8f9fa
 

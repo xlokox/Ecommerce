@@ -1,0 +1,44 @@
+@startuml
+left to right direction
+
+actor משתמש as user
+
+package "מערכת חנות מקוונת" {
+    usecase "צפייה בהיסטוריית הזמנות" as view_order_history
+    usecase "ניווט לדף 'היסטוריית הזמנות'" as navigate_to_history_page
+    usecase "אחזור והצגת רשימת הזמנות" as retrieve_and_display_orders
+    usecase "לחיצה על הזמנה ספציפית" as click_specific_order
+    usecase "צפייה בפרטי הזמנה מלאים" as view_order_details
+
+    ' Alternate Flow A1: אין הזמנות קודמות '
+    usecase "בדיקת קיום הזמנות קודמות" as check_for_previous_orders
+    usecase "הצגת הודעה 'לא נמצאו הזמנות קודמות'" as show_no_orders_message
+}
+
+user --> navigate_to_history_page : "נווט לפרופיל"
+navigate_to_history_page --> view_order_history
+
+view_order_history ..> check_for_previous_orders : <<include>>
+view_order_history ..> retrieve_and_display_orders : <<include>> "אם קיימות הזמנות"
+
+retrieve_and_display_orders --> click_specific_order : "בוחר הזמנה"
+click_specific_order --> view_order_details : "לצפייה בפרטים"
+
+' Alternate Flow A1: אין הזמנות קודמות '
+check_for_previous_orders ..> show_no_orders_message : <<extend>> "אם אין הזמנות (2a)"
+
+note bottom of view_order_history
+  **תנאי מקדים:**
+  - המשתמש מחובר למערכת.
+
+  **תנאי סיום:**
+  - המשתמש צפה בהיסטוריית הזמנות שלו.
+end note
+
+' Note on "View Order Details" use case
+note right of view_order_details
+  זהו Use Case נפרד,
+  או פירוט של צפייה בהזמנה.
+end note
+
+@enduml

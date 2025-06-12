@@ -1,0 +1,52 @@
+@startuml
+left to right direction
+
+actor משתמש as user
+
+package "מערכת חנות מקוונת" {
+    usecase "ביצוע תשלום" as process_payment
+    usecase "הצגת מסך הזנת פרטי תשלום" as display_payment_screen
+    usecase "הזנת פרטי תשלום ואישור" as enter_payment_details
+    usecase "שליחת פרטי תשלום ל-Payment Gateway" as send_payment_details_to_pg
+    usecase "קבלת סטטוס תשלום מ-Payment Gateway" as receive_payment_status_from_pg
+
+    ' Alternate Flow A1: תשלום נדחה '
+    usecase "הצגת הודעה 'התשלום נדחה'" as show_payment_declined_message
+
+    ' Exception Flow E1: כשל תקשורת '
+    usecase "הצגת שגיאת תקשורת כללית" as show_communication_error
+}
+
+' External System '
+database "Payment Gateway" as payment_gateway_system <<external system>>
+
+' Main Payment Flow '
+process_payment ..> display_payment_screen : <<include>>
+process_payment ..> enter_payment_details : <<include>>
+process_payment ..> send_payment_details_to_pg : <<include>>
+process_payment ..> receive_payment_status_from_pg : <<include>>
+
+user --> display_payment_screen : "מבקש תשלום"
+display_payment_screen --> user : "מציגה מסך"
+user --> enter_payment_details : "מזין פרטים ולוחץ אישור"
+enter_payment_details --> send_payment_details_to_pg : "שולח נתונים לעיבוד"
+
+send_payment_details_to_pg --> payment_gateway_system : "מעביר פרטי תשלום"
+payment_gateway_system --> receive_payment_status_from_pg : "מחזיר סטטוס תשלום"
+
+' Alternate Flow A1: תשלום נדחה '
+receive_payment_status_from_pg ..> show_payment_declined_message : <<extend>> "אם סטטוס = דחייה"
+
+' Exception Flow E1: כשל תקשורת '
+send_payment_details_to_pg ..> show_communication_error : <<extend>> "אם יש כשל בשליחה"
+receive_payment_status_from_pg ..> show_communication_error : <<extend>> "אם כשל בקבלה"
+
+note bottom of process_payment
+  **תנאי מקדים:**
+  - המשתמש הגיע לשלב התשלום בתהליך ביצוע ההזמנה.
+
+  **תנאי סיום:**
+  - **הצלחה**: התשלום בוצע ואושר.
+  - **כישלון**: התשלום נדחה/נכשל.
+end note
+@enduml

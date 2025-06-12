@@ -1,0 +1,260 @@
+@startuml מסד נתונים כללי - Database Schema
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Database Schema: מסד הנתונים של מערכת E-commerce
+
+!define ENTITY class
+!define RELATIONSHIP ..>
+
+' Users Collection
+ENTITY Users {
+  _id: ObjectId
+  --
+  name: String
+  email: String (unique)
+  password: String (hashed)
+  role: String (customer/seller/admin)
+  phone: String
+  address: Object
+  createdAt: Date
+  updatedAt: Date
+  lastLogin: Date
+  status: String (active/inactive)
+  emailVerified: Boolean
+}
+
+' Products Collection
+ENTITY Products {
+  _id: ObjectId
+  --
+  name: String
+  description: String
+  price: Number
+  category: String
+  subcategory: String
+  brand: String
+  images: Array[String]
+  rating: Number
+  reviewCount: Number
+  stock: Number
+  sku: String (unique)
+  seller_id: ObjectId
+  status: String (active/inactive)
+  tags: Array[String]
+  specifications: Object
+  createdAt: Date
+  updatedAt: Date
+}
+
+' Categories Collection
+ENTITY Categories {
+  _id: ObjectId
+  --
+  name: String
+  description: String
+  parent_id: ObjectId
+  image: String
+  status: String (active/inactive)
+  sort_order: Number
+  createdAt: Date
+}
+
+' Cart Collection
+ENTITY Cart {
+  _id: ObjectId
+  --
+  user_id: ObjectId
+  product_id: ObjectId
+  quantity: Number
+  price_at_time: Number
+  addedAt: Date
+  updatedAt: Date
+}
+
+' Orders Collection
+ENTITY Orders {
+  _id: ObjectId
+  --
+  user_id: ObjectId
+  order_number: String (unique)
+  items: Array[Object]
+  total_amount: Number
+  subtotal: Number
+  tax_amount: Number
+  shipping_cost: Number
+  discount_amount: Number
+  payment_method: String
+  payment_status: String
+  order_status: String
+  shipping_address: Object
+  billing_address: Object
+  tracking_number: String
+  createdAt: Date
+  updatedAt: Date
+  delivered_at: Date
+}
+
+' Order Items Collection
+ENTITY OrderItems {
+  _id: ObjectId
+  --
+  order_id: ObjectId
+  product_id: ObjectId
+  quantity: Number
+  price_at_time: Number
+  total_price: Number
+  product_name: String
+  product_image: String
+}
+
+' Reviews Collection
+ENTITY Reviews {
+  _id: ObjectId
+  --
+  user_id: ObjectId
+  product_id: ObjectId
+  order_id: ObjectId
+  rating: Number (1-5)
+  title: String
+  comment: String
+  images: Array[String]
+  verified_purchase: Boolean
+  helpful_count: Number
+  createdAt: Date
+  updatedAt: Date
+}
+
+' Payments Collection
+ENTITY Payments {
+  _id: ObjectId
+  --
+  order_id: ObjectId
+  user_id: ObjectId
+  amount: Number
+  currency: String
+  payment_method: String
+  payment_gateway: String
+  transaction_id: String
+  gateway_response: Object
+  status: String
+  processed_at: Date
+  createdAt: Date
+}
+
+' Chat Messages Collection
+ENTITY ChatMessages {
+  _id: ObjectId
+  --
+  sender_id: ObjectId
+  receiver_id: ObjectId
+  sender_type: String (customer/seller/admin)
+  receiver_type: String (customer/seller/admin)
+  message: String
+  message_type: String (text/image/file)
+  attachment: String
+  read_status: Boolean
+  createdAt: Date
+}
+
+' Sessions Collection
+ENTITY Sessions {
+  _id: ObjectId
+  --
+  user_id: ObjectId
+  token: String
+  device_info: String
+  ip_address: String
+  user_agent: String
+  created_at: Date
+  expires_at: Date
+  last_activity: Date
+}
+
+' System Logs Collection
+ENTITY SystemLogs {
+  _id: ObjectId
+  --
+  user_id: ObjectId
+  action: String
+  entity_type: String
+  entity_id: ObjectId
+  details: Object
+  ip_address: String
+  user_agent: String
+  timestamp: Date
+  level: String (info/warning/error)
+}
+
+' Wishlist Collection
+ENTITY Wishlist {
+  _id: ObjectId
+  --
+  user_id: ObjectId
+  product_id: ObjectId
+  addedAt: Date
+}
+
+' Coupons Collection
+ENTITY Coupons {
+  _id: ObjectId
+  --
+  code: String (unique)
+  description: String
+  discount_type: String (percentage/fixed)
+  discount_value: Number
+  min_order_amount: Number
+  max_discount: Number
+  usage_limit: Number
+  used_count: Number
+  valid_from: Date
+  valid_until: Date
+  status: String (active/inactive)
+  createdAt: Date
+}
+
+' Relationships
+Users ||--o{ Products : "seller creates"
+Users ||--o{ Cart : "user has"
+Users ||--o{ Orders : "user places"
+Users ||--o{ Reviews : "user writes"
+Users ||--o{ ChatMessages : "user sends"
+Users ||--o{ Sessions : "user has"
+Users ||--o{ Wishlist : "user has"
+
+Products ||--o{ Cart : "product in"
+Products ||--o{ OrderItems : "product ordered"
+Products ||--o{ Reviews : "product reviewed"
+Products ||--o{ Wishlist : "product wished"
+Products }o--|| Categories : "belongs to"
+
+Orders ||--o{ OrderItems : "order contains"
+Orders ||--o{ Payments : "order paid"
+Orders ||--o{ Reviews : "order reviewed"
+
+Categories ||--o{ Categories : "parent-child"
+
+note top of Users
+  **משתמשים:**
+  - לקוחות (customers)
+  - מוכרים (sellers)  
+  - מנהלים (admins)
+end note
+
+note top of Products
+  **מוצרים:**
+  - מידע בסיסי
+  - מלאי ומחירים
+  - תמונות וביקורות
+  - קטגוריות ותגיות
+end note
+
+note top of Orders
+  **הזמנות:**
+  - פרטי הזמנה
+  - סטטוס ומעקב
+  - כתובות משלוח
+  - חישובי מחיר
+end note
+
+@enduml

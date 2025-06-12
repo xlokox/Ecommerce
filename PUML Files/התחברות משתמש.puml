@@ -1,0 +1,49 @@
+@startuml
+left to right direction
+
+actor משתמש as user
+
+package "מערכת חנות מקוונת" {
+    usecase "התחברות משתמש" as login
+    usecase "הצגת טופס התחברות" as show_login_form
+    usecase "הזנת פרטים ולחיצה על 'התחבר'" as enter_and_submit
+    usecase "אימות פרטי התחברות" as validate_credentials
+    usecase "אישור התחברות" as confirm_login
+    usecase "ניווט לדף הבית/קודם" as navigate_to_home_or_previous
+
+    ' Alternate Flow A1: סיסמה שגויה/דוא''ל לא קיים '
+    usecase "הצגת הודעת שגיאה 'שם משתמש או סיסמה שגויים'" as show_invalid_credentials_error
+    usecase "ניסיון התחברות חוזר" as retry_login
+    usecase "שחזור סיסמה" as recover_password
+
+    ' Exception Flow E1: חסימת משתמש '
+    usecase "הצגת הודעה 'חשבונך נחסם'" as show_account_blocked_message
+}
+
+user --> show_login_form : "מבקש להתחבר"
+show_login_form --> enter_and_submit : "מזין פרטים ולוחץ 'התחבר'"
+enter_and_submit --> login
+
+login ..> validate_credentials : <<include>>
+login ..> confirm_login : <<include>> "אם הפרטים נכונים"
+login ..> navigate_to_home_or_previous : <<include>> "לאחר אישור התחברות"
+
+' Alternate Flow A1: סיסמה שגויה/דוא''ל לא קיים '
+validate_credentials ..> show_invalid_credentials_error : <<extend>> "אם הפרטים שגויים"
+show_invalid_credentials_error --> retry_login : "מנסה שוב"
+user --> retry_login : "מנסה להתחבר שוב"
+show_invalid_credentials_error --> recover_password : "בוחר לשחזר סיסמה"
+user --> recover_password : "בוחר לשחזר סיסמה (Use Case אחר)"
+
+' Exception Flow E1: חסימת משתמש '
+confirm_login ..> show_account_blocked_message : <<extend>> "אם המשתמש חסום"
+
+note bottom of login
+  **תנאים מקדימים:**
+  - המשתמש אינו מחובר למערכת.
+
+  **זרימה בסיסית:**
+  שלבים 1-6 מהטבלה.
+end note
+
+@enduml

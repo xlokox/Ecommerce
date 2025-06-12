@@ -1,0 +1,77 @@
+@startuml
+left to right direction
+
+actor משתמש as user
+
+package "מערכת חנות מקוונת" {
+    usecase "ביצוע הזמנה" as place_order
+    usecase "לחיצה על 'המשך לתשלום'" as click_checkout
+    usecase "הצגת שלבי הזמנה" as display_order_steps
+    usecase "הזנת/אישור פרטי משלוח" as enter_shipping_details
+    usecase "הצגת סיכום הזמנה" as display_order_summary
+    usecase "בחירת אמצעי תשלום" as select_payment_method
+    usecase "הפניה ל'תשלום'" as redirect_to_payment
+    usecase "יצירת הזמנה במערכת" as create_order
+    usecase "שליחת דוא''ל אישור הזמנה" as send_order_confirmation_email
+    usecase "הצגת הודעת אישור הזמנה סופית" as display_final_confirmation
+
+    ' Alternate Flow A1: פרטי משלוח חסרים/שגויים '
+    usecase "בדיקת תקינות פרטי משלוח" as validate_shipping_details
+    usecase "הצגת שגיאות פרטי משלוח" as show_shipping_errors
+
+    ' Exception Flow E1: כשלון תשלום '
+    usecase "קבלת סטטוס תשלום" as get_payment_status
+    usecase "הצגת הודעת שגיאת תשלום" as show_payment_failure_message
+    usecase "ניסיון תשלום חוזר" as retry_payment_method
+
+    ' External Use Case: Payment '
+    usecase "תשלום" as payment_uc [[#payment_uc]]
+}
+
+user --> click_checkout : "מעגלת הקניות"
+click_checkout --> place_order
+
+place_order ..> display_order_steps : <<include>>
+place_order ..> enter_shipping_details : <<include>>
+place_order ..> display_order_summary : <<include>>
+place_order ..> select_payment_method : <<include>>
+place_order ..> redirect_to_payment : <<include>>
+place_order ..> get_payment_status : <<include>>
+place_order ..> create_order : <<include>> "לאחר אישור תשלום"
+place_order ..> send_order_confirmation_email : <<include>> "לאחר יצירת הזמנה"
+place_order ..> display_final_confirmation : <<include>> "לאחר יצירת הזמנה"
+
+
+' Alternate Flow A1: פרטי משלוח חסרים/שגויים '
+enter_shipping_details ..> validate_shipping_details : <<include>>
+validate_shipping_details ..> show_shipping_errors : <<extend>> "אם פרטים לא תקינים (3a)"
+show_shipping_errors --> enter_shipping_details : "המשתמש מתקן ומאשר שוב (3b)"
+
+
+' Exception Flow E1: כשלון תשלום '
+get_payment_status ..> show_payment_failure_message : <<extend>> "אם התשלום נכשל (7a)"
+show_payment_failure_message --> select_payment_method : "המשתמש מנסה שוב (7b)"
+user --> retry_payment_method : "מנסה תשלום מחדש"
+
+
+redirect_to_payment --> payment_uc : "מפנה ל"
+payment_uc --> get_payment_status : "מחזיר סטטוס"
+
+
+note bottom of place_order
+  **תנאים מקדימים:**
+  - המשתמש נמצא בעגלת הקניות עם פריטים.
+  - המשתמש מחובר (מומלץ) או אורח.
+
+  **תנאי סיום:**
+  - **הצלחה**: נוצרה הזמנה, התשלום אושר.
+  - **כישלון**: לא נוצרה הזמנה.
+end note
+
+' Note on "Payment" use case
+note right of payment_uc
+  זהו Use Case נפרד,
+  כפי שצויין בתיאור.
+end note
+
+@enduml

@@ -1,4 +1,4 @@
-@startuml User Login Sequence
+@startuml התחברות משתמש - Sequence
 !theme plain
 skinparam backgroundColor #f8f9fa
 

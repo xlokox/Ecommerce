@@ -1,4 +1,4 @@
-@startuml Browse Products Sequence
+@startuml דפדוף במוצרים - Sequence
 !theme plain
 skinparam backgroundColor #f8f9fa
 

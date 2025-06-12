@@ -1,0 +1,66 @@
+@startuml
+left to right direction
+
+actor משתמש as user
+actor "מנהל מערכת" as admin
+
+package "מערכת חנות מקוונת" {
+    usecase "צ'אט עם הלקוחות" as customer_chat
+    usecase "לחיצה על כפתור 'צ'אט'" as click_chat_button
+    usecase "זיהוי/פנייה יזומה של מנהל" as admin_initiate_or_detect
+    usecase "פתיחת חלון צ'אט" as open_chat_window
+    usecase "שליחת הודעה" as send_message
+    usecase "קבלת והצגת הודעה" as receive_and_display_message
+    usecase "סגירת שיחה" as close_chat_session
+
+    ' Alternate Flow A1: אין מנהל זמין '
+    usecase "בדיקת זמינות נציג" as check_agent_availability
+    usecase "הצגת הודעה 'אין נציג זמין'" as show_no_agent_message
+
+    ' Exception Flow E1: כשל תקשורת '
+    usecase "טיפול בכשל תקשורת" as handle_communication_failure
+    usecase "הצגת הודעת שגיאת תקשורת" as show_communication_error
+}
+
+' User Initiates Chat '
+user --> click_chat_button : "מבקש צ'אט"
+click_chat_button --> customer_chat
+
+' Admin Initiates or Responds '
+admin --> admin_initiate_or_detect : "מזהה / פונה יזומה"
+admin_initiate_or_detect --> customer_chat
+
+customer_chat ..> check_agent_availability : <<include>>
+
+' Basic Flow - Chat Session '
+customer_chat ..> open_chat_window : <<include>> "אם נציג זמין"
+open_chat_window -[hidden]-> send_message
+open_chat_window -[hidden]-> receive_and_display_message
+
+user --> send_message : "שולח הודעה"
+send_message --> receive_and_display_message
+admin --> send_message : "שולח הודעה"
+
+send_message ..> handle_communication_failure : <<extend>> "אם כשל תקשורת (E1)"
+receive_and_display_message ..> handle_communication_failure : <<extend>> "אם כשל תקשורת (E1)"
+
+user --> close_chat_session : "סוגר שיחה"
+admin --> close_chat_session : "סוגר שיחה"
+
+' Alternate Flow A1: אין מנהל זמין '
+check_agent_availability ..> show_no_agent_message : <<extend>> "אם אין נציג זמין (A1)"
+
+' Exception Flow E1: כשל תקשורת '
+handle_communication_failure ..> show_communication_error : <<extend>> "אם יש כשל (4a)"
+
+
+note bottom of customer_chat
+  **שחקנים:** משתמש, מנהל מערכת
+  **תנאי מקדים:** שני הצדדים מחוברים למערכת הצ'אט.
+
+  **תנאי סיום:**
+  - **הצלחה**: שיחת הצ'אט התקיימה והסתיימה.
+  - **כישלון**: הצ'אט לא התקיים או נקטע.
+end note
+
+@enduml

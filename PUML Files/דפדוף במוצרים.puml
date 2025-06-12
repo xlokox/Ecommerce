@@ -1,0 +1,47 @@
+@startuml
+left to right direction
+
+actor משתמש as user
+
+package "מערכת חנות מקוונת" {
+    usecase "דפדוף במוצרים" as browse_products
+    usecase "הצגת רשימת מוצרים" as display_product_list
+    usecase "גלילה וצפייה במוצרים" as scroll_view
+    usecase "בחירת קטגוריה לסינון" as filter_by_category
+    usecase "חיפוש מוצר ספציפי" as search_product
+    usecase "הצגת תוצאות סינון/חיפוש" as display_results
+    usecase "צפייה בפרטי מוצר" as view_product_details
+
+    ' Alternate Flow A1: אין מוצרים בקטגוריה/חיפוש '
+    usecase "הצגת הודעה 'לא נמצאו מוצרים'" as display_no_products_message
+}
+
+user --> browse_products
+browse_products ..> display_product_list : <<include>>
+
+user --> scroll_view : "גולל"
+user --> filter_by_category : "בוחר קטגוריה"
+user --> search_product : "מזין מונח חיפוש"
+user --> view_product_details : "בוחר לצפות במוצר"
+
+scroll_view --> display_results
+filter_by_category --> display_results
+search_product --> display_results
+
+display_results ..> display_no_products_message : <<extend>> "אם אין תוצאות (A1)"
+
+note bottom of browse_products
+  **תנאי מקדים:**
+  - המשתמש נמצא באתר.
+
+  **תנאי סיום:**
+  - המשתמש צפה במוצרים או בתוצאות חיפוש/סינון.
+end note
+
+' Note on the "View Product Details" use case
+note bottom of view_product_details
+  זהו Use Case נפרד,
+  כפי שצויין בתיאור.
+end note
+
+@enduml

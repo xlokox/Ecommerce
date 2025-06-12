@@ -1,0 +1,49 @@
+@startuml
+left to right direction
+
+actor משתמש as user
+
+package "מערכת חנות מקוונת" {
+    usecase "הוספת מוצר לעגלה" as add_to_cart
+    usecase "צפייה במוצר / כפתור 'הוסף לעגלה'" as view_product_or_button
+    usecase "בחירת כמות ולחיצה על 'הוסף לעגלה'" as select_qty_and_click
+    usecase "הוספת המוצר בפועל לעגלה" as actual_add_item
+    usecase "עדכון תצוגת העגלה" as update_cart_display
+    usecase "הצגת הודעת אישור" as show_confirmation_message
+
+    ' Alternate Flow A1: מוצר אזל מהמלאי '
+    usecase "בדיקת מלאי מוצר" as check_product_stock
+    usecase "הצגת הודעה 'המוצר אזל מהמלאי'" as show_out_of_stock_message
+
+    ' Exception Flow E1: כמות לא חוקית '
+    usecase "אימות כמות מוצר" as validate_quantity
+    usecase "הצגת שגיאה 'כמות לא חוקית'" as show_invalid_quantity_error
+}
+
+user --> view_product_or_button : "מגיע לדף מוצר או רשימה"
+view_product_or_button --> select_qty_and_click : "בוחר כמות ולוחץ"
+select_qty_and_click --> add_to_cart
+
+add_to_cart ..> validate_quantity : <<include>>
+add_to_cart ..> check_product_stock : <<include>>
+add_to_cart ..> actual_add_item : <<include>> "אם תקין ובמלאי"
+add_to_cart ..> update_cart_display : <<include>> "לאחר הוספה מוצלחת"
+add_to_cart ..> show_confirmation_message : <<include>> "לאחר הוספה מוצלחת"
+
+' Alternate Flow A1: מוצר אזל מהמלאי '
+check_product_stock ..> show_out_of_stock_message : <<extend>> "אם אזל מהמלאי (3a)"
+
+' Exception Flow E1: כמות לא חוקית '
+validate_quantity ..> show_invalid_quantity_error : <<extend>> "אם הכמות לא חוקית (2a)"
+show_invalid_quantity_error --> select_qty_and_click : "המשתמש מתקן ומנסה שוב"
+
+note bottom of add_to_cart
+  **תנאי מקדים:**
+  - המשתמש צופה בדף מוצר ספציפי או ברשימת מוצרים.
+
+  **תנאי סיום:**
+  - **הצלחה**: המוצר נוסף לעגלה.
+  - **כישלון**: המוצר לא נוסף לעגלה.
+end note
+
+@enduml

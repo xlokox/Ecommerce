@@ -1,0 +1,60 @@
+@startuml הוספת מוצר לעגלה - Data Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Data Flow: הוספת מוצר לעגלה (Add to Cart)
+
+!define ENTITY rectangle
+!define PROCESS circle
+!define DATASTORE database
+
+' Clean layout to avoid crossing lines
+ENTITY "משתמש\n(User)" as User
+
+PROCESS "1.0\nאימות בקשה\n(Validate Request)" as P1
+PROCESS "2.0\nבדיקת מלאי\n(Check Stock)" as P2
+PROCESS "3.0\nניהול עגלה\n(Manage Cart)" as P3
+PROCESS "4.0\nעדכון מונה\n(Update Counter)" as P4
+
+DATASTORE "D1\nמוצרים\n(Products DB)" as ProductsDB
+DATASTORE "D2\nעגלות קניות\n(Carts DB)" as CartsDB
+DATASTORE "D3\nלוג פעילות\n(Activity Log)" as ActivityLog
+
+' Main linear flow
+User --> P1 : "בקשת הוספה"
+P1 --> P2 : "נתונים מאומתים"
+P2 --> P3 : "אישור זמינות"
+P3 --> P4 : "בקשת עדכון מונה"
+P4 --> User : "תוצאת הוספה"
+
+' Database interactions - positioned to avoid crossing
+P2 --> ProductsDB : "שאילתת מלאי"
+P3 --> CartsDB : "שאילתת עגלה"
+P3 --> CartsDB : "עדכון עגלה"
+P4 --> CartsDB : "ספירת פריטים"
+
+' Logging flows - positioned at bottom
+P1 --> ActivityLog : "לוג פעילות"
+P2 --> ActivityLog : "לוג בדיקת מלאי"
+P3 --> ActivityLog : "לוג עדכון עגלה"
+
+note bottom of CartsDB
+  **מבנה עגלת קניות:**
+  - _id: ObjectId
+  - user_id: ObjectId
+  - product_id: ObjectId
+  - quantity: Number
+  - price_at_time: Number
+  - added_at: Date
+end note
+
+note bottom of ActivityLog
+  **מבנה לוג פעילות:**
+  - _id: ObjectId
+  - user_id: ObjectId
+  - action: String
+  - product_id: ObjectId
+  - timestamp: Date
+end note
+
+@enduml

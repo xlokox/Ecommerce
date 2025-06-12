@@ -1,0 +1,40 @@
+@startuml
+left to right direction
+
+actor "מנהל מערכת" as admin
+
+package "מערכת ניהול חנות מקוונת" {
+    usecase "ניהול דוחות" as manage_reports
+    usecase "ניווט לדף 'דוחות וסטטיסטיקות'" as navigate_to_reports_page
+    usecase "הצגת דוחות זמינים" as display_available_reports
+    usecase "בחירת טווח תאריכים / פילטרים" as select_filters
+    usecase "הצגת דוח מבוקש" as display_requested_report
+
+    ' Alternate Flow A1: אין נתונים בטווח תאריכים '
+    usecase "בדיקת קיום נתונים" as check_for_data
+    usecase "הצגת הודעה 'אין נתונים בטווח תאריכים זה'" as show_no_data_message
+}
+
+admin --> navigate_to_reports_page : "נווט"
+navigate_to_reports_page --> manage_reports
+
+manage_reports ..> display_available_reports : <<include>>
+
+display_available_reports --> select_filters : "בוחר טווח תאריכים/פילטרים"
+select_filters --> manage_reports
+
+manage_reports ..> check_for_data : <<include>>
+manage_reports ..> display_requested_report : <<include>> "אם קיימים נתונים"
+
+' Alternate Flow A1: אין נתונים בטווח תאריכים '
+check_for_data ..> show_no_data_message : <<extend>> "אם אין נתונים בטווח (A1)"
+
+note bottom of manage_reports
+  **תנאי מקדים:**
+  - מנהל המערכת מחובר למערכת הניהול.
+
+  **תנאי סיום:**
+  - מנהל המערכת צפה בנתונים סטטיסטיים ודוחות.
+end note
+
+@enduml

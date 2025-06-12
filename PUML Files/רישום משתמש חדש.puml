@@ -1,0 +1,55 @@
+@startuml
+left to right direction
+
+actor משתמש as user
+
+package "מערכת חנות מקוונת" {
+    usecase "רישום משתמש חדש" as register
+    usecase "הצגת טופס רישום" as show_form
+    usecase "מילוי פרטים ואישור" as fill_and_submit
+    usecase "אימות תקינות פרטים" as validate_details
+    usecase "בדיקת זמינות דוא''ל" as check_email_exists
+    usecase "יצירת חשבון חדש" as create_account
+    usecase "שליחת דוא''ל אימות" as send_email_validation
+    usecase "הצגת הודעת הצלחה / הפניה" as show_success_redirect
+
+    ' Alternate Flow A1'
+    usecase "הצגת הודעת דוא''ל רשום" as show_email_registered_message
+    usecase "מעבר להתחברות" as navigate_to_login
+
+    ' Exception Flow E1'
+    usecase "הצגת הודעות שגיאה ספציפיות" as show_specific_errors
+}
+
+user --> show_form : "מבקש להירשם"
+show_form --> fill_and_submit : "מזין פרטים ולוחץ 'הרשמה'"
+
+fill_and_submit --> register
+
+register ..> validate_details : <<include>>
+register ..> check_email_exists : <<include>>
+register ..> create_account : <<include>> "אם תקין וזמין"
+register ..> send_email_validation : <<include>> "לאחר יצירת חשבון"
+register ..> show_success_redirect : <<include>> "במקרה הצלחה"
+
+
+' Alternate Flow A1: דוא''ל כבר רשום '
+check_email_exists ..> show_email_registered_message : <<extend>> "אם דוא''ל קיים"
+show_email_registered_message --> navigate_to_login : "בוחר לעבור"
+user --> navigate_to_login : "בוחר לעבור (אופציה מ-3b)"
+
+
+' Exception Flow E1: פרטים לא תקינים '
+validate_details ..> show_specific_errors : <<extend>> "אם פרטים לא תקינים"
+show_specific_errors --> fill_and_submit : "המשתמש מתקן ומנסה שוב"
+
+note bottom of register
+  **תנאים מקדימים:**
+  - המשתמש אינו מחובר.
+  - הדוא"ל אינו רשום.
+
+  **זרימה בסיסית:**
+  שלבים 1-8 מהטבלה.
+end note
+
+@enduml

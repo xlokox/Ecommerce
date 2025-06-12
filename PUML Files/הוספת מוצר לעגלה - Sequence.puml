@@ -1,4 +1,4 @@
-@startuml Add to Cart Sequence
+@startuml הוספת מוצר לעגלה - Sequence
 !theme plain
 skinparam backgroundColor #f8f9fa
 

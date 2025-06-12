@@ -1,0 +1,45 @@
+@startuml
+left to right direction
+
+actor משתמש as user
+actor "מנהל מערכת" as admin
+package "מערכת חנות מקוונת" {
+    usecase "רישום משתמש חדש" as register
+    usecase "התחברות משתמש" as login
+    usecase "דפדוף במוצרים" as browse
+    usecase "הוספת מוצר לעגלה" as add_to_cart
+    usecase "צפייה בעגלת הקניות" as view_cart
+    usecase "ביצוע הזמנה" as place_order
+    usecase "תשלום" as payment
+    usecase "צפייה בהיסטוריית הזמנות" as view_history
+    usecase "ניהול מוצרים" as manage_products
+    usecase "ניהול משתמשים" as manage_users
+    usecase "ניהול דוחות" as manage_reports
+    usecase "צ'אט עם הלקוחות" as chat
+}
+
+package "מערכת חיצונית" {
+    usecase "Payment Gateway" as payment_gateway
+}
+
+user --> register
+user --> login
+user --> browse
+user --> add_to_cart
+user --> view_cart
+user --> place_order
+user --> view_history
+user --> chat
+
+admin --> manage_products
+admin --> manage_users
+admin --> manage_reports
+admin --> chat
+
+place_order ..> payment : <<include>>
+payment .right.> payment_gateway : <<uses>>
+
+add_to_cart .up.> browse : <<extend>>
+view_cart .up.> add_to_cart : <<extend>>
+
+@enduml

@@ -1,0 +1,63 @@
+@startuml
+left to right direction
+
+actor משתמש as user
+
+package "מערכת חנות מקוונת" {
+    usecase "צפייה בעגלת הקניות" as view_cart
+    usecase "לחיצה על אייקון/קישור עגלה" as click_cart_icon
+    usecase "הצגת תוכן עגלת הקניות" as display_cart_content
+    usecase "שינוי כמות מוצר" as modify_product_quantity
+    usecase "הסרת מוצר מהעגלה" as remove_product_from_cart
+    usecase "המשך קניות" as continue_shopping
+    usecase "מעבר לביצוע הזמנה" as proceed_to_checkout
+
+    ' Alternate Flow A1: עגלה ריקה '
+    usecase "בדיקת מצב עגלה" as check_cart_status
+    usecase "הצגת הודעה 'עגלת הקניות שלך ריקה'" as show_empty_cart_message
+    usecase "הצעה לדפדוף במוצרים" as suggest_browse_products
+}
+
+user --> click_cart_icon : "לוחץ על עגלה"
+click_cart_icon --> view_cart
+
+view_cart ..> check_cart_status : <<include>>
+view_cart ..> display_cart_content : <<include>> "אם העגלה אינה ריקה"
+
+display_cart_content --> modify_product_quantity : "משנה כמות"
+display_cart_content --> remove_product_from_cart : "מסיר מוצר"
+display_cart_content --> continue_shopping : "בוחר להמשיך בקניות"
+display_cart_content --> proceed_to_checkout : "בוחר לעבור לביצוע הזמנה"
+
+modify_product_quantity --> display_cart_content : "המערכת מעדכנת ומציגה מחדש"
+remove_product_from_cart --> display_cart_content : "המערכת מעדכנת ומציגה מחדש"
+
+' Alternate Flow A1: עגלה ריקה '
+check_cart_status ..> show_empty_cart_message : <<extend>> "אם העגלה ריקה (2a)"
+show_empty_cart_message --> suggest_browse_products : "מציעה לדפדף (2b)"
+user --> suggest_browse_products : "בוחר לדפדף במוצרים"
+suggest_browse_products --> continue_shopping : "המשך קניות"
+
+
+note bottom of view_cart
+  **תנאי מקדים:**
+  - המשתמש מחובר למערכת (אופציונלי).
+
+  **תנאי סיום:**
+  - המשתמש צפה/עדכן את העגלה או עבר לשלב הבא.
+end note
+
+' Note on "Proceed to Checkout" use case
+note right of proceed_to_checkout
+  זהו Use Case נפרד,
+  כפי שצויין בתיאור.
+end note
+
+' Note on "Continue Shopping" use case
+note right of continue_shopping
+  זה יכול להיות
+  Use Case קיים
+  (לדוגמה, "דפדוף במוצרים").
+end note
+
+@enduml
