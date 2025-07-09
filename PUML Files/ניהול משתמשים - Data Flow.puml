@@ -1,0 +1,86 @@
+@startuml ניהול משתמשים - Data Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Data Flow: ניהול משתמשים (User Management Data Flow)
+
+!define ENTITY rectangle
+!define PROCESS circle
+!define DATASTORE database
+
+' Clean layout to avoid crossing lines
+ENTITY "מנהל מערכת\n(System Admin)" as Admin
+
+PROCESS "1.0\nצפייה במשתמשים\n(View Users)" as P1
+PROCESS "2.0\nעריכת משתמש\n(Edit User)" as P2
+PROCESS "3.0\nניהול הרשאות\n(Manage Permissions)" as P3
+PROCESS "4.0\nחסימת משתמש\n(Block User)" as P4
+PROCESS "5.0\nמחיקת משתמש\n(Delete User)" as P5
+
+DATASTORE "D1\nמשתמשים\n(Users DB)" as UsersDB
+DATASTORE "D2\nסשנים\n(Sessions DB)" as SessionsDB
+DATASTORE "D3\nהרשאות\n(Permissions DB)" as PermissionsDB
+DATASTORE "D4\nלוג ניהול\n(Admin Log)" as AdminLog
+
+' Main flow paths - separated to avoid crossing
+Admin --> P1 : "בקשת רשימת משתמשים"
+Admin --> P2 : "עדכון פרטי משתמש"
+Admin --> P3 : "שינוי הרשאות"
+Admin --> P4 : "חסימת משתמש"
+Admin --> P5 : "מחיקת משתמש"
+
+P1 --> Admin : "רשימת משתמשים"
+P2 --> Admin : "משתמש עודכן"
+P3 --> Admin : "הרשאות עודכנו"
+P4 --> Admin : "משתמש נחסם"
+P5 --> Admin : "משתמש נמחק"
+
+' Database interactions - positioned to avoid crossing
+P1 --> UsersDB : "שאילתת משתמשים"
+P2 --> UsersDB : "עדכון פרטים"
+P3 --> UsersDB : "עדכון תפקיד"
+P3 --> PermissionsDB : "עדכון הרשאות"
+P4 --> UsersDB : "עדכון סטטוס"
+P4 --> SessionsDB : "ביטול סשנים"
+P5 --> UsersDB : "מחיקה רכה"
+
+' Logging flows - positioned at bottom
+P1 --> AdminLog : "לוג צפייה"
+P2 --> AdminLog : "לוג עריכה"
+P3 --> AdminLog : "לוג שינוי הרשאות"
+P4 --> AdminLog : "לוג חסימה"
+P5 --> AdminLog : "לוג מחיקה"
+
+note bottom of UsersDB
+  **מבנה משתמש:**
+  - _id: ObjectId
+  - name: String
+  - email: String (unique)
+  - role: String
+  - status: String
+  - created_at: Date
+  - last_login: Date
+  - profile_data: Object
+end note
+
+note bottom of PermissionsDB
+  **מבנה הרשאות:**
+  - _id: ObjectId
+  - role: String
+  - permissions: Array[String]
+  - resources: Array[String]
+  - created_at: Date
+end note
+
+note bottom of AdminLog
+  **מבנה לוג ניהול:**
+  - _id: ObjectId
+  - admin_id: ObjectId
+  - action: String
+  - target_user_id: ObjectId
+  - details: Object
+  - timestamp: Date
+  - ip_address: String
+end note
+
+@enduml

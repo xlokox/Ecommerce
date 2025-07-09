@@ -45,24 +45,62 @@ app.use(cookieParser());
 // Security middleware
 app.use(securityMiddleware);
 
-// CORS with secure configuration
+// CORS with secure configuration - Enhanced for Mobile App Support
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
-    ? 'https://your-domain.com'
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
+    ? ['https://your-domain.com']
+    : [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:3002',
+        // Allow all local network IPs for mobile development
+        /^http:\/\/192\.168\.\d+\.\d+:19006$/, // Expo development
+        /^http:\/\/10\.\d+\.\d+\.\d+:19006$/,  // Alternative network range
+        /^http:\/\/172\.\d+\.\d+\.\d+:19006$/ // Docker network range
+      ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'X-CSRF-Token', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'X-CSRF-Token',
+    'Authorization',
+    'X-Client-Type',
+    'X-Platform',
+    'Accept',
+    'Origin',
+    'X-Requested-With'
+  ],
   exposedHeaders: ['X-CSRF-Token'],
-  maxAge: 86400 // 24 hours
+  maxAge: 86400, // 24 hours
+  optionsSuccessStatus: 200 // Support legacy browsers
 }));
 
 // Add logging middleware
 app.use(loggingMiddleware);
 
-// Test endpoint
+// Enhanced test endpoint for mobile app connectivity
 app.get('/api/test', (req, res) => {
-  res.json({ message: 'API is working' });
+  res.json({
+    success: true,
+    message: 'Backend server is connected and working!',
+    timestamp: new Date().toISOString(),
+    server: 'E-commerce Backend',
+    version: '1.0.0',
+    clientType: req.headers['x-client-type'] || 'unknown',
+    platform: req.headers['x-platform'] || 'unknown',
+    userAgent: req.headers['user-agent'] || 'unknown'
+  });
+});
+
+// Health check route for monitoring
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    memory: process.memoryUsage(),
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
 // Public chat endpoint for getting available sellers
@@ -84,13 +122,27 @@ app.use((err, req, res, next) => {
   });
 });
 
-// הגדרת Socket.io עם אפשרויות CORS
+// הגדרת Socket.io עם אפשרויות CORS - Enhanced for Mobile Support
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
+    origin: process.env.NODE_ENV === 'production'
+      ? ['https://your-domain.com']
+      : [
+          'http://localhost:3000',
+          'http://localhost:3001',
+          'http://localhost:3002',
+          // Allow mobile development
+          /^http:\/\/192\.168\.\d+\.\d+:19006$/,
+          /^http:\/\/10\.\d+\.\d+\.\d+:19006$/,
+          /^http:\/\/172\.\d+\.\d+\.\d+:19006$/
+        ],
     methods: ['GET', 'POST'],
     credentials: true,
+    allowEIO3: true // Support older clients
   },
+  transports: ['websocket', 'polling'], // Support both transports for mobile
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
 // משתנים לניהול חיבורי סוקט – לקוחות, מוכרים ומנהל
@@ -265,6 +317,7 @@ import customerAuthRoutes from './routes/home/customerAuthRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import dashboardRoutes from './routes/dashboard/dashboardRoutes.js';
+import syncProductsRoutes from './routes/syncProducts.js';
 
 // הגדרת הנתיבים ב־Express
 app.use('/api/home', homeRoutes);
@@ -278,6 +331,7 @@ app.use('/api/customer', customerAuthRoutes);
 app.use('/api', chatRoutes);
 app.use('/api', paymentRoutes);
 app.use('/api', dashboardRoutes);
+app.use('/api/sync', syncProductsRoutes);
 
 // בדיקת שרת
 app.get('/', (req, res) => res.send('Hello Server'));

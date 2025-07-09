@@ -27,6 +27,7 @@ import Wishlist from './components/dashboard/Wishlist';
 import OrderDetails from './components/dashboard/OrderDetails';
 import Chat from './components/dashboard/Chat';
 import ConfirmOrder from './pages/ConfirmOrder';
+import { RecentlyViewedProvider } from './context/RecentlyViewedContext';
 
 function App() {
   const dispatch = useDispatch();
@@ -39,37 +40,39 @@ function App() {
   }, [dispatch]); // הוספנו dispatch למערך התלויות
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path='/' element={<Home />} />
-        <Route path='/login' element={<Login />} />
-        <Route path='/register' element={<Register />} />
-        <Route path='/shops' element={<Shops />} />
-        <Route path='/blog' element={<Blog />} />
-        <Route path='/blog/:id' element={<BlogDetails />} />
-        <Route path='/about' element={<About />} />
-        <Route path='/contact' element={<Contact />} />
-        <Route path='/card' element={<Card />} />
-        <Route path='/shipping' element={<Shipping />} />
-        <Route path='/payment' element={<Payment />} />
-        <Route path='/products?' element={<CategoryShop />} />
-        <Route path='/products/search?' element={<SearchProducts />} />
-        <Route path='/product/details/:slug' element={<Details />} />
-        <Route path='/order/confirm?' element={<ConfirmOrder />} />
+    <RecentlyViewedProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path='/' element={<Home />} />
+          <Route path='/login' element={<Login />} />
+          <Route path='/register' element={<Register />} />
+          <Route path='/shops' element={<Shops />} />
+          <Route path='/blog' element={<Blog />} />
+          <Route path='/blog/:id' element={<BlogDetails />} />
+          <Route path='/about' element={<About />} />
+          <Route path='/contact' element={<Contact />} />
+          <Route path='/card' element={<Card />} />
+          <Route path='/shipping' element={<Shipping />} />
+          <Route path='/payment' element={<Payment />} />
+          <Route path='/products?' element={<CategoryShop />} />
+          <Route path='/products/search?' element={<SearchProducts />} />
+          <Route path='/product/details/:slug' element={<Details />} />
+          <Route path='/order/confirm?' element={<ConfirmOrder />} />
 
-        <Route path='/dashboard' element={<ProtectUser />}>
-          <Route path='' element={<Dashboard />}>
-            <Route path='' element={<Index />} />
-            <Route path='my-orders' element={<Orders />} />
-            <Route path='change-password' element={<ChangePassword />} />
-            <Route path='my-wishlist' element={<Wishlist />} />
-            <Route path='order/details/:orderId' element={<OrderDetails />} />
-            <Route path='chat' element={<Chat />} />
-            <Route path='chat/:sellerId' element={<Chat />} />
+          <Route path='/dashboard' element={<ProtectUser />}>
+            <Route path='' element={<Dashboard />}>
+              <Route path='' element={<Index />} />
+              <Route path='my-orders' element={<Orders />} />
+              <Route path='change-password' element={<ChangePassword />} />
+              <Route path='my-wishlist' element={<Wishlist />} />
+              <Route path='order/details/:orderId' element={<OrderDetails />} />
+              <Route path='chat' element={<Chat />} />
+              <Route path='chat/:sellerId' element={<Chat />} />
+            </Route>
           </Route>
-        </Route>
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </RecentlyViewedProvider>
   );
 }
 

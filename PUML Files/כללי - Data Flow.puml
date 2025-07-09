@@ -1,0 +1,104 @@
+@startuml כללי - Data Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Data Flow: זרימת נתונים כללית במערכת E-commerce (General System Data Flow)
+
+!define ENTITY rectangle
+!define PROCESS circle
+!define DATASTORE database
+
+' Clean layout to avoid crossing lines
+ENTITY "משתמש\n(User)" as User
+ENTITY "מנהל מערכת\n(System Admin)" as Admin
+ENTITY "מוכר\n(Seller)" as Seller
+
+PROCESS "1.0\nניהול משתמשים\n(User Management)" as P1
+PROCESS "2.0\nניהול מוצרים\n(Product Management)" as P2
+PROCESS "3.0\nניהול הזמנות\n(Order Management)" as P3
+PROCESS "4.0\nעיבוד תשלומים\n(Payment Processing)" as P4
+PROCESS "5.0\nניתוח ודוחות\n(Analytics & Reports)" as P5
+PROCESS "6.0\nתקשורת ותמיכה\n(Communication & Support)" as P6
+
+DATASTORE "D1\nמשתמשים\n(Users DB)" as UsersDB
+DATASTORE "D2\nמוצרים\n(Products DB)" as ProductsDB
+DATASTORE "D3\nהזמנות\n(Orders DB)" as OrdersDB
+DATASTORE "D4\nתשלומים\n(Payments DB)" as PaymentsDB
+DATASTORE "D5\nעגלות קניות\n(Carts DB)" as CartsDB
+DATASTORE "D6\nהודעות צ'אט\n(Chat Messages)" as ChatDB
+DATASTORE "D7\nלוגים ואנליטיקס\n(Logs & Analytics)" as LogsDB
+
+' User interactions - positioned to avoid crossing
+User --> P1 : "רישום והתחברות"
+User --> P2 : "דפדוף מוצרים"
+User --> P3 : "ביצוע הזמנות"
+User --> P4 : "תשלומים"
+User --> P6 : "תמיכה וצ'אט"
+
+' Seller interactions
+Seller --> P2 : "ניהול מוצרים"
+Seller --> P3 : "עיבוד הזמנות"
+Seller --> P5 : "צפייה בדוחות"
+Seller --> P6 : "מענה ללקוחות"
+
+' Admin interactions
+Admin --> P1 : "ניהול משתמשים"
+Admin --> P2 : "אישור מוצרים"
+Admin --> P5 : "דוחות מערכת"
+Admin --> P6 : "ניהול תמיכה"
+
+' Process to database interactions - clean layout
+P1 --> UsersDB : "נתוני משתמשים"
+P2 --> ProductsDB : "נתוני מוצרים"
+P2 --> CartsDB : "עגלות קניות"
+P3 --> OrdersDB : "נתוני הזמנות"
+P4 --> PaymentsDB : "נתוני תשלומים"
+P6 --> ChatDB : "הודעות צ'אט"
+
+' Analytics and logging - positioned at bottom
+P1 --> LogsDB : "לוגי משתמשים"
+P2 --> LogsDB : "לוגי מוצרים"
+P3 --> LogsDB : "לוגי הזמנות"
+P4 --> LogsDB : "לוגי תשלומים"
+P5 --> LogsDB : "נתוני אנליטיקס"
+
+' Analytics reads from all databases
+P5 --> UsersDB : "ניתוח משתמשים"
+P5 --> ProductsDB : "ניתוח מוצרים"
+P5 --> OrdersDB : "ניתוח מכירות"
+P5 --> PaymentsDB : "ניתוח תשלומים"
+
+' Return flows to users
+P1 --> User : "פרופיל משתמש"
+P2 --> User : "קטלוג מוצרים"
+P3 --> User : "סטטוס הזמנות"
+P4 --> User : "אישורי תשלום"
+P5 --> Seller : "דוחות מכירות"
+P5 --> Admin : "דוחות מערכת"
+P6 --> User : "תמיכה ומענה"
+
+note bottom of UsersDB
+  **נתוני משתמשים:**
+  - פרטים אישיים
+  - הרשאות וסיסמאות
+  - היסטוריית פעילות
+  - העדפות אישיות
+end note
+
+note bottom of OrdersDB
+  **נתוני הזמנות:**
+  - פרטי הזמנה
+  - סטטוס ומעקב
+  - פריטים והזמנה
+  - כתובות משלוח
+end note
+
+note bottom of LogsDB
+  **לוגים ואנליטיקס:**
+  - פעילות משתמשים
+  - ביצועי מערכת
+  - נתוני מכירות
+  - דוחות שגיאות
+end note
+
+@enduml

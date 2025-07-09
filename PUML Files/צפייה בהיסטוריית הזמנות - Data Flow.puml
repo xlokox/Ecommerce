@@ -1,0 +1,80 @@
+@startuml צפייה בהיסטוריית הזמנות - Data Flow
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Data Flow: צפייה בהיסטוריית הזמנות (Order History Data Flow)
+
+!define ENTITY rectangle
+!define PROCESS circle
+!define DATASTORE database
+
+' Clean layout to avoid crossing lines
+ENTITY "לקוח\n(Customer)" as Customer
+
+PROCESS "1.0\nטעינת הזמנות\n(Load Orders)" as P1
+PROCESS "2.0\nסינון וחיפוש\n(Filter & Search)" as P2
+PROCESS "3.0\nהעשרת נתונים\n(Enrich Data)" as P3
+PROCESS "4.0\nפרטי הזמנה\n(Order Details)" as P4
+PROCESS "5.0\nיצירת חשבונית\n(Generate Invoice)" as P5
+
+DATASTORE "D1\nהזמנות\n(Orders DB)" as OrdersDB
+DATASTORE "D2\nפריטי הזמנה\n(Order Items DB)" as OrderItemsDB
+DATASTORE "D3\nתשלומים\n(Payments DB)" as PaymentsDB
+DATASTORE "D4\nמוצרים\n(Products DB)" as ProductsDB
+DATASTORE "D5\nחשבוניות\n(Invoices Storage)" as InvoicesStorage
+
+' Main flow paths - separated to avoid crossing
+Customer --> P1 : "בקשת היסטוריה"
+Customer --> P2 : "קריטריוני סינון"
+Customer --> P4 : "בקשת פרטי הזמנה"
+Customer --> P5 : "בקשת חשבונית"
+
+P1 --> P3 : "הזמנות בסיסיות"
+P2 --> P3 : "הזמנות מסוננות"
+P3 --> Customer : "הזמנות מועשרות"
+
+P4 --> Customer : "פרטי הזמנה מלאים"
+P5 --> Customer : "חשבונית PDF"
+
+' Database interactions - positioned to avoid crossing
+P1 --> OrdersDB : "שאילתת הזמנות משתמש"
+P2 --> OrdersDB : "שאילתה מסוננת"
+P3 --> PaymentsDB : "מידע תשלומים"
+P3 --> ProductsDB : "פרטי מוצרים"
+P4 --> OrderItemsDB : "פריטי הזמנה"
+P4 --> PaymentsDB : "פרטי תשלום"
+P5 --> InvoicesStorage : "שמירת חשבונית"
+
+note bottom of OrdersDB
+  **מבנה הזמנה:**
+  - _id: ObjectId
+  - user_id: ObjectId
+  - order_number: String
+  - total_amount: Number
+  - status: String
+  - created_at: Date
+  - shipping_address: Object
+end note
+
+note bottom of OrderItemsDB
+  **מבנה פריט הזמנה:**
+  - _id: ObjectId
+  - order_id: ObjectId
+  - product_id: ObjectId
+  - quantity: Number
+  - price_at_time: Number
+  - product_name: String
+end note
+
+note bottom of PaymentsDB
+  **מבנה תשלום:**
+  - _id: ObjectId
+  - order_id: ObjectId
+  - amount: Number
+  - payment_method: String
+  - status: String
+  - transaction_id: String
+  - processed_at: Date
+end note
+
+@enduml

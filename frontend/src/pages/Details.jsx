@@ -20,6 +20,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { product_details } from '../store/reducers/homeReducer';
 import toast from 'react-hot-toast';
 import { add_to_card,messageClear,add_to_wishlist } from '../store/reducers/cardReducer';
+import { useRecentlyViewed } from '../context/RecentlyViewedContext';
 
 
 const Details = () => {
@@ -27,6 +28,7 @@ const Details = () => {
     const navigate = useNavigate()
     const {slug} = useParams()
     const dispatch = useDispatch()
+    const { addToRecentlyViewed } = useRecentlyViewed()
     const {product,relatedProducts,moreProducts} = useSelector(state => state.home)
     const {userInfo } = useSelector(state => state.auth)
     const {errorMessage,successMessage } = useSelector(state => state.card)
@@ -34,6 +36,13 @@ const Details = () => {
     useEffect(() => {
         dispatch(product_details(slug))
     },[slug])
+
+    // Add to recently viewed when product is loaded
+    useEffect(() => {
+        if (product && product._id) {
+            addToRecentlyViewed(product)
+        }
+    }, [product, addToRecentlyViewed])
 
     useEffect(() => {
         if (successMessage) {
@@ -384,7 +393,12 @@ const Details = () => {
         {
             moreProducts.map((p,i) => {
                 return (
-        <Link className='block' to={`/product/details/${p.slug}`}>
+        <Link
+            key={i}
+            className='block'
+            to={`/product/details/${p.slug}`}
+            onClick={() => addToRecentlyViewed(p)}
+        >
             <div className='relative h-[270px]'>
             <img className='w-full h-full' src={ p.images[0]} alt="" />
             {
@@ -445,7 +459,11 @@ const Details = () => {
             return (
 
                 <SwiperSlide key={i}>
-                    <Link className='block' to={`/product/details/${p.slug}`}>
+                    <Link
+                        className='block'
+                        to={`/product/details/${p.slug}`}
+                        onClick={() => addToRecentlyViewed(p)}
+                    >
                         <div className='relative h-[270px]'>
                             <div className='w-full h-full'>
                     <img className='w-full h-full' src={p.images[0] } alt="" />

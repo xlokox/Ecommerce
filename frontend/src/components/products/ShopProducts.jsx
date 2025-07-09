@@ -6,10 +6,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { add_to_card, add_to_wishlist, messageClear } from '../../store/reducers/cardReducer';
 import toast from 'react-hot-toast';
+import { useRecentlyViewed } from '../../context/RecentlyViewedContext';
 
 const ShopProducts = ({ styles, products }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { addToRecentlyViewed } = useRecentlyViewed();
   const { userInfo } = useSelector(state => state.auth);
   const { errorMessage, successMessage } = useSelector(state => state.card);
 
@@ -100,6 +102,7 @@ const ShopProducts = ({ styles, products }) => {
                 </li>
                 <Link
                   to={`/product/details/${p.slug}`}
+                  onClick={() => addToRecentlyViewed(p)}
                   className='w-[38px] h-[38px] cursor-pointer bg-white flex justify-center items-center rounded-full hover:bg-[#059473] hover:text-white hover:rotate-[720deg] transition-all'
                 >
                   <FaEye />

@@ -1,0 +1,150 @@
+@startuml צפייה בהיסטוריית הזמנות - Sequence
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Sequence: צפייה בהיסטוריית הזמנות (Order History View)
+
+actor "לקוח\n(Customer)" as Customer
+participant "Frontend\n(React App)" as Frontend
+participant "Order Controller\n(Backend)" as OrderController
+participant "Order Service\n(Business Logic)" as OrderService
+participant "Payment Service\n(Payment Logic)" as PaymentService
+participant "Database\n(MongoDB)" as Database
+
+Customer -> Frontend: 1. כניסה לעמוד "ההזמנות שלי"
+activate Frontend
+
+Frontend -> OrderController: 2. GET /api/orders/user/:userId
+activate OrderController
+
+OrderController -> OrderService: 3. getUserOrders(userId, pagination)
+activate OrderService
+
+OrderService -> Database: 4. find({user_id: userId}).sort({createdAt: -1})
+activate Database
+
+Database --> OrderService: 5. רשימת הזמנות משתמש
+deactivate Database
+
+OrderService -> PaymentService: 6. getPaymentStatus(orderIds)
+activate PaymentService
+
+PaymentService -> Database: 7. find({order_id: {$in: orderIds}})
+activate Database
+
+Database --> PaymentService: 8. סטטוס תשלומים
+deactivate Database
+
+PaymentService --> OrderService: 9. מידע תשלומים מעודכן
+deactivate PaymentService
+
+OrderService -> OrderService: 10. enrichOrdersWithDetails(orders, payments)
+
+OrderService --> OrderController: 11. הזמנות מועשרות + מטא-דאטה
+deactivate OrderService
+
+OrderController --> Frontend: 12. 200 OK + orders list + pagination
+deactivate OrderController
+
+Frontend --> Customer: 13. הצגת רשימת הזמנות
+deactivate Frontend
+
+== צפייה בפרטי הזמנה ==
+
+Customer -> Frontend: 14. לחיצה על הזמנה ספציפית
+activate Frontend
+
+Frontend -> OrderController: 15. GET /api/orders/:orderId/details
+activate OrderController
+
+OrderController -> OrderService: 16. getOrderDetails(orderId, userId)
+activate OrderService
+
+OrderService -> Database: 17. findOne({_id: orderId, user_id: userId})
+activate Database
+
+Database --> OrderService: 18. פרטי הזמנה מלאים
+deactivate Database
+
+OrderService -> Database: 19. find({order_id: orderId}) // order items
+activate Database
+
+Database --> OrderService: 20. פריטי הזמנה
+deactivate Database
+
+OrderService -> PaymentService: 21. getPaymentDetails(orderId)
+activate PaymentService
+
+PaymentService -> Database: 22. findOne({order_id: orderId})
+activate Database
+
+Database --> PaymentService: 23. פרטי תשלום
+deactivate Database
+
+PaymentService --> OrderService: 24. מידע תשלום מלא
+deactivate PaymentService
+
+OrderService --> OrderController: 25. הזמנה מלאה + פריטים + תשלום
+deactivate OrderService
+
+OrderController --> Frontend: 26. 200 OK + complete order details
+deactivate OrderController
+
+Frontend --> Customer: 27. הצגת פרטי הזמנה המלאים
+deactivate Frontend
+
+== סינון והחיפוש ==
+
+Customer -> Frontend: 28. סינון לפי תאריך/סטטוס
+activate Frontend
+
+Frontend -> OrderController: 29. GET /api/orders/user/:userId?filter=params
+activate OrderController
+
+OrderController -> OrderService: 30. getFilteredOrders(userId, filters)
+activate OrderService
+
+OrderService -> Database: 31. find({user_id: userId, ...filters})
+activate Database
+
+Database --> OrderService: 32. הזמנות מסוננות
+deactivate Database
+
+OrderService --> OrderController: 33. תוצאות מסוננות
+deactivate OrderService
+
+OrderController --> Frontend: 34. 200 OK + filtered results
+deactivate OrderController
+
+Frontend --> Customer: 35. הצגת תוצאות מסוננות
+deactivate Frontend
+
+== הורדת חשבונית ==
+
+Customer -> Frontend: 36. לחיצה על "הורד חשבונית"
+activate Frontend
+
+Frontend -> OrderController: 37. GET /api/orders/:orderId/invoice
+activate OrderController
+
+OrderController -> OrderService: 38. generateInvoice(orderId, userId)
+activate OrderService
+
+OrderService -> Database: 39. אימות בעלות על הזמנה
+activate Database
+
+Database --> OrderService: 40. אישור בעלות
+deactivate Database
+
+OrderService -> OrderService: 41. createInvoicePDF(orderData)
+
+OrderService --> OrderController: 42. קובץ PDF מוכן
+deactivate OrderService
+
+OrderController --> Frontend: 43. 200 OK + PDF file stream
+deactivate OrderController
+
+Frontend --> Customer: 44. הורדת חשבונית
+deactivate Frontend
+
+@enduml

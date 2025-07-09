@@ -1,0 +1,188 @@
+@startuml ניהול משתמשים - Sequence
+!theme plain
+skinparam backgroundColor #f8f9fa
+
+title Sequence: ניהול משתמשים (User Management)
+
+actor "מנהל מערכת\n(System Admin)" as Admin
+participant "Frontend\n(React App)" as Frontend
+participant "User Controller\n(Backend)" as UserController
+participant "User Service\n(Business Logic)" as UserService
+participant "Auth Service\n(Authentication)" as AuthService
+participant "Database\n(MongoDB)" as Database
+
+== צפייה ברשימת משתמשים ==
+
+Admin -> Frontend: 1. כניסה לעמוד ניהול משתמשים
+activate Frontend
+
+Frontend -> UserController: 2. GET /api/admin/users
+activate UserController
+
+UserController -> UserService: 3. getAllUsers(pagination, filters)
+activate UserService
+
+UserService -> Database: 4. find({}).sort({createdAt: -1})
+activate Database
+
+Database --> UserService: 5. רשימת כל המשתמשים
+deactivate Database
+
+UserService --> UserController: 6. משתמשים + מטא-דאטה
+deactivate UserService
+
+UserController --> Frontend: 7. 200 OK + users list
+deactivate UserController
+
+Frontend --> Admin: 8. הצגת רשימת משתמשים
+deactivate Frontend
+
+== עריכת משתמש ==
+
+Admin -> Frontend: 9. בחירת משתמש לעריכה
+activate Frontend
+
+Frontend -> UserController: 10. GET /api/admin/users/:userId
+activate UserController
+
+UserController -> UserService: 11. getUserById(userId)
+activate UserService
+
+UserService -> Database: 12. findById(userId)
+activate Database
+
+Database --> UserService: 13. פרטי משתמש
+deactivate Database
+
+UserService --> UserController: 14. נתוני משתמש מלאים
+deactivate UserService
+
+UserController --> Frontend: 15. 200 OK + user details
+deactivate UserController
+
+Frontend --> Admin: 16. הצגת טופס עריכה
+deactivate Frontend
+
+Admin -> Frontend: 17. עדכון פרטי משתמש
+activate Frontend
+
+Frontend -> UserController: 18. PUT /api/admin/users/:userId
+activate UserController
+
+UserController -> UserService: 19. updateUser(userId, updateData)
+activate UserService
+
+UserService -> Database: 20. updateOne({_id: userId}, updateData)
+activate Database
+
+Database --> UserService: 21. עדכון הושלם
+deactivate Database
+
+UserService --> UserController: 22. {success: true, updated}
+deactivate UserService
+
+UserController --> Frontend: 23. 200 OK + updated user
+deactivate UserController
+
+Frontend --> Admin: 24. הודעת עדכון הצלחה
+deactivate Frontend
+
+== שינוי הרשאות משתמש ==
+
+Admin -> Frontend: 25. שינוי תפקיד משתמש
+activate Frontend
+
+Frontend -> UserController: 26. PUT /api/admin/users/:userId/role
+activate UserController
+
+UserController -> AuthService: 27. validateRoleChange(userId, newRole)
+activate AuthService
+
+AuthService -> AuthService: 28. בדיקת הרשאות מנהל
+
+AuthService --> UserController: 29. אישור שינוי תפקיד
+deactivate AuthService
+
+UserController -> UserService: 30. updateUserRole(userId, newRole)
+activate UserService
+
+UserService -> Database: 31. updateOne({_id: userId}, {role: newRole})
+activate Database
+
+Database --> UserService: 32. תפקיד עודכן
+deactivate Database
+
+UserService --> UserController: 33. {success: true, roleUpdated}
+deactivate UserService
+
+UserController --> Frontend: 34. 200 OK + role updated
+deactivate UserController
+
+Frontend --> Admin: 35. אישור שינוי תפקיד
+deactivate Frontend
+
+== חסימת/ביטול חסימת משתמש ==
+
+Admin -> Frontend: 36. לחיצה על "חסום משתמש"
+activate Frontend
+
+Frontend -> UserController: 37. PUT /api/admin/users/:userId/status
+activate UserController
+
+UserController -> UserService: 38. updateUserStatus(userId, status)
+activate UserService
+
+UserService -> Database: 39. updateOne({_id: userId}, {status: 'blocked'})
+activate Database
+
+Database --> UserService: 40. סטטוס עודכן
+deactivate Database
+
+UserService -> AuthService: 41. invalidateUserSessions(userId)
+activate AuthService
+
+AuthService -> Database: 42. deleteMany({user_id: userId}) // sessions
+activate Database
+
+Database --> AuthService: 43. סשנים נמחקו
+deactivate Database
+
+AuthService --> UserService: 44. סשנים בוטלו
+deactivate AuthService
+
+UserService --> UserController: 45. {success: true, userBlocked}
+deactivate UserService
+
+UserController --> Frontend: 46. 200 OK + user blocked
+deactivate UserController
+
+Frontend --> Admin: 47. אישור חסימת משתמש
+deactivate Frontend
+
+== מחיקת משתמש ==
+
+Admin -> Frontend: 48. לחיצה על "מחק משתמש"
+activate Frontend
+
+Frontend -> UserController: 49. DELETE /api/admin/users/:userId
+activate UserController
+
+UserController -> UserService: 50. deleteUser(userId)
+activate UserService
+
+UserService -> Database: 51. updateOne({_id: userId}, {status: 'deleted'})
+activate Database
+
+Database --> UserService: 52. משתמש סומן כמחוק
+deactivate Database
+
+UserService --> UserController: 53. {success: true, userDeleted}
+deactivate UserService
+
+UserController --> Frontend: 54. 200 OK + user deleted
+deactivate UserController
+
+Frontend --> Admin: 55. אישור מחיקת משתמש
+deactivate Frontend
+
+@enduml
