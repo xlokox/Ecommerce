@@ -4,6 +4,8 @@ import { responseReturn } from '../../utiles/response.js';
 import bcrypt from 'bcrypt';
 import sellerCustomerModel from '../../models/chat/sellerCustomerModel.js';
 import { createToken } from '../../utiles/tokenCreate.js';
+import formidable from 'formidable';
+import cloudinary from 'cloudinary';
 
 
 
@@ -120,7 +122,92 @@ class CustomerAuthController {
         console.error('🚨 Logout Error:', error)
         return responseReturn(res, 500, { error: 'Internal Server Error' })
     }
-}
+  }
+
+  // 4️⃣ קבלת פרופיל לקוח
+  async get_customer_profile(req, res) {
+    try {
+      const { id } = req;
+      const customer = await customerModel.findById(id);
+      if (!customer) {
+        return responseReturn(res, 404, { error: 'Customer not found' });
+      }
+      return responseReturn(res, 200, { customer });
+    } catch (error) {
+      console.error('🚨 Get Profile Error:', error);
+      return responseReturn(res, 500, { error: 'Internal Server Error' });
+    }
+  }
+
+  // 5️⃣ עדכון פרופיל לקוח
+  async update_customer_profile(req, res) {
+    try {
+      const { id } = req;
+      const { name, phone, address } = req.body;
+
+      const updateData = {};
+      if (name) updateData.name = name.trim();
+      if (phone) updateData.phone = phone.trim();
+      if (address) updateData.address = address;
+
+      const customer = await customerModel.findByIdAndUpdate(id, updateData, { new: true });
+      if (!customer) {
+        return responseReturn(res, 404, { error: 'Customer not found' });
+      }
+
+      return responseReturn(res, 200, { message: 'Profile updated successfully', customer });
+    } catch (error) {
+      console.error('🚨 Update Profile Error:', error);
+      return responseReturn(res, 500, { error: 'Internal Server Error' });
+    }
+  }
+
+  // 6️⃣ העלאת תמונת פרופיל לקוח
+  async upload_customer_image(req, res) {
+    try {
+      const { id } = req;
+      const form = formidable({ multiples: true });
+
+      form.parse(req, async (err, _, files) => {
+        if (err) {
+          return responseReturn(res, 400, { error: 'Form parse error' });
+        }
+
+        const { image } = files;
+        if (!image) {
+          return responseReturn(res, 400, { error: 'No image file provided' });
+        }
+
+        try {
+          const result = await cloudinary.v2.uploader.upload(image.filepath, {
+            folder: 'customer_profiles',
+            transformation: [
+              { width: 300, height: 300, crop: 'fill' },
+              { quality: 'auto' }
+            ]
+          });
+
+          const customer = await customerModel.findByIdAndUpdate(
+            id,
+            { image: result.url },
+            { new: true }
+          );
+
+          return responseReturn(res, 200, {
+            message: 'Profile image uploaded successfully',
+            customer,
+            imageUrl: result.url
+          });
+        } catch (uploadError) {
+          console.error('🚨 Image Upload Error:', uploadError);
+          return responseReturn(res, 500, { error: 'Image upload failed' });
+        }
+      });
+    } catch (error) {
+      console.error('🚨 Upload Image Error:', error);
+      return responseReturn(res, 500, { error: 'Internal Server Error' });
+    }
+  }
 
 }
 

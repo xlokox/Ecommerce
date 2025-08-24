@@ -1,5 +1,6 @@
 import express from 'express';
 import customerAuthController from '../../controllers/home/customerAuthController.js';
+import { authMiddleware } from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
@@ -31,6 +32,39 @@ router.get('/logout', async (req, res) => {
     await customerAuthController.customer_logout(req, res);
   } catch (error) {
     console.error('Error in logout route:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// קבלת פרופיל לקוח
+router.get('/profile', authMiddleware, async (req, res) => {
+  console.log("📌 Get Profile Route Hit");
+  try {
+    await customerAuthController.get_customer_profile(req, res);
+  } catch (error) {
+    console.error('Error in get profile route:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// עדכון פרופיל לקוח
+router.put('/profile', authMiddleware, async (req, res) => {
+  console.log("📌 Update Profile Route Hit");
+  try {
+    await customerAuthController.update_customer_profile(req, res);
+  } catch (error) {
+    console.error('Error in update profile route:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// העלאת תמונת פרופיל לקוח
+router.post('/profile/image', authMiddleware, async (req, res) => {
+  console.log("📌 Upload Profile Image Route Hit");
+  try {
+    await customerAuthController.upload_customer_image(req, res);
+  } catch (error) {
+    console.error('Error in upload image route:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

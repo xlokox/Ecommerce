@@ -17,6 +17,21 @@ const customerSchema = new Schema({
     method: {
         type: String,
         required: true
+    },
+    image: {
+        type: String,
+        default: ''
+    },
+    phone: {
+        type: String,
+        default: ''
+    },
+    address: {
+        street: { type: String, default: '' },
+        city: { type: String, default: '' },
+        state: { type: String, default: '' },
+        zipCode: { type: String, default: '' },
+        country: { type: String, default: '' }
     }
 }, { timestamps: true });
 

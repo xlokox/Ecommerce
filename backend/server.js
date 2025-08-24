@@ -18,10 +18,7 @@ cloudinary.v2.config({
   secure: true
 });
 
-// (לא חובה, אבל עוזר לבדיקה)
-console.log('cloud_name:', process.env.cloud_name);
-console.log('api_key:', process.env.api_key);
-console.log('api_secret:', process.env.api_secret);
+// Avoid logging sensitive cloudinary secrets
 
 // goodies – לפי מה שהיה לך קודם
 console.log('🚀 Available ChatController Methods: [...]');
@@ -123,6 +120,7 @@ app.use((err, req, res, next) => {
 });
 
 // הגדרת Socket.io עם אפשרויות CORS - Enhanced for Mobile Support
+import { setIO } from './utils/socket.js';
 const io = new Server(server, {
   cors: {
     origin: process.env.NODE_ENV === 'production'
@@ -144,6 +142,7 @@ const io = new Server(server, {
   pingTimeout: 60000,
   pingInterval: 25000
 });
+setIO(io);
 
 // משתנים לניהול חיבורי סוקט – לקוחות, מוכרים ומנהל
 let allCustomer = [];
