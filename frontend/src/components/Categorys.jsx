@@ -80,7 +80,7 @@ const Categorys = () => {
                             data-cy={`category-link-${i}`}
                             className='block w-11/12 mx-auto h-[160px] rounded-2xl overflow-hidden shadow-md'
                             key={i}
-                            to={`/products?category=${c.name}`}
+                            to={`/products?category=${encodeURIComponent(c.name)}`}
                         >
                             <div className='relative w-full h-full'>
                                 <img

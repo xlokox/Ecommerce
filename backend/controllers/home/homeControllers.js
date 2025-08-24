@@ -88,7 +88,8 @@ class HomeControllers {
 
   // שליפת מוצרים לפי קריטריונים (קטגוריה, דירוג, מחיר, חיפוש)
   query_products = async (req, res) => {
-    const parPage = 12;
+    // Allow client to override parPage up to a safe maximum (defaults to 12)
+    const parPage = Math.min(parseInt(req.query.parPage) || 12, 50);
     req.query.parPage = parPage;
 
     console.log('Query params:', req.query);
@@ -124,6 +125,12 @@ class HomeControllers {
 
       // If category filter is provided
       if (req.query.category) {
+        // Decode percent-encoded category names like "Home%20%26%20Kitchen"
+        try {
+          req.query.category = decodeURIComponent(req.query.category);
+        } catch (e) {
+          // ignore if already decoded
+        }
         // Check if it's a valid category ID
         if (categoryMap[req.query.category]) {
           // It's an ID, use the name for filtering

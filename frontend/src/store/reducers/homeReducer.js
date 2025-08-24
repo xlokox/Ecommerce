@@ -71,8 +71,9 @@ export const query_products = createAsyncThunk(
 
       console.log('Query params:', { category, rating, low, high, sortPrice, pageNumber, searchValue });
 
+      const encodedCategory = encodeURIComponent(category);
       const { data } = await api.get(
-        `/home/query-products?category=${category}&&rating=${rating}&&lowPrice=${low}&&highPrice=${high}&&sortPrice=${sortPrice}&&pageNumber=${pageNumber}&&searchValue=${searchValue}`
+        `/home/query-products?category=${encodedCategory}&&rating=${rating}&&lowPrice=${low}&&highPrice=${high}&&sortPrice=${sortPrice}&&pageNumber=${pageNumber}&&searchValue=${searchValue}`
       );
       return fulfillWithValue(data);
     } catch (error) {
