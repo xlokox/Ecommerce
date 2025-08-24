@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { FaEye, FaRegHeart } from "react-icons/fa";
 import { RiShoppingCartLine } from "react-icons/ri";
 import Rating from '../Rating';
+import { getImageSrc, onImgError } from '../../utils/image';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { add_to_card, add_to_wishlist, messageClear } from '../../store/reducers/cardReducer';
@@ -94,7 +95,7 @@ const FeatureProducts = ({ products }) => {
                     {p.discount}%
                   </div>
                 ) : null}
-                <img className='sm:w-full w-full h-[240px]' src={p.images[0]} alt="Product" />
+                <img className='sm:w-full w-full h-[240px]' src={getImageSrc(p.images)} onError={onImgError} alt="Product" />
                 <ul className='flex transition-all duration-700 -bottom-10 justify-center items-center gap-2 absolute w-full group-hover:bottom-3'>
                   <li
                     onClick={() => add_wishlist(p)}

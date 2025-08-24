@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import Carousel from 'react-multi-carousel';
 import { Link } from 'react-router-dom';
 // Import the base carousel styles
@@ -8,15 +8,35 @@ import '../styles/carousel-override.css';
 import { useSelector } from 'react-redux';
 
 const Banner = () => {
-    // Get banners from Redux store with a default empty array
-    const { banners = [] } = useSelector(state => state.home || { banners: [] });
+    // Get categories to build links that match the app
+    const { categorys = [] } = useSelector(state => state.home || { categorys: [] });
 
-    // Debug: Log banners to see what we're getting
-    useEffect(() => {
-        if (banners && banners.length > 0) {
-            console.log('Banner component - banners loaded:', banners.length);
-        }
-    }, [banners]);
+    const getCategoryIdByName = (name) => {
+      const cat = categorys.find(c => (c.name || '').toLowerCase() === name.toLowerCase());
+      return cat?._id || '';
+    };
+
+    // Slides synced with the mobile app
+    const slides = [
+      {
+        id: 'sale',
+        image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=2940&q=80',
+        label: 'Our Latest Deals',
+        link: '/products?'
+      },
+      {
+        id: 'electronics',
+        image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2940&q=80',
+        label: 'Our Newst Electronics',
+        link: `/products?category=${getCategoryIdByName('Electronics')}`
+      },
+      {
+        id: 'toys',
+        image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=1600&q=80',
+        label: 'Our Newst Toys',
+        link: `/products?category=${getCategoryIdByName('Toys')}`
+      }
+    ];
 
     const responsive = {
          superLargeDesktop: {
@@ -52,39 +72,25 @@ const Banner = () => {
                      showDots={true}
                      responsive={responsive}
                  >
-                 {
-                     // Use banners from Redux store if available, otherwise use static images
-                     banners && banners.length > 0 ? (
-                         banners.map((banner, i) => (
-                             <Link key={i} to={banner.link || '#'}>
-                                 <img
-                                    src={banner.banner}
-                                    alt={banner.title || 'Banner'}
-                                    className="w-full h-[300px] object-cover rounded-md"
-                                    onError={(e) => {
-                                        console.error('Banner image failed to load:', banner.banner);
-                                        e.target.src = 'http://localhost:3000/images/banner/1.jpg';
-                                    }}
-                                 />
-                             </Link>
-                         ))
-                     ) : (
-                         // Fallback to static images if no banners are available
-                         [1,2,3,4,5,6].map((img, i) => (
-                             <Link key={i} to='#'>
-                                 <img
-                                    src={`http://localhost:3000/images/banner/${img}.jpg`}
-                                    alt="Banner"
-                                    className="w-full h-[300px] object-cover rounded-md"
-                                    onError={(e) => {
-                                        console.error(`Fallback banner image failed to load: ${img}.jpg`);
-                                        e.target.src = 'http://localhost:3000/images/banner/1.jpg';
-                                    }}
-                                 />
-                             </Link>
-                         ))
-                     )
-                 }
+                 {slides.map((slide) => (
+                    <Link key={slide.id} to={slide.link}>
+                      <div className="relative">
+                        <img
+                          src={slide.image}
+                          alt={slide.label}
+                          className="w-full h-[400px] sm:h-[460px] md:h-[520px] lg:h-[640px] xl:h-[720px] object-cover rounded-md"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span
+                            className="text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-[4px]"
+                            style={{ textShadow: '0 2px 8px rgba(0,0,0,0.65)' }}
+                          >
+                            {slide.label}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
                  </Carousel>
                          </div>
                      </div>

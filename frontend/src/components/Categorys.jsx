@@ -14,7 +14,7 @@ const Categorys = () => {
             <div className='w-[87%] mx-auto relative'>
                 <div className='w-full'>
                     <div className='text-center flex justify-center items-center flex-col text-3xl text-slate-600 font-bold relative pb-[35px]'>
-                        <h2>Top Category</h2>
+                        <h2>Shop by Category</h2>
                         <div className='w-[100px] h-[2px] bg-[#059473] mt-4'></div>
                     </div>
                     <div className='text-center text-gray-500 py-4'>No categories available at the moment.</div>
@@ -26,23 +26,23 @@ const Categorys = () => {
     const responsive = {
         superLargeDesktop: {
             breakpoint: { max: 4000, min: 3000 },
-            items: 6
+            items: 5
         },
         desktop: {
             breakpoint: { max: 3000, min: 1024 },
-            items: 6
+            items: 4
         },
         tablet: {
             breakpoint: { max: 1024, min: 464 },
-            items: 4
+            items: 3
         },
         mdtablet: {
             breakpoint: { max: 991, min: 464 },
-            items: 4
+            items: 3
         },
         mobile: {
             breakpoint: { max: 464, min: 0 },
-            items: 3
+            items: 2
         },
         smmobile: {
             breakpoint: { max: 640, min: 0 },
@@ -60,7 +60,7 @@ const Categorys = () => {
         <div className='w-[87%] mx-auto relative'>
             <div className='w-full'>
             <div className='text-center flex justify-center items-center flex-col text-3xl text-slate-600 font-bold relative pb-[35px]'>
-                <h2>Top Category </h2>
+                <h2>Shop by Category</h2>
                 <div className='w-[100px] h-[2px] bg-[#059473] mt-4'></div>
             </div>
             </div>
@@ -68,22 +68,32 @@ const Categorys = () => {
                 <Carousel
                     autoPlay={true}
                     infinite={true}
-                    arrows={true}
+                    arrows={false}
                     responsive={responsive}
+                    itemClass="px-1 md:px-2"
+                    containerClass="pb-0"
                     transitionDuration={500}
                 >
                 {
                     categorys.map((c, i) => (
                         <Link
                             data-cy={`category-link-${i}`}
-                            className='h-[185px] border block'
+                            className='block w-11/12 mx-auto h-[160px] rounded-2xl overflow-hidden shadow-md'
                             key={i}
                             to={`/products?category=${c.name}`}
                         >
-                            <div className='w-full h-full relative p-3'>
-                                <img data-cy={`category-image-${i}`} src={c.image} alt={c.name} />
-                                <div className='absolute bottom-6 w-full mx-auto font-bold left-0 flex justify-center items-center'>
-                                    <span className='py-[2px] px-6 bg-[#3330305d] text-white'>{c.name}</span>
+                            <div className='relative w-full h-full'>
+                                <img
+                                  data-cy={`category-image-${i}`}
+                                  src={c.image}
+                                  alt={c.name}
+                                  className='w-full h-full object-cover'
+                                />
+                                <div className='absolute inset-0 bg-black/40'></div>
+                                <div className='absolute inset-0 flex items-center justify-center'>
+                                  <span className='text-white text-sm md:text-base font-bold text-center drop-shadow'>
+                                    {c.name}
+                                  </span>
                                 </div>
                             </div>
                         </Link>

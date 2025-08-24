@@ -94,9 +94,8 @@ class ProductController {
       }
 
       if (!images) {
-        console.log('WARNING: Missing images file, will try to continue');
-        // Don't add validation error, allow product creation without images
-        // validationErrors.push("No 'images' file provided");
+        console.log('ERROR: Missing images file');
+        validationErrors.push("At least one image is required");
       }
 
       if (!price) {
@@ -193,8 +192,7 @@ class ProductController {
 
       // Handle case where images might be undefined or null
       if (!images) {
-        console.log('No images provided, using fallback image');
-        allImageUrl.push('https://res.cloudinary.com/dbx/image/upload/v1/products/product_placeholder');
+        return responseReturn(res, 400, { error: 'At least one image is required' });
       } else {
         // Convert to array if not already
         if (!Array.isArray(images)) {
@@ -384,7 +382,7 @@ class ProductController {
         // This makes the uploaded image the only image (main image)
         const productImages = [result.url];
 
-        await productModel.findByIdAndUpdate(productId, { images: productImages });
+        await productModel.findByIdAndUpdate(productId, { images: productImages }, { runValidators: true });
         product = await productModel.findById(productId);
         return responseReturn(res, 200, { product, message: "Product Image Updated Successfully" });
       } catch (error) {

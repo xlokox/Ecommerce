@@ -114,6 +114,10 @@ const AddProduct = () => {
       toast.error('Please fill in all required fields');
       return;
     }
+    if (!images || images.length === 0) {
+      toast.error('Please upload at least one product image');
+      return;
+    }
 
     console.log('🚀 Creating product with data:', {
       name: state.name,
@@ -156,7 +160,7 @@ const AddProduct = () => {
             <div className='flex flex-col mb-3 md:flex-row gap-4 w-full text-[#d0d2d6]'>
               <div className='flex flex-col w-full gap-1'>
                 <label htmlFor="name">Product Name</label>
-                <input 
+                <input
                   className='px-4 py-2 focus:border-indigo-500 outline-none bg-[#6a5fdf] border border-slate-700 rounded-md text-[#d0d2d6]'
                   onChange={inputHandle}
                   value={state.name}
@@ -168,7 +172,7 @@ const AddProduct = () => {
               </div>
               <div className='flex flex-col w-full gap-1'>
                 <label htmlFor="brand">Product Brand</label>
-                <input 
+                <input
                   className='px-4 py-2 focus:border-indigo-500 outline-none bg-[#6a5fdf] border border-slate-700 rounded-md text-[#d0d2d6]'
                   onChange={inputHandle}
                   value={state.brand}
@@ -182,8 +186,8 @@ const AddProduct = () => {
             <div className='flex flex-col mb-3 md:flex-row gap-4 w-full text-[#d0d2d6]'>
               <div className='flex flex-col w-full gap-1 relative'>
                 <label htmlFor="category">Category</label>
-                <input 
-                  readOnly 
+                <input
+                  readOnly
                   onClick={() => setCateShow(!cateShow)}
                   className='px-4 py-2 focus:border-indigo-500 outline-none bg-[#6a5fdf] border border-slate-700 rounded-md text-[#d0d2d6]'
                   value={category}
@@ -193,7 +197,7 @@ const AddProduct = () => {
                 />
                 <div className={`absolute top-[101%] bg-[#475569] w-full transition-all ${cateShow ? 'scale-100' : 'scale-0'}`}>
                   <div className='w-full px-4 py-2 fixed'>
-                    <input 
+                    <input
                       value={searchValue}
                       onChange={categorySearch}
                       className='px-3 py-1 w-full focus:border-indigo-500 outline-none bg-transparent border border-slate-700 rounded-md text-[#d0d2d6] overflow-hidden'
@@ -204,7 +208,7 @@ const AddProduct = () => {
                   <div className='pt-14'></div>
                   <div className='flex flex-col h-[200px] overflow-x-scroll'>
                     {allCategory.map((c, i) => (
-                      <span 
+                      <span
                         key={i}
                         className={`px-4 py-2 hover:bg-indigo-500 hover:text-white hover:shadow-lg w-full cursor-pointer ${category === c.name && 'bg-indigo-500'}`}
                         onClick={() => {
@@ -222,7 +226,7 @@ const AddProduct = () => {
               </div>
               <div className='flex flex-col w-full gap-1'>
                 <label htmlFor="stock">Product Stock</label>
-                <input 
+                <input
                   className='px-4 py-2 focus:border-indigo-500 outline-none bg-[#6a5fdf] border border-slate-700 rounded-md text-[#d0d2d6]'
                   onChange={inputHandle}
                   value={state.stock}
@@ -236,7 +240,7 @@ const AddProduct = () => {
             <div className='flex flex-col mb-3 md:flex-row gap-4 w-full text-[#d0d2d6]'>
               <div className='flex flex-col w-full gap-1'>
                 <label htmlFor="price">Price</label>
-                <input 
+                <input
                   className='px-4 py-2 focus:border-indigo-500 outline-none bg-[#6a5fdf] border border-slate-700 rounded-md text-[#d0d2d6]'
                   onChange={inputHandle}
                   value={state.price}
@@ -248,7 +252,7 @@ const AddProduct = () => {
               </div>
               <div className='flex flex-col w-full gap-1'>
                 <label htmlFor="discount">Discount</label>
-                <input 
+                <input
                   className='px-4 py-2 focus:border-indigo-500 outline-none bg-[#6a5fdf] border border-slate-700 rounded-md text-[#d0d2d6]'
                   onChange={inputHandle}
                   value={state.discount}
@@ -261,7 +265,7 @@ const AddProduct = () => {
             </div>
             <div className='flex flex-col w-full gap-1 mb-5'>
               <label htmlFor="description" className='text-[#d0d2d6]'>Description</label>
-              <textarea 
+              <textarea
                 className='px-4 py-2 focus:border-indigo-500 outline-none bg-[#6a5fdf] border border-slate-700 rounded-md text-[#d0d2d6]'
                 onChange={inputHandle}
                 value={state.description}
@@ -289,6 +293,8 @@ const AddProduct = () => {
                 <span>Select Image</span>
               </label>
               <input className='hidden' onChange={imageHandle} multiple type="file" id='image' />
+            <p className='text-xs text-red-400 mt-1'>At least one image is required</p>
+
             </div>
             <div className='flex'>
               <button disabled={loader} className='bg-red-500 w-[280px] hover:shadow-red-300/50 hover:shadow-lg text-white rounded-md px-7 py-2 mb-3'>

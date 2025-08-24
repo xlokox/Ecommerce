@@ -69,4 +69,16 @@ router.post('/profile/image', authMiddleware, async (req, res) => {
   }
 });
 
+
+// Temporary aliases for deprecated mobile endpoints (to be removed after clients update)
+router.post('/customer-login', async (req, res) => {
+  console.warn('⚠️ Deprecated endpoint called: /api/customer/customer-login. Use /api/customer/login');
+  return customerAuthController.customer_login(req, res);
+});
+
+router.post('/customer-register', async (req, res) => {
+  console.warn('⚠️ Deprecated endpoint called: /api/customer/customer-register. Use /api/customer/register');
+  return customerAuthController.customer_register(req, res);
+});
+
 export default router;

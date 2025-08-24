@@ -11,7 +11,16 @@ const productSchema = new Schema({
   discount: { type: Number, default: 0 }, // Made optional with default 0
   description: { type: String, default: '' }, // Made optional with default empty string
   shopName: { type: String, default: 'EasyShop' }, // Made optional with default value
-  images: { type: Array, default: [] }, // Made optional with default empty array
+  images: {
+    type: [String],
+    validate: {
+      validator: function(v) {
+        return Array.isArray(v) && v.length > 0 && v.every(s => typeof s === 'string' && s.trim().length > 0);
+      },
+      message: 'Product must have at least one image URL'
+    },
+    required: [true, 'At least one product image is required']
+  },
   rating: { type: Number, default: 0 }
 }, { timestamps: true });
 

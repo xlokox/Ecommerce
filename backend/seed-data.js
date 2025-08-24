@@ -30,7 +30,8 @@ const categories = [
   { name: 'Clothing', slug: 'clothing', image: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3' },
   { name: 'Home & Kitchen', slug: 'home-kitchen', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3' },
   { name: 'Books', slug: 'books', image: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3' },
-  { name: 'Toys', slug: 'toys', image: 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?q=80&w=2928&auto=format&fit=crop&ixlib=rb-4.0.3' }
+  { name: 'Toys', slug: 'toys', image: 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?q=80&w=2928&auto=format&fit=crop&ixlib=rb-4.0.3' },
+  { name: 'Dogs', slug: 'dogs', image: 'https://images.unsplash.com/photo-1517423440428-a5a00ad493e8?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3' }
 ];
 
 // EXACT SAME 40 PRODUCTS AS MOBILE APP - PERFECT SYNC
@@ -683,6 +684,128 @@ const products = [
       'https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3',
       'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
     ]
+  },
+  // DOGS CATEGORY (8 products)
+  {
+    name: 'Premium Dog Food 10kg',
+    slug: 'premium-dog-food-10kg',
+    category: 'Dogs',
+    brand: 'CanineCare',
+    price: 49.99,
+    stock: 120,
+    discount: 10,
+    description: 'High-protein dry food suitable for all breeds',
+    shopName: 'Pet Store',
+    rating: 4.6,
+    images: [
+      'https://images.unsplash.com/photo-1587300003388-59208cc962cb?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3',
+      'https://images.unsplash.com/photo-1596495578067-5f8b8e5b2b45?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
+    ]
+  },
+  {
+    name: 'Adjustable Dog Harness',
+    slug: 'adjustable-dog-harness',
+    category: 'Dogs',
+    brand: 'PawFit',
+    price: 24.99,
+    stock: 80,
+    discount: 5,
+    description: 'Breathable and comfortable harness for daily walks',
+    shopName: 'Pet Store',
+    rating: 4.5,
+    images: [
+      'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
+    ]
+  },
+  {
+    name: 'Durable Chew Toy',
+    slug: 'durable-chew-toy',
+    category: 'Dogs',
+    brand: 'K9Play',
+    price: 12.99,
+    stock: 200,
+    discount: 0,
+    description: 'Veterinarian-approved chew toy for strong chewers',
+    shopName: 'Pet Store',
+    rating: 4.7,
+    images: [
+      'https://images.unsplash.com/photo-1507149833265-60c372daea22?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
+    ]
+  },
+  {
+    name: 'Orthopedic Dog Bed',
+    slug: 'orthopedic-dog-bed',
+    category: 'Dogs',
+    brand: 'SleepyPaws',
+    price: 79.99,
+    stock: 40,
+    discount: 15,
+    description: 'Memory foam bed for superior joint support',
+    shopName: 'Pet Store',
+    rating: 4.8,
+    images: [
+      'https://images.unsplash.com/photo-1619983081563-430f63602796?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
+    ]
+  },
+  {
+    name: 'Stainless Steel Dog Bowl',
+    slug: 'stainless-steel-dog-bowl',
+    category: 'Dogs',
+    brand: 'PetEssentials',
+    price: 14.99,
+    stock: 150,
+    discount: 0,
+    description: 'Non-slip, dishwasher-safe food bowl',
+    shopName: 'Pet Store',
+    rating: 4.4,
+    images: [
+      'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
+    ]
+  },
+  {
+    name: 'Dog Shampoo Sensitive Skin',
+    slug: 'dog-shampoo-sensitive-skin',
+    category: 'Dogs',
+    brand: 'GentlePup',
+    price: 11.99,
+    stock: 90,
+    discount: 8,
+    description: 'Hypoallergenic shampoo with aloe and oatmeal',
+    shopName: 'Pet Store',
+    rating: 4.3,
+    images: [
+      'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
+    ]
+  },
+  {
+    name: 'Reflective Dog Leash',
+    slug: 'reflective-dog-leash',
+    category: 'Dogs',
+    brand: 'NightPaw',
+    price: 16.99,
+    stock: 110,
+    discount: 10,
+    description: 'Strong nylon leash with reflective stitching for safety',
+    shopName: 'Pet Store',
+    rating: 4.5,
+    images: [
+      'https://images.unsplash.com/photo-1543466835-00a7907e9de1?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
+    ]
+  },
+  {
+    name: 'Healthy Dog Treats',
+    slug: 'healthy-dog-treats',
+    category: 'Dogs',
+    brand: 'GoodBoi',
+    price: 9.99,
+    stock: 180,
+    discount: 5,
+    description: 'Grain-free treats made with real chicken',
+    shopName: 'Pet Store',
+    rating: 4.6,
+    images: [
+      'https://images.unsplash.com/photo-1583511655936-0700d874f1fb?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3'
+    ]
   }
 ];
 
@@ -702,19 +825,8 @@ const seedData = async () => {
     const createdCategories = await Category.insertMany(categories);
     console.log(`✅ Added ${createdCategories.length} categories`);
 
-    // Insert products
-    const productPromises = products.map(async (product) => {
-      const category = await Category.findOne({ name: product.category });
-      if (category) {
-        return {
-          ...product,
-          category: category._id
-        };
-      }
-    });
-
-    const productsWithCategoryIds = await Promise.all(productPromises);
-    const createdProducts = await Product.insertMany(productsWithCategoryIds.filter(p => p));
+    // Insert products as-is (category stored by name for consistency across clients)
+    const createdProducts = await Product.insertMany(products);
     console.log(`✅ Added ${createdProducts.length} products`);
 
     // Create banners with product IDs

@@ -118,6 +118,12 @@ const EditProduct = () => {
   // 10. שליחת טופס העדכון
   const update = (e) => {
     e.preventDefault();
+    // Require at least one image to remain on update as well
+    if (!imageShow || imageShow.length === 0) {
+      toast.error('Please keep at least one product image');
+      return;
+    }
+    e.preventDefault();
     const obj = {
       name: state.name,
       description: state.description,

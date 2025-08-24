@@ -11,10 +11,10 @@ const api = axios.create({
   }
 });
 
-// Function to safely get token from localStorage
+// Function to safely get token from localStorage (standardized: customerToken)
 const getToken = () => {
   try {
-    return localStorage.getItem('accessToken') || '';
+    return localStorage.getItem('customerToken') || '';
   } catch (error) {
     console.error('Error accessing localStorage:', error);
     return '';
@@ -57,7 +57,7 @@ api.interceptors.response.use(
     if (error.response) {
       if (error.response.status === 401) {
         // If unauthorized, clear token and redirect to login
-        localStorage.removeItem('accessToken');
+        localStorage.removeItem('customerToken');
         // Only redirect if we're not already on the login page
         if (!window.location.pathname.includes('/login')) {
           window.location.href = '/login';

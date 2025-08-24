@@ -23,9 +23,9 @@ const CategoryShop = () => {
     const dispatch = useDispatch()
     const {products = [], categorys = [], priceRange = {low: 0, high: 100}, latest_product = [], totalProduct = 0, parPage = 10} = useSelector(state => state.home || {})
 
-    // Find the category name for display
-    const selectedCategory = categorys.find(c => c._id === category)
-    const categoryName = selectedCategory ? selectedCategory.name : 'All Products'
+    // Find the category name for display, support ID or Name in URL
+    const selectedCategory = categorys.find(c => c._id === category || c.name === category)
+    const categoryName = selectedCategory ? selectedCategory.name : (category || 'All Products')
 
     useEffect(() => {
         dispatch(price_range_product())

@@ -27,10 +27,10 @@ class HomeControllers {
     return productArray;
   };
 
-  // שליפת כל הקטגוריות
+  // שליפת כל הקטגוריות (ממוינות לפי שם לצורך עקביות בין אתרים)
   get_categorys = async (req, res) => {
     try {
-      const categorys = await categoryModel.find({});
+      const categorys = await categoryModel.find({}).sort({ name: 1 });
       return responseReturn(res, 200, { categorys });
     } catch (error) {
       console.log(error.message);
