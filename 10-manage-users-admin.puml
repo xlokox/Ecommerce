@@ -1,0 +1,191 @@
+@startuml Manage Users (Admin) Activity Diagram
+
+!theme plain
+title Manage Users Use Case - Admin\n(ניהול משתמשים - מנהל מערכת)
+
+|Admin|
+start
+:Admin logs into dashboard\n(מנהל נכנס ללוח בקרה);
+
+|Frontend Dashboard|
+:Load admin dashboard\n(טעינת לוח בקרה מנהל);
+:Navigate to Users section\n(מעבר לקטע משתמשים);
+
+|User Management|
+:Display user management interface\n(הצגת ממשק ניהול משתמשים);
+
+|Admin|
+if (What user type?) then (Manage Sellers)
+  |User Management|
+  :Navigate to Sellers section\n(מעבר לקטע מוכרים);
+  
+  if (What action?) then (View Pending Sellers)
+    |Backend Controller|
+    :sellerController.request_seller_get()\n(קבלת מוכרים ממתינים);
+    
+    |Database|
+    :Query sellers with status: 'pending'\n(שאילתה למוכרים עם סטטוס 'ממתין');
+    
+    |User Management|
+    :Display pending sellers list:\n- Name, email\n- Registration date\n- Shop information\n- Actions (approve, reject)\n(הצגת רשימת מוכרים ממתינים);
+    
+  elseif (action) then (Approve/Reject Seller)
+    |User Management|
+    :Show seller details\n(הצגת פרטי מוכר);
+    
+    |Admin|
+    :Review seller information:\n- Personal details\n- Shop information\n- Business documents\n(בדיקת מידע מוכר);
+    
+    |Admin|
+    :Make decision (approve/reject)\n(קבלת החלטה - אישור/דחייה);
+    
+    |Backend Controller|
+    :sellerController.seller_status_update()\n(עדכון סטטוס מוכר);
+    
+    |Database|
+    :Update seller status:\n- 'active' (approved)\n- 'deactive' (rejected)\n(עדכון סטטוס מוכר);
+    
+    |Notification System|
+    :Send notification to seller\n(שליחת הודעה למוכר);
+    
+    |User Management|
+    :Show status update confirmation\n(הצגת אישור עדכון סטטוס);
+    
+  elseif (action) then (View All Sellers)
+    |Backend Controller|
+    :sellerController.get_sellers()\n(קבלת כל המוכרים);
+    
+    |Database|
+    :Query all sellers with pagination\n(שאילתה לכל המוכרים עם חלוקה לעמודים);
+    
+    |User Management|
+    :Display sellers table:\n- Name, email, status\n- Shop name, payment status\n- Registration date\n- Actions (view, edit, suspend)\n(הצגת טבלת מוכרים);
+    
+  elseif (action) then (Suspend/Activate Seller)
+    |User Management|
+    :Show confirmation dialog\n(הצגת דיאלוג אישור);
+    
+    |Admin|
+    :Confirm action\n(אישור פעולה);
+    
+    |Backend Controller|
+    :sellerController.seller_status_update()\n(עדכון סטטוס מוכר);
+    
+    |Database|
+    :Update seller status and payment\n(עדכון סטטוס מוכר ותשלום);
+    
+    |User Management|
+    :Show action confirmation\n(הצגת אישור פעולה);
+  endif
+  
+elseif (user type) then (Manage Customers)
+  |User Management|
+  :Navigate to Customers section\n(מעבר לקטע לקוחות);
+  
+  if (What action?) then (View All Customers)
+    |Backend Controller|
+    :customerController.get_customers()\n(קבלת כל הלקוחות);
+    
+    |Database|
+    :Query customer collection\n(שאילתה לאוסף לקוחות);
+    
+    |User Management|
+    :Display customers table:\n- Name, email\n- Registration date\n- Order count\n- Total spent\n- Status\n(הצגת טבלת לקוחות);
+    
+  elseif (action) then (View Customer Details)
+    |Backend Controller|
+    :customerController.get_customer_details()\n(קבלת פרטי לקוח);
+    
+    |Database|
+    :Get customer info and order history\n(קבלת מידע לקוח והיסטוריית הזמנות);
+    
+    |User Management|
+    :Display detailed customer view:\n- Personal information\n- Order history\n- Payment history\n- Support tickets\n(הצגת תצוגה מפורטת של לקוח);
+    
+  elseif (action) then (Search Customers)
+    |User Management|
+    :Apply search criteria:\n- Name, email\n- Registration date range\n- Order status\n(החלת קריטריוני חיפוש);
+    
+    |Backend Controller|
+    :customerController.search_customers()\n(חיפוש לקוחות);
+    
+    |Database|
+    :Execute search query\n(ביצוע שאילתת חיפוש);
+    
+    |User Management|
+    :Display search results\n(הצגת תוצאות חיפוש);
+  endif
+  
+elseif (user type) then (Manage Admins)
+  |User Management|
+  :Navigate to Admin Management\n(מעבר לניהול מנהלים);
+  
+  if (What action?) then (View All Admins)
+    |Backend Controller|
+    :adminController.get_admins()\n(קבלת כל המנהלים);
+    
+    |Database|
+    :Query admin collection\n(שאילתה לאוסף מנהלים);
+    
+    |User Management|
+    :Display admins table:\n- Name, email, role\n- Last login\n- Permissions\n- Status\n(הצגת טבלת מנהלים);
+    
+  elseif (action) then (Add New Admin)
+    |User Management|
+    :Show add admin form\n(הצגת טופס הוספת מנהל);
+    
+    |Admin|
+    :Fill admin details:\n- Name, email\n- Password\n- Role, permissions\n(מילוי פרטי מנהל);
+    
+    |Backend Controller|
+    :adminController.create_admin()\n(יצירת מנהל חדש);
+    
+    |Database|
+    :Create new admin document\n(יצירת מסמך מנהל חדש);
+    
+    |User Management|
+    :Show creation success\n(הצגת הצלחת יצירה);
+    
+  elseif (action) then (Edit Admin Permissions)
+    |User Management|
+    :Show permissions form\n(הצגת טופס הרשאות);
+    
+    |Admin|
+    :Modify permissions\n(שינוי הרשאות);
+    
+    |Backend Controller|
+    :adminController.update_permissions()\n(עדכון הרשאות);
+    
+    |Database|
+    :Update admin permissions\n(עדכון הרשאות מנהל);
+    
+    |User Management|
+    :Show update confirmation\n(הצגת אישור עדכון);
+  endif
+endif
+
+|User Management|
+:Generate user activity reports:\n- Registration trends\n- User engagement\n- Support metrics\n(יצירת דוחות פעילות משתמשים);
+
+|Admin|
+if (Continue managing?) then (yes)
+  :Select another user type/action\n(בחירת סוג משתמש/פעולה נוספת);
+else (no)
+  :Exit user management\n(יציאה מניהול משתמשים);
+  stop
+endif
+
+note right
+  User management capabilities:
+  - Seller approval workflow
+  - Customer support and monitoring
+  - Admin role and permission management
+  - User activity tracking
+  - Bulk operations support
+  
+  (יכולות ניהול משתמשים:
+  תהליך אישור מוכרים, תמיכה ומעקב לקוחות,
+  ניהול תפקידים והרשאות מנהלים)
+end note
+
+@enduml

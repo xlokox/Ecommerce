@@ -1,0 +1,158 @@
+@startuml Manage Products (Admin) Activity Diagram
+
+!theme plain
+title Manage Products Use Case - Admin\n(ניהול מוצרים - מנהל מערכת)
+
+|Admin|
+start
+:Admin logs into dashboard\n(מנהל נכנס ללוח בקרה);
+
+|Frontend Dashboard|
+:Load admin dashboard\n(טעינת לוח בקרה מנהל);
+:Navigate to Products section\n(מעבר לקטע מוצרים);
+
+|Product Management|
+:Display products management interface\n(הצגת ממשק ניהול מוצרים);
+
+|Admin|
+if (What action?) then (View All Products)
+  |Product Management|
+  :GET /api/products\n(קבלת כל המוצרים);
+  
+  |Backend Controller|
+  :productController.products_get()\n(קבלת רשימת מוצרים);
+  
+  |Database|
+  :Query all products with pagination\n(שאילתה לכל המוצרים עם חלוקה לעמודים);
+  
+  |Product Management|
+  :Display products table:\n- Product name, category\n- Price, stock, rating\n- Seller information\n- Actions (edit, delete)\n(הצגת טבלת מוצרים);
+  
+elseif (action) then (Add New Product)
+  |Product Management|
+  :Show add product form\n(הצגת טופס הוספת מוצר);
+  
+  |Admin|
+  :Fill product details:\n- Name, description\n- Category, brand\n- Price, stock\n- Images upload\n(מילוי פרטי מוצר);
+  
+  |Product Management|
+  :Validate form data\n(בדיקת תקינות נתוני טופס);
+  
+  |Backend Controller|
+  :productController.add_product()\n(הוספת מוצר חדש);
+  
+  |File Upload|
+  :Upload images to Cloudinary\n(העלאת תמונות ל-Cloudinary);
+  
+  |Database|
+  :Create new product document\n(יצירת מסמך מוצר חדש);
+  
+  |Product Management|
+  :Show success message\n(הצגת הודעת הצלחה);
+  
+elseif (action) then (Edit Product)
+  |Product Management|
+  :GET /api/product/:productId\n(קבלת פרטי מוצר);
+  
+  |Backend Controller|
+  :productController.product_get()\n(קבלת מוצר ספציפי);
+  
+  |Database|
+  :Find product by ID\n(חיפוש מוצר לפי מזהה);
+  
+  |Product Management|
+  :Pre-fill edit form with current data\n(מילוי מוקדם של טופס עריכה);
+  
+  |Admin|
+  :Modify product details\n(שינוי פרטי מוצר);
+  
+  |Product Management|
+  :Validate updated data\n(בדיקת תקינות נתונים מעודכנים);
+  
+  |Backend Controller|
+  :productController.product_update()\n(עדכון מוצר);
+  
+  |File Upload|
+  if (New images uploaded?) then (yes)
+    :Upload new images to Cloudinary\n(העלאת תמונות חדשות);
+    :Delete old images\n(מחיקת תמונות ישנות);
+  else (no)
+    :Keep existing images\n(שמירת תמונות קיימות);
+  endif
+  
+  |Database|
+  :Update product document\n(עדכון מסמך מוצר);
+  
+  |Product Management|
+  :Show update success message\n(הצגת הודעת עדכון מוצלח);
+  
+elseif (action) then (Delete Product)
+  |Product Management|
+  :Show confirmation dialog\n(הצגת דיאלוג אישור);
+  
+  |Admin|
+  :Confirm deletion\n(אישור מחיקה);
+  
+  |Backend Controller|
+  :productController.product_delete()\n(מחיקת מוצר);
+  
+  |File Upload|
+  :Delete product images from Cloudinary\n(מחיקת תמונות מוצר מ-Cloudinary);
+  
+  |Database|
+  :Remove product document\n(הסרת מסמך מוצר);
+  :Update related collections:\n- Remove from carts\n- Remove from wishlists\n(עדכון אוספים קשורים);
+  
+  |Product Management|
+  :Show deletion success message\n(הצגת הודעת מחיקה מוצלחת);
+  :Refresh products list\n(רענון רשימת מוצרים);
+  
+elseif (action) then (Search/Filter Products)
+  |Product Management|
+  :Apply search/filter criteria:\n- Product name\n- Category\n- Price range\n- Stock status\n- Seller\n(החלת קריטריוני חיפוש/סינון);
+  
+  |Backend Controller|
+  :productController.products_get()\nwith search parameters\n(קבלת מוצרים עם פרמטרי חיפוש);
+  
+  |Database|
+  :Execute filtered query\n(ביצוע שאילתה מסוננת);
+  
+  |Product Management|
+  :Display filtered results\n(הצגת תוצאות מסוננות);
+  
+elseif (action) then (Manage Categories)
+  |Product Management|
+  :Navigate to categories management\n(מעבר לניהול קטגוריות);
+  
+  |Backend Controller|
+  :categoryController functions\n(פונקציות בקר קטגוריות);
+  
+  |Database|
+  :CRUD operations on categories\n(פעולות CRUD על קטגוריות);
+  
+  |Product Management|
+  :Show categories management interface\n(הצגת ממשק ניהול קטגוריות);
+endif
+
+|Admin|
+if (Continue managing?) then (yes)
+  :Select another action\n(בחירת פעולה נוספת);
+else (no)
+  :Exit products management\n(יציאה מניהול מוצרים);
+  stop
+endif
+
+note right
+  Admin product management includes:
+  - Full CRUD operations on products
+  - Image management via Cloudinary
+  - Category and inventory management
+  - Search and filtering capabilities
+  - Bulk operations support
+  
+  (ניהול מוצרים מנהל כולל:
+  פעולות CRUD מלאות, ניהול תמונות,
+  ניהול קטגוריות ומלאי, חיפוש וסינון)
+end note
+
+@enduml

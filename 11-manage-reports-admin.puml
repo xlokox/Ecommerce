@@ -1,0 +1,167 @@
+@startuml Manage Reports (Admin) Activity Diagram
+
+!theme plain
+title Manage Reports Use Case - Admin\n(ניהול דוחות - מנהל מערכת)
+
+|Admin|
+start
+:Admin logs into dashboard\n(מנהל נכנס ללוח בקרה);
+
+|Frontend Dashboard|
+:Load admin dashboard\n(טעינת לוח בקרה מנהל);
+
+|Dashboard Controller|
+:dashboardController.get_admin_dashboard_data()\n(קבלת נתוני לוח בקרה מנהל);
+
+|Database Aggregation|
+:Aggregate data from multiple collections:\n- myShopWallet (sales)\n- productModel (products)\n- customerOrder (orders)\n- sellerModel (sellers)\n- adminSellerMessage (messages)\n(צבירת נתונים מאוספים מרובים);
+
+|Dashboard Display|
+:Display main dashboard metrics:\n- Total Sales Revenue\n- Total Products Count\n- Total Orders Count\n- Total Sellers Count\n- Recent Messages\n- Recent Orders\n(הצגת מדדי לוח בקרה עיקריים);
+
+|Admin|
+if (What report type?) then (Sales Reports)
+  |Reports Section|
+  :Navigate to Sales Analytics\n(מעבר לאנליטיקת מכירות);
+  
+  |Chart Component|
+  :Render sales charts:\n- Monthly revenue trends\n- Product category performance\n- Seller performance comparison\n(הצגת גרפי מכירות);
+  
+  |Database|
+  :Query sales data with date ranges\n(שאילתת נתוני מכירות עם טווחי תאריכים);
+  
+  |Reports Section|
+  :Display interactive charts:\n- Bar charts for orders\n- Line charts for revenue\n- Pie charts for categories\n(הצגת גרפים אינטראקטיביים);
+  
+elseif (report type) then (Order Reports)
+  |Reports Section|
+  :Navigate to Order Analytics\n(מעבר לאנליטיקת הזמנות);
+  
+  |Database|
+  :Aggregate order statistics:\n- Orders by status\n- Orders by date range\n- Average order value\n- Top selling products\n(צבירת סטטיסטיקות הזמנות);
+  
+  |Reports Section|
+  :Display order metrics:\n- Pending orders count\n- Processing orders count\n- Completed orders count\n- Cancelled orders count\n- Order fulfillment rates\n(הצגת מדדי הזמנות);
+  
+elseif (report type) then (Product Reports)
+  |Reports Section|
+  :Navigate to Product Analytics\n(מעבר לאנליטיקת מוצרים);
+  
+  |Database|
+  :Query product performance data:\n- Best selling products\n- Low stock alerts\n- Product ratings analysis\n- Category performance\n(שאילתת נתוני ביצועי מוצרים);
+  
+  |Reports Section|
+  :Display product insights:\n- Top products by sales\n- Inventory status\n- Rating distributions\n- Category trends\n(הצגת תובנות מוצרים);
+  
+elseif (report type) then (Seller Reports)
+  |Reports Section|
+  :Navigate to Seller Analytics\n(מעבר לאנליטיקת מוכרים);
+  
+  |Database|
+  :Aggregate seller performance:\n- Sales by seller\n- Product count by seller\n- Seller ratings\n- Commission calculations\n(צבירת ביצועי מוכרים);
+  
+  |Reports Section|
+  :Display seller metrics:\n- Top performing sellers\n- Seller growth trends\n- Commission reports\n- Seller status distribution\n(הצגת מדדי מוכרים);
+  
+elseif (report type) then (Financial Reports)
+  |Reports Section|
+  :Navigate to Financial Analytics\n(מעבר לאנליטיקה פיננסית);
+  
+  |Database|
+  :Calculate financial metrics:\n- Total platform revenue\n- Commission earnings\n- Payment gateway fees\n- Refunds and chargebacks\n(חישוב מדדים פיננסיים);
+  
+  |Reports Section|
+  :Display financial dashboard:\n- Revenue breakdown\n- Profit margins\n- Payment method analysis\n- Financial trends\n(הצגת לוח בקרה פיננסי);
+  
+elseif (report type) then (User Activity Reports)
+  |Reports Section|
+  :Navigate to User Analytics\n(מעבר לאנליטיקת משתמשים);
+  
+  |Database|
+  :Query user activity data:\n- User registration trends\n- Login frequency\n- Purchase behavior\n- Support ticket volume\n(שאילתת נתוני פעילות משתמשים);
+  
+  |Reports Section|
+  :Display user insights:\n- Active users count\n- User engagement metrics\n- Customer lifetime value\n- Churn analysis\n(הצגת תובנות משתמשים);
+endif
+
+|Admin|
+if (Need detailed report?) then (yes)
+  |Reports Section|
+  :Select date range and filters\n(בחירת טווח תאריכים ומסננים);
+  
+  |Database|
+  :Execute filtered queries\n(ביצוע שאילתות מסוננות);
+  
+  |Reports Section|
+  :Generate detailed report\n(יצירת דוח מפורט);
+  
+  |Admin|
+  if (Export report?) then (yes)
+    |Export Service|
+    :Generate report in format:\n- PDF\n- Excel\n- CSV\n(יצירת דוח בפורמט);
+    
+    |Reports Section|
+    :Download report file\n(הורדת קובץ דוח);
+  else (no)
+    |Reports Section|
+    :View report online\n(צפייה בדוח באינטרנט);
+  endif
+else (no)
+  |Reports Section|
+  :Continue with dashboard view\n(המשך עם תצוגת לוח בקרה);
+endif
+
+|Admin|
+if (Set up alerts?) then (yes)
+  |Alert System|
+  :Configure automated alerts:\n- Low stock warnings\n- High order volume\n- Payment failures\n- System errors\n(הגדרת התראות אוטומטיות);
+  
+  |Database|
+  :Save alert configurations\n(שמירת הגדרות התראות);
+  
+  |Reports Section|
+  :Show alert confirmation\n(הצגת אישור התראות);
+else (no)
+  |Reports Section|
+  :Continue with current settings\n(המשך עם הגדרות נוכחיות);
+endif
+
+|Admin|
+if (Schedule reports?) then (yes)
+  |Scheduler Service|
+  :Set up automated report generation:\n- Daily sales summary\n- Weekly performance report\n- Monthly financial report\n(הגדרת יצירת דוחות אוטומטית);
+  
+  |Database|
+  :Save schedule configurations\n(שמירת הגדרות לוח זמנים);
+  
+  |Reports Section|
+  :Show schedule confirmation\n(הצגת אישור לוח זמנים);
+else (no)
+  |Reports Section|
+  :Manual report generation only\n(יצירת דוחות ידנית בלבד);
+endif
+
+|Admin|
+if (Continue with reports?) then (yes)
+  :Select another report type\n(בחירת סוג דוח נוסף);
+else (no)
+  :Exit reports section\n(יציאה מקטע דוחות);
+  stop
+endif
+
+note right
+  Admin reporting capabilities include:
+  - Real-time dashboard metrics
+  - Interactive charts and graphs
+  - Customizable date ranges
+  - Export functionality (PDF, Excel, CSV)
+  - Automated alerts and notifications
+  - Scheduled report generation
+  - Multi-dimensional data analysis
+  
+  (יכולות דיווח מנהל כוללות:
+  מדדי לוח בקרה בזמן אמת, גרפים אינטראקטיביים,
+  ייצוא דוחות, התראות אוטומטיות)
+end note
+
+@enduml

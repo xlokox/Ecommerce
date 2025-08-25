@@ -1,0 +1,109 @@
+@startuml Place Order Sequence Diagram
+
+!theme plain
+title Place Order Use Case\n(ביצוע הזמנה)
+
+actor "User\n(משתמש)" as User
+participant "Shipping Page\n(עמוד משלוח)" as ShippingPage
+participant "Order Reducer\n(Redux)" as OrderReducer
+participant "API Layer" as API
+participant "Order Controller" as OrderController
+participant "Customer Order Model\n(MongoDB)" as CustomerOrderModel
+participant "Auth Order Model\n(MongoDB)" as AuthOrderModel
+participant "Card Model\n(MongoDB)" as CardModel
+
+User -> ShippingPage: Fill shipping information\n(מילוי פרטי משלוח)
+activate ShippingPage
+
+ShippingPage -> ShippingPage: Validate shipping form:\n- Name, Address\n- Phone, Email\n- City, Area\n(בדיקת תקינות טופס משלוח)
+
+User -> ShippingPage: Click "Place Order" button\n(לחיצה על "בצע הזמנה")
+
+ShippingPage -> ShippingPage: Prepare order data:\n- price (total amount)\n- products (cart items)\n- shipping_fee\n- shippingInfo\n- userId\n(הכנת נתוני הזמנה)
+
+ShippingPage -> OrderReducer: dispatch(place_order(orderData))
+activate OrderReducer
+
+OrderReducer -> API: POST /api/order/place-order
+activate API
+
+API -> OrderController: place_order(req, res)
+activate OrderController
+
+OrderController -> OrderController: Validate required fields\n(בדיקת שדות חובה)
+
+alt Missing required fields
+    OrderController --> API: 400 - Missing required fields
+    API --> OrderReducer: Error response
+    OrderReducer --> ShippingPage: Show error message
+    ShippingPage --> User: Display validation error\n(הצגת שגיאת תקינות)
+else Valid order data
+    OrderController -> OrderController: Process products:\n- Group by sellerId\n- Calculate seller totals\n- Prepare order structures\n(עיבוד מוצרים לפי מוכרים)
+    
+    OrderController -> OrderController: Generate order date\n(יצירת תאריך הזמנה)
+    
+    OrderController -> CustomerOrderModel: create(customerOrder)
+    activate CustomerOrderModel
+    note right of CustomerOrderModel
+      Customer Order includes:
+      - customerId
+      - shippingInfo
+      - products array
+      - total price + shipping
+      - payment_status: 'unpaid'
+      - delivery_status: 'pending'
+    end note
+    CustomerOrderModel --> OrderController: Order created with orderId\n(הזמנה נוצרה עם מזהה)
+    deactivate CustomerOrderModel
+    
+    OrderController -> OrderController: Prepare auth orders for each seller\n(הכנת הזמנות מורשות לכל מוכר)
+    
+    OrderController -> AuthOrderModel: insertMany(authorOrderData)
+    activate AuthOrderModel
+    note right of AuthOrderModel
+      Auth Orders (one per seller):
+      - orderId (reference to customer order)
+      - sellerId
+      - products (seller's products only)
+      - price (seller's total)
+      - payment_status: 'unpaid'
+      - delivery_status: 'pending'
+    end note
+    AuthOrderModel --> OrderController: Seller orders created\n(הזמנות מוכרים נוצרו)
+    deactivate AuthOrderModel
+    
+    OrderController -> CardModel: deleteMany({_id: {$in: cardIds}})
+    activate CardModel
+    CardModel --> OrderController: Cart items removed\n(פריטי עגלה הוסרו)
+    deactivate CardModel
+    
+    OrderController -> OrderController: Set payment timeout (15 seconds)\nfor automatic cancellation\n(הגדרת זמן קצוב לתשלום)
+    
+    OrderController --> API: 200 - Order Placed Successfully + orderId
+    deactivate OrderController
+    
+    API --> OrderReducer: Success response with orderId
+    deactivate API
+    
+    OrderReducer -> OrderReducer: Update order state\n(עדכון מצב הזמנה)
+    
+    OrderReducer --> ShippingPage: Order placed successfully
+    deactivate OrderReducer
+    
+    ShippingPage --> User: Redirect to payment page\nwith orderId\n(הפניה לעמוד תשלום)
+end
+
+deactivate ShippingPage
+
+note right of OrderController
+  Payment timeout mechanism:
+  If payment is not completed within 15 seconds,
+  the order status changes to 'cancelled'
+  automatically.
+  
+  (מנגנון זמן קצוב לתשלום:
+  אם התשלום לא מושלם תוך 15 שניות,
+  סטטוס ההזמנה משתנה ל'מבוטל' אוטומטית)
+end note
+
+@enduml

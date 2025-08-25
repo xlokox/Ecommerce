@@ -1,0 +1,213 @@
+@startuml Chat with Customers Sequence Diagram
+
+!theme plain
+title Chat with Customers Use Case\n(צ'אט עם הלקוחות)
+
+actor "Customer\n(לקוח)" as Customer
+actor "Seller\n(מוכר)" as Seller
+actor "Admin\n(מנהל)" as Admin
+participant "Chat Component\n(רכיב צ'אט)" as ChatComponent
+participant "Chat Reducer\n(Redux)" as ChatReducer
+participant "Socket.IO\n(WebSocket)" as Socket
+participant "API Layer" as API
+participant "Chat Controller" as ChatController
+participant "Seller Customer Message\n(MongoDB)" as SellerCustomerMsg
+participant "Admin Seller Message\n(MongoDB)" as AdminSellerMsg
+participant "Seller Customer Model\n(MongoDB)" as SellerCustomerModel
+
+== Customer-Seller Chat ==
+
+Customer -> ChatComponent: Open chat with seller\n(פתיחת צ'אט עם מוכר)
+activate ChatComponent
+
+ChatComponent -> ChatReducer: dispatch(add_customer_friend({sellerId, userId}))
+activate ChatReducer
+
+ChatReducer -> API: POST /api/chat/customer/add-customer-friend
+activate API
+
+API -> ChatController: add_customer_friend(req, res)
+activate ChatController
+
+ChatController -> SellerCustomerModel: Check if friendship exists\n(בדיקה אם חברות קיימת)
+activate SellerCustomerModel
+
+alt Friendship doesn't exist
+    SellerCustomerModel -> SellerCustomerModel: Add seller to customer's friends\n(הוספת מוכר לחברים של לקוח)
+    SellerCustomerModel -> SellerCustomerModel: Add customer to seller's friends\n(הוספת לקוח לחברים של מוכר)
+else Friendship exists
+    SellerCustomerModel --> ChatController: Friendship already exists\n(חברות כבר קיימת)
+end
+
+SellerCustomerModel --> ChatController: Friendship established\n(חברות הוקמה)
+deactivate SellerCustomerModel
+
+ChatController --> API: 201 - Friend added successfully
+deactivate ChatController
+
+API --> ChatReducer: Success response
+deactivate API
+
+ChatReducer --> ChatComponent: Friend relationship established
+deactivate ChatReducer
+
+Customer -> ChatComponent: Type and send message\n(הקלדה ושליחת הודעה)
+
+ChatComponent -> ChatReducer: dispatch(customer_message_add({userId, text, sellerId, name}))
+activate ChatReducer
+
+ChatReducer -> API: POST /api/chat/customer/send-message-to-seller
+activate API
+
+API -> ChatController: customer_message_add(req, res)
+activate ChatController
+
+ChatController -> SellerCustomerMsg: create({senderId: userId, receverId: sellerId, message: text})
+activate SellerCustomerMsg
+SellerCustomerMsg --> ChatController: Message saved\n(הודעה נשמרה)
+deactivate SellerCustomerMsg
+
+ChatController -> ChatController: updateFriendsOrder()\nfor both users\n(עדכון סדר חברים לשני המשתמשים)
+
+ChatController --> API: 201 - Message sent successfully
+deactivate ChatController
+
+API --> ChatReducer: Success response
+deactivate API
+
+ChatReducer -> Socket: Emit message to seller\n(שליחת הודעה למוכר דרך WebSocket)
+activate Socket
+
+Socket --> Seller: Real-time message notification\n(התראת הודעה בזמן אמת)
+
+ChatReducer --> ChatComponent: Message added to chat
+deactivate ChatReducer
+
+ChatComponent --> Customer: Display sent message\n(הצגת הודעה שנשלחה)
+
+== Seller Response ==
+
+Seller -> ChatComponent: View customer message\n(צפייה בהודעת לקוח)
+
+Seller -> ChatComponent: Type and send reply\n(הקלדה ושליחת תגובה)
+
+ChatComponent -> ChatReducer: dispatch(customer_message_add({userId: sellerId, text, receverId: customerId, name}))
+activate ChatReducer
+
+ChatReducer -> API: POST /api/chat/seller/send-message-to-customer
+activate API
+
+API -> ChatController: customer_message_add(req, res)
+activate ChatController
+
+ChatController -> SellerCustomerMsg: create({senderId: sellerId, receverId: customerId, message: text})
+activate SellerCustomerMsg
+SellerCustomerMsg --> ChatController: Reply saved\n(תגובה נשמרה)
+deactivate SellerCustomerMsg
+
+ChatController --> API: 201 - Reply sent successfully
+deactivate ChatController
+
+API --> ChatReducer: Success response
+deactivate API
+
+ChatReducer -> Socket: Emit reply to customer\n(שליחת תגובה ללקוח דרך WebSocket)
+
+Socket --> Customer: Real-time reply notification\n(התראת תגובה בזמן אמת)
+deactivate Socket
+
+ChatReducer --> ChatComponent: Reply added to chat
+deactivate ChatReducer
+
+ChatComponent --> Seller: Display sent reply\n(הצגת תגובה שנשלחה)
+
+== Admin-Seller Chat ==
+
+Admin -> ChatComponent: Open chat with seller\n(פתיחת צ'אט עם מוכר)
+activate ChatComponent
+
+ChatComponent -> ChatReducer: dispatch(get_sellers())
+activate ChatReducer
+
+ChatReducer -> API: GET /api/chat/admin/get-sellers
+activate API
+
+API -> ChatController: get_sellers(req, res)
+activate ChatController
+
+ChatController -> SellerCustomerModel: find({}) - Get all sellers\n(קבלת כל המוכרים)
+activate SellerCustomerModel
+SellerCustomerModel --> ChatController: Sellers list\n(רשימת מוכרים)
+deactivate SellerCustomerModel
+
+ChatController --> API: 200 - Sellers list
+deactivate ChatController
+
+API --> ChatReducer: Success response with sellers
+deactivate API
+
+ChatReducer --> ChatComponent: Sellers list updated
+deactivate ChatReducer
+
+Admin -> ChatComponent: Select seller and send message\n(בחירת מוכר ושליחת הודעה)
+
+ChatComponent -> ChatReducer: dispatch(send_message_seller_admin({senderId: '', receverId: sellerId, message, senderName: 'Admin Support'}))
+activate ChatReducer
+
+ChatReducer -> API: POST /api/chat/message-send-seller-admin
+activate API
+
+API -> ChatController: seller_admin_message_insert(req, res)
+activate ChatController
+
+ChatController -> AdminSellerMsg: create({senderId: '', receverId: sellerId, message, senderName})
+activate AdminSellerMsg
+AdminSellerMsg --> ChatController: Admin message saved\n(הודעת מנהל נשמרה)
+deactivate AdminSellerMsg
+
+ChatController --> API: 200 - Admin message sent
+deactivate ChatController
+
+API --> ChatReducer: Success response
+deactivate API
+
+ChatReducer -> Socket: Emit message to seller\n(שליחת הודעה למוכר)
+activate Socket
+
+Socket --> Seller: Admin message notification\n(התראת הודעת מנהל)
+deactivate Socket
+
+ChatReducer --> ChatComponent: Admin message added
+deactivate ChatReducer
+
+ChatComponent --> Admin: Display sent message\n(הצגת הודעה שנשלחה)
+
+deactivate ChatComponent
+
+note right of Socket
+  WebSocket (Socket.IO) enables:
+  - Real-time message delivery
+  - Online status indicators
+  - Typing indicators
+  - Message read receipts
+  - Push notifications
+  
+  (WebSocket מאפשר:
+  מסירת הודעות בזמן אמת,
+  מחווני סטטוס, התראות)
+end note
+
+note right of ChatController
+  Chat system supports:
+  - Customer ↔ Seller communication
+  - Admin ↔ Seller communication
+  - Message history persistence
+  - Friend relationship management
+  - Real-time notifications
+  
+  (מערכת צ'אט תומכת ב:
+  תקשורת לקוח-מוכר, מנהל-מוכר,
+  שמירת היסטוריה, ניהול חברויות)
+end note
+
+@enduml

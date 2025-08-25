@@ -1,0 +1,132 @@
+@startuml View Order History Sequence Diagram
+
+!theme plain
+title View Order History Use Case\n(צפייה בהיסטוריית הזמנות)
+
+actor "User\n(משתמש)" as User
+participant "Dashboard Page\n(עמוד לוח בקרה)" as DashboardPage
+participant "Orders Component\n(רכיב הזמנות)" as OrdersComponent
+participant "Order Reducer\n(Redux)" as OrderReducer
+participant "API Layer" as API
+participant "Order Controller" as OrderController
+participant "Customer Order Model\n(MongoDB)" as CustomerOrderModel
+participant "Auth Order Model\n(MongoDB)" as AuthOrderModel
+
+User -> DashboardPage: Navigate to user dashboard\n(מעבר ללוח בקרה של המשתמש)
+activate DashboardPage
+
+DashboardPage -> DashboardPage: Check user authentication\n(בדיקת אימות משתמש)
+
+User -> DashboardPage: Click "My Orders" tab\n(לחיצה על לשונית "ההזמנות שלי")
+
+DashboardPage -> OrdersComponent: Load Orders component\n(טעינת רכיב הזמנות)
+activate OrdersComponent
+
+OrdersComponent -> OrdersComponent: Get userId from auth state\n(קבלת מזהה משתמש ממצב האימות)
+
+OrdersComponent -> OrderReducer: dispatch(get_orders(userId, status))
+activate OrderReducer
+
+OrderReducer -> API: GET /api/home/customer/get-orders/:customerId/:status
+activate API
+
+API -> OrderController: get_orders(req, res)
+activate OrderController
+
+OrderController -> OrderController: Extract customerId and status\nfrom request parameters\n(חילוץ מזהה לקוח וסטטוס מפרמטרי הבקשה)
+
+OrderController -> OrderController: Convert customerId to ObjectId\n(המרת מזהה לקוח ל-ObjectId)
+
+OrderController -> CustomerOrderModel: find({customerId}).sort({createdAt: -1})
+activate CustomerOrderModel
+CustomerOrderModel --> OrderController: Customer orders list\n(רשימת הזמנות לקוח)
+deactivate CustomerOrderModel
+
+OrderController -> OrderController: Filter orders by status if specified:\n- 'pending'\n- 'processing' \n- 'warehouse'\n- 'placed'\n- 'cancelled'\n(סינון הזמנות לפי סטטוס)
+
+OrderController --> API: 200 - Orders list with details
+deactivate OrderController
+
+API --> OrderReducer: Success response with orders
+deactivate API
+
+OrderReducer -> OrderReducer: Update orders state:\n- myOrders array\n- Order counts by status\n(עדכון מצב הזמנות)
+
+OrderReducer --> OrdersComponent: Orders data updated
+deactivate OrderReducer
+
+OrdersComponent -> OrdersComponent: Render orders list:\n- Order ID and date\n- Products summary\n- Total amount\n- Payment status\n- Delivery status\n(הצגת רשימת הזמנות)
+
+OrdersComponent --> User: Display order history\n(הצגת היסטוריית הזמנות)
+
+alt User wants to view order details
+    User -> OrdersComponent: Click on specific order\n(לחיצה על הזמנה ספציפית)
+    
+    OrdersComponent -> OrderReducer: dispatch(get_order_details(orderId))
+    activate OrderReducer
+    
+    OrderReducer -> API: GET /api/home/customer/get-order-details/:orderId
+    activate API
+    
+    API -> OrderController: get_order_details(req, res)
+    activate OrderController
+    
+    OrderController -> CustomerOrderModel: findById(orderId).populate('products')
+    activate CustomerOrderModel
+    CustomerOrderModel --> OrderController: Detailed order information\n(מידע מפורט על ההזמנה)
+    deactivate CustomerOrderModel
+    
+    OrderController -> AuthOrderModel: find({orderId}).populate('sellerId')
+    activate AuthOrderModel
+    AuthOrderModel --> OrderController: Seller-specific order details\n(פרטי הזמנה ספציפיים למוכר)
+    deactivate AuthOrderModel
+    
+    OrderController --> API: 200 - Detailed order information
+    deactivate OrderController
+    
+    API --> OrderReducer: Success response with order details
+    deactivate API
+    
+    OrderReducer -> OrderReducer: Update order details state\n(עדכון מצב פרטי הזמנה)
+    
+    OrderReducer --> OrdersComponent: Order details updated
+    deactivate OrderReducer
+    
+    OrdersComponent -> OrdersComponent: Navigate to OrderDetails component\n(מעבר לרכיב פרטי הזמנה)
+    
+    OrdersComponent --> User: Display detailed order view:\n- Complete product list\n- Shipping information\n- Payment details\n- Tracking information\n(הצגת תצוגה מפורטת של ההזמנה)
+end
+
+alt User wants to filter orders
+    User -> OrdersComponent: Select order status filter\n(בחירת מסנן סטטוס הזמנה)
+    
+    OrdersComponent -> OrderReducer: dispatch(get_orders(userId, selectedStatus))
+    activate OrderReducer
+    
+    OrderReducer -> API: GET /api/home/customer/get-orders/:customerId/:status
+    activate API
+    
+    API -> OrderController: get_orders with status filter
+    activate OrderController
+    
+    OrderController -> CustomerOrderModel: find({customerId, delivery_status: status})
+    activate CustomerOrderModel
+    CustomerOrderModel --> OrderController: Filtered orders\n(הזמנות מסוננות)
+    deactivate CustomerOrderModel
+    
+    OrderController --> API: 200 - Filtered orders list
+    deactivate OrderController
+    
+    API --> OrderReducer: Success response
+    deactivate API
+    
+    OrderReducer --> OrdersComponent: Filtered orders displayed
+    deactivate OrderReducer
+    
+    OrdersComponent --> User: Show filtered results\n(הצגת תוצאות מסוננות)
+end
+
+deactivate OrdersComponent
+deactivate DashboardPage
+
+@enduml

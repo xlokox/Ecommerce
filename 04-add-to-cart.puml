@@ -1,0 +1,94 @@
+@startuml Add Product to Cart Sequence Diagram
+
+!theme plain
+title Add Product to Cart Use Case\n(הוספת מוצר לעגלה)
+
+actor "User\n(משתמש)" as User
+participant "Product Details Page\n(עמוד פרטי מוצר)" as ProductPage
+participant "Cart Reducer\n(Redux)" as CartReducer
+participant "API Layer" as API
+participant "Card Controller" as CardController
+participant "Card Model\n(MongoDB)" as CardModel
+participant "Product Model\n(MongoDB)" as ProductModel
+
+User -> ProductPage: Click "Add to Cart" button\n(לחיצה על "הוסף לעגלה")
+activate ProductPage
+
+ProductPage -> ProductPage: Check if user is logged in\n(בדיקה אם המשתמש מחובר)
+
+alt User not logged in
+    ProductPage --> User: Redirect to login page\n(הפניה לעמוד התחברות)
+else User logged in
+    ProductPage -> ProductPage: Get product details:\n- productId\n- userId\n- quantity\n(קבלת פרטי המוצר)
+    
+    ProductPage -> CartReducer: dispatch(add_to_card({userId, productId, quantity}))
+    activate CartReducer
+    
+    CartReducer -> API: POST /api/home/card/add-to-card
+    activate API
+    
+    API -> CardController: add_to_card(req, res)
+    activate CardController
+    
+    CardController -> CardController: Validate request body\n(בדיקת תקינות הבקשה)
+    
+    alt Missing required fields
+        CardController --> API: 400 - Missing required fields
+        API --> CartReducer: Error response
+        CartReducer --> ProductPage: Show error message
+        ProductPage --> User: Display error\n(הצגת שגיאה)
+    else Valid request
+        CardController -> CardController: Convert IDs to ObjectId\n(המרת מזהים ל-ObjectId)
+        
+        CardController -> CardModel: findOne({userId, productId})
+        activate CardModel
+        CardModel --> CardController: Check if product exists in cart\n(בדיקה אם המוצר קיים בעגלה)
+        deactivate CardModel
+        
+        alt Product already in cart
+            CardController --> API: 404 - Product Already Added To Card
+            API --> CartReducer: Error response
+            CartReducer --> ProductPage: Show error message
+            ProductPage --> User: Display "Product already in cart"\n(הצגת "מוצר כבר בעגלה")
+        else Product not in cart
+            CardController -> CardModel: create({userId, productId, quantity})
+            activate CardModel
+            CardModel --> CardController: Product added to cart\n(מוצר נוסף לעגלה)
+            deactivate CardModel
+            
+            CardController --> API: 201 - Added To Card Successfully
+            deactivate CardController
+            
+            API --> CartReducer: Success response
+            deactivate API
+            
+            CartReducer -> CartReducer: Update cart state\n(עדכון מצב העגלה)
+            
+            CartReducer --> ProductPage: Product added successfully
+            deactivate CartReducer
+            
+            ProductPage --> User: Show success message\n"Added to cart"\n(הצגת הודעת הצלחה)
+        end
+    end
+end
+
+deactivate ProductPage
+
+note right of CardController
+  Validation includes:
+  - userId must be valid ObjectId
+  - productId must be valid ObjectId
+  - quantity must be positive number
+  
+  (בדיקות תקינות כוללות מזהים ותקינות כמות)
+end note
+
+note right of CardModel
+  Cart document structure:
+  - userId: ObjectId (ref to customer)
+  - productId: ObjectId (ref to product)
+  - quantity: Number
+  - timestamps: createdAt, updatedAt
+end note
+
+@enduml

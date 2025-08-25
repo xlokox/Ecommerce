@@ -1,0 +1,88 @@
+@startuml User Login Sequence Diagram
+
+!theme plain
+title User Login Use Case\n(התחברות משתמש)
+
+actor "User\n(משתמש)" as User
+participant "Login Page\n(דף התחברות)" as LoginPage
+participant "Auth Reducer\n(Redux)" as AuthReducer
+participant "API Layer" as API
+participant "Customer Auth Controller" as AuthController
+participant "Customer Model\n(MongoDB)" as CustomerModel
+participant "JWT Token Creator" as TokenCreator
+
+User -> LoginPage: Enter email and password\n(הזנת אימייל וסיסמה)
+activate LoginPage
+
+LoginPage -> LoginPage: Validate form data\n(בדיקת תקינות נתונים)
+
+LoginPage -> AuthReducer: dispatch(customer_login({email, password}))
+activate AuthReducer
+
+AuthReducer -> API: POST /api/customer/login
+activate API
+
+API -> AuthController: customer_login(req, res)
+activate AuthController
+
+AuthController -> AuthController: Validate required fields\n(בדיקת שדות חובה)
+
+AuthController -> CustomerModel: findOne({email}).select('+password')
+activate CustomerModel
+CustomerModel --> AuthController: Customer data with password\n(נתוני לקוח עם סיסמה)
+deactivate CustomerModel
+
+alt Customer not found
+    AuthController --> API: 404 - Email not found
+    API --> AuthReducer: Error response
+    AuthReducer --> LoginPage: Show error message
+    LoginPage --> User: Display "Email not found"\n(הצגת "אימייל לא נמצא")
+else Customer found
+    AuthController -> AuthController: bcrypt.compare(password, hashedPassword)\n(השוואת סיסמאות)
+    
+    alt Password incorrect
+        AuthController --> API: 401 - Incorrect password
+        API --> AuthReducer: Error response
+        AuthReducer --> LoginPage: Show error message
+        LoginPage --> User: Display "Incorrect password"\n(הצגת "סיסמה שגויה")
+    else Password correct
+        AuthController -> TokenCreator: createToken({id, name, email, role: 'customer'})
+        activate TokenCreator
+        TokenCreator --> AuthController: JWT Token
+        deactivate TokenCreator
+        
+        AuthController -> AuthController: Set HTTP-only cookie\n(הגדרת עוגיה מאובטחת)
+        
+        AuthController --> API: 200 - Login successful + token
+        deactivate AuthController
+        
+        API --> AuthReducer: Success response with token
+        deactivate API
+        
+        AuthReducer -> AuthReducer: Store token in localStorage\n(שמירת טוקן במחסן מקומי)
+        
+        AuthReducer --> LoginPage: Login successful
+        deactivate AuthReducer
+        
+        LoginPage --> User: Redirect to dashboard/home\n(הפניה לדף הבית)
+    end
+end
+
+deactivate LoginPage
+
+note right of AuthController
+  Authentication uses bcrypt
+  to compare plain password
+  with hashed password
+  (אימות באמצעות bcrypt)
+end note
+
+note right of TokenCreator
+  JWT token contains:
+  - Customer ID
+  - Name, Email, Method
+  - Role: 'customer'
+  - Expires in 7 days
+end note
+
+@enduml

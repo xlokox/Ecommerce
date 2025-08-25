@@ -1,0 +1,74 @@
+@startuml E-commerce Use Case Diagram
+
+!theme plain
+skinparam actorStyle awesome
+
+' Title
+title E-commerce System Use Case Diagram
+
+' Actors
+actor "User\n(משתמש)" as User
+actor "System Admin\n(מנהל מערכת)" as Admin
+actor "Payment Gateway" as PaymentGW
+
+' System boundary
+rectangle "E-commerce System" {
+    
+    ' User use cases
+    usecase "Register New User\n(רישום משתמש חדש)" as UC1
+    usecase "User Login\n(התחברות משתמש)" as UC2
+    usecase "Browse Products\n(דפדוף במוצרים)" as UC3
+    usecase "Add Product to Cart\n(הוספת מוצר לעגלה)" as UC4
+    usecase "View Shopping Cart\n(צפייה בעגלת הקניות)" as UC5
+    usecase "Place Order\n(ביצוע הזמנה)" as UC6
+    usecase "Make Payment\n(תשלום)" as UC7
+    usecase "View Order History\n(צפייה בהיסטוריית הזמנות)" as UC8
+    
+    ' Admin use cases
+    usecase "Manage Products\n(ניהול מוצרים)" as UC9
+    usecase "Manage Users\n(ניהול משתמשים)" as UC10
+    usecase "Manage Reports\n(ניהול דוחות)" as UC11
+    
+    ' Shared use cases
+    usecase "Chat with Customers\n(צ'אט עם הלקוחות)" as UC12
+}
+
+' User associations
+User --> UC1 : registers
+User --> UC2 : logs in
+User --> UC3 : browses
+User --> UC4 : adds to cart
+User --> UC5 : views cart
+User --> UC6 : places order
+User --> UC7 : makes payment
+User --> UC8 : views history
+User --> UC12 : chats
+
+' Admin associations
+Admin --> UC9 : manages products
+Admin --> UC10 : manages users
+Admin --> UC11 : manages reports
+Admin --> UC12 : provides support
+
+' Payment Gateway association
+PaymentGW --> UC7 : processes payment
+
+' Dependencies (include/extend relationships)
+UC6 ..> UC7 : <<include>>
+UC4 ..> UC5 : <<extend>>
+UC5 ..> UC6 : <<extend>>
+
+' Notes
+note right of UC7
+  Payment is processed through
+  external payment gateway
+  (התשלום מעובד דרך מערכת חיצונית)
+end note
+
+note bottom of UC12
+  Chat functionality is available
+  for both users and admins
+  (צ'אט זמין למשתמשים ומנהלים)
+end note
+
+@enduml
