@@ -19,6 +19,48 @@ const Home = () => {
     topRated_product,
     discount_product
   } = useSelector((state) => state.home);
+  // Featured Products dynamic rotation (mix from multiple pools)
+  const [featuredPool, setFeaturedPool] = React.useState([]);
+  const [featuredProducts, setFeaturedProducts] = React.useState([]);
+
+  const dedupeById = (arr) => {
+    const seen = new Set();
+    return (arr || []).filter(p => {
+      const id = p?._id;
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  };
+  const pickRandom = (arr, count = 8) => {
+    const a = [...(arr || [])];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a.slice(0, count);
+  };
+
+  // Build pool when store data changes
+  React.useEffect(() => {
+    const pool = dedupeById([
+      ...(latest_product || []).flat().filter(Boolean),
+      ...(topRated_product || []).flat().filter(Boolean),
+      ...(discount_product || []).flat().filter(Boolean),
+      ...(products || [])
+    ]).slice(0, 60);
+    setFeaturedPool(pool);
+  }, [products, latest_product, topRated_product, discount_product]);
+
+  // Rotate visible featured products every 2 minutes
+  React.useEffect(() => {
+    if (!featuredPool.length) return;
+    const update = () => setFeaturedProducts(pickRandom(featuredPool, 8));
+    update();
+    const id = setInterval(update, 120000);
+    return () => clearInterval(id);
+  }, [featuredPool]);
+
 
   useEffect(() => {
     dispatch(get_products());
@@ -56,8 +98,8 @@ const Home = () => {
       <Categorys />
 
       <div className="py-[45px]">
-        {products && products.length > 0 && (
-          <FeatureProducts products={products} />
+        {featuredProducts && featuredProducts.length > 0 && (
+          <FeatureProducts products={featuredProducts} />
         )}
       </div>
 

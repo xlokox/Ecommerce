@@ -16,27 +16,27 @@ const Banner = () => {
       return cat?._id || '';
     };
 
-    // Slides synced with the mobile app
-    const slides = [
-      {
-        id: 'sale',
-        image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=2940&q=80',
-        label: 'Our Latest Deals',
-        link: '/products?'
-      },
-      {
-        id: 'electronics',
-        image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2940&q=80',
-        label: 'Our Newst Electronics',
-        link: `/products?category=${getCategoryIdByName('Electronics')}`
-      },
-      {
-        id: 'toys',
-        image: 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=1600&q=80',
-        label: 'Our Newst Toys',
-        link: `/products?category=${getCategoryIdByName('Toys')}`
-      }
-    ];
+    // Fetch campaigns for hero
+    const [slides, setSlides] = React.useState([]);
+    React.useEffect(() => {
+      const fallback = [
+        { id: 'placeholder', image: 'https://dummyimage.com/1600x640/5a51d8/ffffff&text=Your+Campaign+Banner', label: 'EasyShop', link: '/products', titleSize: 48, textColor: '#fff' },
+      ];
+      fetch((process.env.REACT_APP_API_URL || 'http://localhost:5001/api') + '/campaigns/public')
+        .then(r => r.json())
+        .then(d => {
+          const mapped = (d.campaigns || []).map(c => ({
+            id: c._id,
+            image: c.image,
+            label: c.title,
+            link: c.ctaLink || '/products',
+            titleSize: c.titleSize || 48,
+            textColor: c.textColor || '#ffffff'
+          }));
+          setSlides(mapped.length ? mapped : fallback);
+        })
+        .catch(() => setSlides(fallback));
+    }, []);
 
     const responsive = {
          superLargeDesktop: {
@@ -82,8 +82,8 @@ const Banner = () => {
                         />
                         <div className="absolute inset-0 flex items-center justify-center">
                           <span
-                            className="text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-[4px]"
-                            style={{ textShadow: '0 2px 8px rgba(0,0,0,0.65)' }}
+                            className="font-extrabold tracking-[4px]"
+                            style={{ textShadow: '0 2px 8px rgba(0,0,0,0.65)', color: slide.textColor, fontSize: slide.titleSize }}
                           >
                             {slide.label}
                           </span>

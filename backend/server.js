@@ -318,6 +318,8 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import dashboardRoutes from './routes/dashboard/dashboardRoutes.js';
 import syncProductsRoutes from './routes/syncProducts.js';
 
+import campaignRoutes from './routes/dashboard/campaignRoutes.js';
+
 // הגדרת הנתיבים ב־Express
 app.use('/api/home', homeRoutes);
 app.use('/api', authRoutes);
@@ -328,6 +330,8 @@ app.use('/api', productRoutes);
 app.use('/api', sellerRoutes);
 app.use('/api/customer', customerAuthRoutes);
 app.use('/api', chatRoutes);
+app.use('/api', campaignRoutes);
+
 app.use('/api', paymentRoutes);
 app.use('/api', dashboardRoutes);
 app.use('/api/sync', syncProductsRoutes);

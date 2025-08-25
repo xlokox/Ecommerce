@@ -99,6 +99,12 @@ const SellerLayout = () => {
                 </Link>
               </li>
               <li>
+                <Link to="campaigns" className={`flex items-center gap-2 p-3 rounded-md ${pathname === '/seller/dashboard/campaigns' ? 'bg-[#7866ff] text-white' : 'text-[#d0d2d6] hover:bg-[#7866ff] hover:text-white'}`}>
+                  <FaList />
+                  <span>Campaigns</span>
+                </Link>
+              </li>
+              <li>
                 <Link to="orders" className={`flex items-center gap-2 p-3 rounded-md ${pathname === '/seller/dashboard/orders' ? 'bg-[#7866ff] text-white' : 'text-[#d0d2d6] hover:bg-[#7866ff] hover:text-white'}`}>
                   <FaShoppingBag />
                   <span>Orders</span>

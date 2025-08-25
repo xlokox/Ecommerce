@@ -119,6 +119,10 @@ const AdminLayout = () => {
                   <FaEnvelope />
                   <span>Chat Sellers</span>
                 </Link>
+                <Link to="campaigns" className={`flex items-center gap-2 p-3 rounded-md ${pathname === '/admin/dashboard/campaigns' ? 'bg-[#7866ff] text-white' : 'text-[#d0d2d6] hover:bg-[#7866ff] hover:text-white'}`}>
+                  <FaEnvelope />
+                  <span>Campaigns</span>
+                </Link>
               </li>
             </ul>
           </div>

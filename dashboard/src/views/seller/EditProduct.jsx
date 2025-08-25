@@ -4,7 +4,7 @@ import { IoMdImages } from "react-icons/io";
 import { IoMdCloseCircle } from "react-icons/io";
 import { useDispatch, useSelector } from 'react-redux';
 import { get_category } from '../../store/Reducers/categoryReducer';
-import { get_product, update_product, messageClear, product_image_update } from '../../store/Reducers/productReducer';
+import { get_product, update_product, messageClear, product_image_update, product_images_add } from '../../store/Reducers/productReducer';
 import { PropagateLoader } from 'react-spinners';
 import { overrideStyle } from '../../utils/utils';
 import toast from 'react-hot-toast';
@@ -79,6 +79,35 @@ const EditProduct = () => {
       }));
     }
   };
+
+  // Ability to append more images
+  const [newImages, setNewImages] = useState([]);
+  const [newImagePreviews, setNewImagePreviews] = useState([]);
+
+  const handleAddImages = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setNewImages(prev => [...prev, ...files]);
+    const urls = files.map(f => URL.createObjectURL(f));
+    setNewImagePreviews(prev => [...prev, ...urls]);
+  };
+
+  const removeNewImage = (index) => {
+    setNewImages(prev => prev.filter((_, i) => i !== index));
+    setNewImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const submitAddedImages = () => {
+    if (!newImages.length) {
+      toast.error('Please select images to add');
+      return;
+    }
+    dispatch(product_images_add({ productId, images: newImages }));
+    // reset local add buffer after dispatch
+    setNewImages([]);
+    setNewImagePreviews([]);
+  };
+
 
   // 7. ברגע שה-product נטען, ממלאים את השדות
   useEffect(() => {
@@ -290,6 +319,36 @@ const EditProduct = () => {
                   />
                 </div>
               ))}
+
+	            {/* Add more images section */}
+	            <div className='w-full text-[#d0d2d6] mb-6'>
+	              <label className='mb-2 block'>Add More Images</label>
+	              <div className='flex items-center gap-4 mb-3'>
+	                <label htmlFor='add-images' className='flex justify-center items-center flex-col h-[120px] cursor-pointer border border-dashed hover:border-red-500 w-[200px]'>
+	                  <span><IoMdImages /></span>
+	                  <span>Select Images</span>
+	                </label>
+	                <input id='add-images' type='file' className='hidden' multiple onChange={handleAddImages} />
+	                {newImagePreviews.length > 0 && (
+	                  <button type='button' onClick={submitAddedImages} className='bg-green-600 hover:shadow-green-500/50 hover:shadow-lg text-white rounded-md px-4 py-2'>
+	                    Upload Selected
+	                  </button>
+	                )}
+	              </div>
+	              {newImagePreviews.length > 0 && (
+	                <div className='grid lg:grid-cols-4 grid-cols-1 md:grid-cols-3 sm:grid-cols-2 gap-3'>
+	                  {newImagePreviews.map((url, i) => (
+	                    <div key={i} className='relative'>
+	                      <img src={url} alt={`new-${i}`} className='w-full h-full rounded-sm' />
+	                      <span onClick={() => removeNewImage(i)} className='p-2 z-10 cursor-pointer bg-slate-700 hover:shadow-lg hover:shadow-slate-400/50 text-white absolute top-1 right-1 rounded-full'>
+	                        <IoMdCloseCircle />
+	                      </span>
+	                    </div>
+	                  ))}
+	                </div>
+	              )}
+	            </div>
+
             </div>
 
             <div className='flex'>

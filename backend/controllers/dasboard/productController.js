@@ -392,6 +392,43 @@ class ProductController {
     });
   };
 
+
+  // הוספת תמונות נוספות למוצר (Append, לא מחליף)
+  product_images_add = async (req, res) => {
+    const form = formidable({ multiples: true });
+    form.parse(req, async (err, fields, files) => {
+      if (err) return responseReturn(res, 400, { error: err.message });
+      const { productId } = fields;
+      const addFiles = files.images || files.newImages || files.image; // תמיכה בשמות שדה שונים
+      try {
+        if (!productId) return responseReturn(res, 400, { error: "No 'productId' provided" });
+        let product = await productModel.findById(productId);
+        if (!product) return responseReturn(res, 404, { error: 'Product not found' });
+
+        // Normalize to array
+        const fileArray = Array.isArray(addFiles) ? addFiles : (addFiles ? [addFiles] : []);
+        if (fileArray.length === 0) {
+          return responseReturn(res, 400, { error: 'No images provided' });
+        }
+
+        const uploadedUrls = [];
+        for (let i = 0; i < fileArray.length; i++) {
+          const f = fileArray[i];
+          const upload = await cloudinary.v2.uploader.upload(f.filepath, { folder: 'products' });
+          uploadedUrls.push(upload.url);
+        }
+
+        const updatedImages = [...(product.images || []), ...uploadedUrls];
+        await productModel.findByIdAndUpdate(productId, { images: updatedImages }, { runValidators: true });
+        product = await productModel.findById(productId);
+        return responseReturn(res, 200, { product, message: 'Images added successfully' });
+      } catch (error) {
+        console.log('product_images_add Error:', error);
+        return responseReturn(res, 500, { error: error.message });
+      }
+    });
+  };
+
   // מחיקת מוצר
   product_delete = async (req, res) => {
     try {

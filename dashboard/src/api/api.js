@@ -11,10 +11,14 @@ const api = axios.create({
   }
 });
 
-// Function to safely get token from localStorage (standardized: customerToken)
+// Function to safely get token from localStorage (supports both dashboard and customer tokens)
 const getToken = () => {
   try {
-    return localStorage.getItem('customerToken') || '';
+    return (
+      localStorage.getItem('accessToken') || // Dashboard/Seller/Admin
+      localStorage.getItem('customerToken') || // Customer (web)
+      ''
+    );
   } catch (error) {
     console.error('Error accessing localStorage:', error);
     return '';

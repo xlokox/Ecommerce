@@ -2,7 +2,7 @@ import React from "react";
 import publicRoutes from "../routes/publicRoutes";
 import MainLayout from "../../layout/MainLayout";
 import SellerLayout from "../../layout/SellerLayout";
-import AdminLayout from "../../layout/AdminLayout";
+// import AdminLayout from "../../layout/AdminLayout";
 import ProtectRoute from "../routes/ProtectRoute";
 
 // Import components directly - using lazy loading for better performance
@@ -20,6 +20,7 @@ const Profile = lazy(() => import("../../views/seller/Profile"));
 const EditProduct = lazy(() => import("../../views/seller/EditProduct"));
 const OrderDetails = lazy(() => import("../../views/seller/OrderDetails"));
 const AddBanner = lazy(() => import("../../views/seller/AddBanner"));
+const Campaigns = lazy(() => import("../../views/admin/Campaigns"));
 const Pending = lazy(() => import("../../views/Pending"));
 const Deactive = lazy(() => import("../../views/Deactive"));
 
@@ -48,6 +49,7 @@ export const getRoutes = () => {
       element: <ProtectRoute route={{}}><SellerLayout /></ProtectRoute>,
       children: [
         {
+
           index: true,
           element: <ProtectRoute route={{}}><SellerDashboard /></ProtectRoute>
         },
@@ -98,6 +100,10 @@ export const getRoutes = () => {
         {
           path: "add-banner/:productId",
           element: <ProtectRoute route={{}}><AddBanner /></ProtectRoute>
+        },
+        {
+          path: "campaigns",
+          element: <ProtectRoute route={{}}><Campaigns /></ProtectRoute>
         }
       ]
     }
